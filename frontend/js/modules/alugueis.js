@@ -168,7 +168,7 @@ class AlugueisModule {
             
             // Processar matriz
             if (matrizResp.success && matrizResp.data) {
-                this.matriz = matrizResp.data.matriz || [];
+                this.matriz = matrizResp.data.matriz || matrizResp.data || [];
                 // Se a resposta incluir proprietarios/imoveis, usar esses (mais frescos)
                 this.proprietarios = matrizResp.data.proprietarios || proprietarios || [];
                 this.imoveis = matrizResp.data.imoveis || imoveis || [];

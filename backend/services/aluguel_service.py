@@ -45,7 +45,7 @@ class AluguelService:
         # Aplicar filtros
         if ano:
             query = query.filter(AluguelSimples.ano == ano)
-        if mes and agregacao == "mensal":
+        if mes and agregacao in ("mensal", "mes_especifico"):
             query = query.filter(AluguelSimples.mes == mes)
         
         # Filtro de proprietário
