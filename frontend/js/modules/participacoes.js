@@ -34,17 +34,17 @@ class ParticipacoesModule {
         // Re-avaliar tipo de dispositivo
         this.isMobile = window.deviceManager && window.deviceManager.deviceType === 'mobile';
         
-        // Identificar container
+        // Identificar container - usar tbody para desktop
         this.container = this.isMobile
             ? document.getElementById('participacoes-list-mobile')
-            : document.getElementById('participacoes-matrix-container');
+            : document.getElementById('participacoes-matrix-body');
 
         // Retry se não encontrar (timing issue)
         if (!this.container) {
             await new Promise(resolve => setTimeout(resolve, 100));
             this.container = this.isMobile
                 ? document.getElementById('participacoes-list-mobile')
-                : document.getElementById('participacoes-matrix-container');
+                : document.getElementById('participacoes-matrix-body');
         }
 
         if (!this.container) {
@@ -233,55 +233,44 @@ class ParticipacoesModule {
     }
 
     renderDesktop() {
-        // Preparar dados para GridComponent
-        const tableData = this.buildTableData();
-        const columns = this.buildColumns();
-
-        // Configuração do GridComponent
-        const gridConfig = {
-            columns: columns,
-            data: tableData,
-            responsive: {
-                mobile: 'cards',
-                desktop: 'table'
-            },
-            search: {
-                enabled: false
-            },
-            sort: {
-                enabled: false
-            },
-            pagination: {
-                enabled: false
-            },
-            emptyMessage: 'Nenhuma participação encontrada.'
-        };
-
-        // Destruir grid anterior
-        if (this.grid) {
-            this.grid.destroy();
-        }
-
-        // Criar novo grid
-        this.grid = new GridComponent('participacoes-matrix-container', gridConfig);
-    }
-
-    buildTableData() {
+        const isAdmin = window.authService && window.authService.isAdmin();
+        
         // Determinar versão target
         const targetVersaoId = (this.selectedData === 'ativo' || this.selectedData === null) 
             ? null 
             : this.selectedData;
 
-        // Criar linhas (uma por imóvel)
-        return this.imoveis.map(imovel => {
-            const row = {
-                imovel: imovel.nome,
-                imovel_id: imovel.id
-            };
+        if (this.proprietarios.length === 0 || this.imoveis.length === 0) {
+            this.container.innerHTML = '<tr><td colspan="100" class="text-center">Nenhuma participação encontrada.</td></tr>';
+            // Atualizar o thead também
+            const thead = document.getElementById('participacoes-matrix-head');
+            if (thead) {
+                thead.innerHTML = '<tr><th>Imóvel</th><th>Info</th></tr>';
+            }
+            return;
+        }
 
+        // Renderizar THEAD com colunas dinâmicas
+        const thead = document.getElementById('participacoes-matrix-head');
+        if (thead) {
+            let theadHtml = '<tr><th width="200">Imóvel</th>';
+            this.proprietarios.forEach(prop => {
+                theadHtml += `<th class="text-center">${SecurityUtils.escapeHtml(prop.nome || 'Sem nome')}</th>`;
+            });
+            theadHtml += '<th class="text-center">Total</th>';
+            if (isAdmin) {
+                theadHtml += '<th width="120">Ações</th>';
+            }
+            theadHtml += '</tr>';
+            thead.innerHTML = theadHtml;
+        }
+
+        // Renderizar TBODY com linhas por imóvel
+        const rowsHtml = this.imoveis.map(imovel => {
             let total = 0;
+            let cellsHtml = `<td><strong>${SecurityUtils.escapeHtml(imovel.nome || 'Sem nome')}</strong></td>`;
 
-            // Adicionar coluna para cada proprietário
+            // Célula para cada proprietário
             this.proprietarios.forEach(prop => {
                 const part = this.participacoes.find(p =>
                     p.imovel_id === imovel.id &&
@@ -293,59 +282,37 @@ class ParticipacoesModule {
                     ? (part.porcentagem < 1 ? part.porcentagem * 100 : part.porcentagem) 
                     : 0;
                 
-                row[`prop_${prop.id}`] = val;
                 total += val;
+                const displayVal = val === 0 ? '-' : `${val.toFixed(2)}%`;
+                cellsHtml += `<td class="text-center">${displayVal}</td>`;
             });
 
-            row.total = total;
-            return row;
-        });
-    }
+            // Célula de total
+            const totalClass = Math.round(total) === 100 ? 'text-success' : 'text-danger';
+            cellsHtml += `<td class="text-center ${totalClass}"><strong>${Math.round(total)}%</strong></td>`;
 
-    buildColumns() {
-        const columns = [
-            {
-                key: 'imovel',
-                label: 'Imóvel',
-                width: '200px'
+            // Célula de ações
+            if (isAdmin) {
+                cellsHtml += `
+                    <td class="text-center">
+                        <button class="btn btn-sm btn-outline-primary edit-participacao-btn" 
+                                data-imovel-id="${imovel.id}" title="Editar participações">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                    </td>
+                `;
             }
-        ];
 
-        // Colunas de proprietários
-        this.proprietarios.forEach(prop => {
-            columns.push({
-                key: `prop_${prop.id}`,
-                label: prop.nome,
-                align: 'center',
-                formatter: (value) => {
-                    if (value === 0 || value === null) return '-';
-                    return `${value.toFixed(2)}%`;
-                }
-            });
-        });
+            return `<tr data-imovel-id="${imovel.id}">${cellsHtml}</tr>`;
+        }).join('');
 
-        // Coluna de total
-        columns.push({
-            key: 'total',
-            label: 'Total',
-            align: 'center',
-            formatter: (value) => `<strong>${Math.round(value)}%</strong>`
-        });
-
-        // Coluna de ações
-        columns.push({
-            key: 'actions',
-            label: 'Ações',
-            align: 'center',
-            width: '100px',
-            formatter: (value, row) => {
-                return `<button class="btn btn-sm btn-outline-primary nova-versao-btn admin-only" data-imovel-id="${row.imovel_id}">
-                    <i class="fas fa-copy"></i>
-                </button>`;
-            }
-        });
-
-        return columns;
+        this.container.innerHTML = rowsHtml;
+        
+        // Mostrar a tabela
+        const tableContainer = document.getElementById('participacoes-table-container');
+        if (tableContainer) {
+            tableContainer.style.display = 'block';
+        }
     }
 
     async novaVersao(imovelId) {
