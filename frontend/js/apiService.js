@@ -250,7 +250,13 @@ window.apiService = {
         return response.success ? response.data : null;
     },
 
-    async getDatasParticipacoes() {
+    async getDatasParticipacoes(useCache = true) {
+        if (useCache && window.cacheService) {
+            return await window.cacheService.get('participacoes_datas', async () => {
+                const response = await this.get('/api/participacoes/datas');
+                return response.success ? response.data?.datas : null;
+            });
+        }
         const response = await this.get('/api/participacoes/datas');
         return response.success ? response.data?.datas : null;
     },
@@ -261,7 +267,13 @@ window.apiService = {
     },
 
     // === MÉTODOS ESPECÍFICOS PARA PROPRIETÁRIOS ===
-    async getProprietarios() {
+    async getProprietarios(useCache = true) {
+        if (useCache && window.cacheService) {
+            return await window.cacheService.get('proprietarios', async () => {
+                const response = await this.get('/api/proprietarios/');
+                return response.success ? response.data : null;
+            });
+        }
         const response = await this.get('/api/proprietarios/');
         return response.success ? response.data : null;
     },
@@ -273,21 +285,39 @@ window.apiService = {
 
     async createProprietario(data) {
         const response = await this.post('/api/proprietarios/', data);
+        // Invalidar cache após criar
+        if (response.success && window.cacheService) {
+            window.cacheService.invalidate('proprietarios');
+        }
         return response;
     },
 
     async updateProprietario(id, data) {
         const response = await this.put(`/api/proprietarios/${id}`, data);
+        // Invalidar cache após atualizar
+        if (response.success && window.cacheService) {
+            window.cacheService.invalidate('proprietarios');
+        }
         return response;
     },
 
     async deleteProprietario(id) {
         const response = await this.delete(`/api/proprietarios/${id}`);
+        // Invalidar cache após deletar
+        if (window.cacheService) {
+            window.cacheService.invalidate('proprietarios');
+        }
         return response;
     },
 
     // === MÉTODOS ESPECÍFICOS PARA IMÓVEIS ===
-    async getImoveis() {
+    async getImoveis(useCache = true) {
+        if (useCache && window.cacheService) {
+            return await window.cacheService.get('imoveis', async () => {
+                const response = await this.get('/api/imoveis/');
+                return response.success ? response.data : null;
+            });
+        }
         const response = await this.get('/api/imoveis/');
         return response.success ? response.data : null;
     },
@@ -299,16 +329,28 @@ window.apiService = {
 
     async createImovel(data) {
         const response = await this.post('/api/imoveis/', data);
+        // Invalidar cache após criar
+        if (response.success && window.cacheService) {
+            window.cacheService.invalidate('imoveis');
+        }
         return response;
     },
 
     async updateImovel(id, data) {
         const response = await this.put(`/api/imoveis/${id}`, data);
+        // Invalidar cache após atualizar
+        if (response.success && window.cacheService) {
+            window.cacheService.invalidate('imoveis');
+        }
         return response;
     },
 
     async deleteImovel(id) {
         const response = await this.delete(`/api/imoveis/${id}`);
+        // Invalidar cache após deletar
+        if (window.cacheService) {
+            window.cacheService.invalidate('imoveis');
+        }
         return response;
     },
 
@@ -340,27 +382,34 @@ window.apiService = {
         return response;
     },
 
-    async getAnosDisponiveisAlugueis() {
-        try {
-            const response = await this.get('/api/alugueis/anos-disponiveis/');
-            console.log('🔍 Resposta COMPLETA do backend para anos:', response);
-            
-            // Verificar se a resposta tem a estrutura esperada
-            if (response && response.success && response.data) {
-                console.log('✅ Estrutura de resposta válida:', response.data);
-                return response.data;
-            } else if (response && response.anos) {
-                // Fallback para resposta direta sem wrapper
-                console.log('✅ Resposta direta sem wrapper:', response);
-                return response;
-            } else {
-                console.warn('⚠️ Estrutura de resposta inesperada:', response);
-                return null;
+    async getAnosDisponiveisAlugueis(useCache = true) {
+        const fetchFn = async () => {
+            try {
+                const response = await this.get('/api/alugueis/anos-disponiveis/');
+                console.log('🔍 Resposta COMPLETA do backend para anos:', response);
+                
+                // Verificar se a resposta tem a estrutura esperada
+                if (response && response.success && response.data) {
+                    console.log('✅ Estrutura de resposta válida:', response.data);
+                    return response.data;
+                } else if (response && response.anos) {
+                    // Fallback para resposta direta sem wrapper
+                    console.log('✅ Resposta direta sem wrapper:', response);
+                    return response;
+                } else {
+                    console.warn('⚠️ Estrutura de resposta inesperada:', response);
+                    return null;
+                }
+            } catch (error) {
+                console.error('❌ Erro ao obter anos disponíveis:', error);
+                throw error;
             }
-        } catch (error) {
-            console.error('❌ Erro ao obter anos disponíveis:', error);
-            throw error;
+        };
+
+        if (useCache && window.cacheService) {
+            return await window.cacheService.get('anos_disponiveis', fetchFn);
         }
+        return await fetchFn();
     },
 
     async getMesesDisponiveisAlugueis(ano) {
