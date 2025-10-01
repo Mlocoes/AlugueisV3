@@ -43,10 +43,10 @@ class AlugueisModule {
     init() {
         if (this.initialized) return;
 
-        // Identificar container
+        // Identificar container - usar tbody para desktop
         this.container = this.isMobile
             ? document.getElementById('alugueis-list-mobile')
-            : document.getElementById('alugueis-matrix-container');
+            : document.getElementById('alugueis-matrix-body');
 
         if (!this.container) {
             console.warn("Container for AlugueisModule not found.");
@@ -249,139 +249,104 @@ class AlugueisModule {
     }
 
     renderDesktop() {
-        // Preparar dados no formato tabular para GridComponent
-        const tableData = this.buildTableData();
-        
-        // Preparar colunas dinâmicas
-        const columns = this.buildColumns();
-
-        // Configuração do GridComponent
-        const gridConfig = {
-            columns: columns,
-            data: tableData,
-            responsive: {
-                mobile: 'cards',
-                desktop: 'table'
-            },
-            search: {
-                enabled: false  // Desabilitado para matriz de aluguéis
-            },
-            sort: {
-                enabled: false  // Desabilitado para matriz
-            },
-            pagination: {
-                enabled: false  // Não precisamos para matriz
-            },
-            emptyMessage: 'Nenhum aluguel encontrado para o período.'
-        };
-
-        // Destruir grid anterior se existir
-        if (this.grid) {
-            this.grid.destroy();
+        if (this.proprietarios.length === 0 || this.imoveis.length === 0) {
+            this.container.innerHTML = '<tr><td colspan="100" class="text-center">Nenhum aluguel encontrado para o período.</td></tr>';
+            // Atualizar o thead também
+            const thead = document.getElementById('alugueis-matrix-head');
+            if (thead) {
+                thead.innerHTML = '<tr><th>Imóvel</th><th>Info</th></tr>';
+            }
+            // Mostrar tabela
+            const tableContainer = document.getElementById('alugueis-table-container');
+            if (tableContainer) {
+                tableContainer.style.display = 'block';
+            }
+            return;
         }
 
-        // Criar novo grid
-        this.grid = new GridComponent('alugueis-matrix-container', gridConfig);
-    }
-
-    buildTableData() {
-        // Construir linhas da tabela (uma por imóvel + linha de totais)
-        const rows = [];
-
-        // Linhas de imóveis
-        this.imoveis.forEach(imovel => {
-            const row = {
-                imovel: imovel.nome,
-                isTotal: false
-            };
-
-            let totalImovel = 0;
-
-            this.proprietarios.forEach(prop => {
-                const linha = this.matriz.find(l => l.proprietario_id === prop.proprietario_id);
-                const valor = (linha && linha.valores[imovel.nome]) || 0;
-                row[`prop_${prop.proprietario_id}`] = valor;
-                totalImovel += valor;
-            });
-
-            row.total = totalImovel;
-            rows.push(row);
-        });
-
-        // Linha de totais
-        const totalRow = {
-            imovel: 'Total por Proprietário',
-            isTotal: true
-        };
-
-        let granTotal = 0;
-
-        this.proprietarios.forEach(prop => {
-            const totalProp = this.matriz
-                .filter(l => l.proprietario_id === prop.proprietario_id)
-                .reduce((sum, l) => sum + Object.values(l.valores).reduce((s, v) => s + (v || 0), 0), 0);
-            
-            totalRow[`prop_${prop.proprietario_id}`] = totalProp;
-            granTotal += totalProp;
-        });
-
-        totalRow.total = granTotal;
-        rows.push(totalRow);
-
-        return rows;
-    }
-
-    buildColumns() {
+        // Preparar título do período
         const meses = ["", "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", 
                        "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
-        
         const tituloPeriodo = this.mesSelecionado && this.mesSelecionado !== 'todos'
             ? `${meses[this.mesSelecionado]} ${this.anoSelecionado}`
             : `Ano ${this.anoSelecionado}`;
 
-        const columns = [
-            {
-                key: 'imovel',
-                label: `Imóvel (${tituloPeriodo})`,
-                width: '200px',
-                formatter: (value, row) => {
-                    return row.isTotal 
-                        ? `<strong>${SecurityUtils.escapeHtml(value)}</strong>` 
-                        : SecurityUtils.escapeHtml(value);
-                }
-            }
-        ];
-
-        // Colunas de proprietários
-        this.proprietarios.forEach(prop => {
-            columns.push({
-                key: `prop_${prop.proprietario_id}`,
-                label: prop.nome,
-                align: 'right',
-                type: 'currency',
-                formatter: (value, row) => {
-                    if (value === 0 || value === null) return '-';
-                    const formatted = `R$ ${value.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
-                    return row.isTotal ? `<strong>${formatted}</strong>` : formatted;
-                }
+        // Renderizar THEAD com colunas dinâmicas
+        const thead = document.getElementById('alugueis-matrix-head');
+        if (thead) {
+            let theadHtml = `<tr><th width="200">Imóvel (${SecurityUtils.escapeHtml(tituloPeriodo)})</th>`;
+            this.proprietarios.forEach(prop => {
+                const nomeCompleto = `${prop.nome || ''} ${prop.sobrenome || ''}`.trim();
+                theadHtml += `<th class="text-end">${SecurityUtils.escapeHtml(nomeCompleto)}</th>`;
             });
+            theadHtml += '<th class="text-end"><strong>Total</strong></th></tr>';
+            thead.innerHTML = theadHtml;
+        }
+
+        // Renderizar TBODY com linhas por imóvel
+        const rowsHtml = [];
+        const totaisPorProprietario = {};
+        let granTotal = 0;
+
+        // Inicializar totais
+        this.proprietarios.forEach(prop => {
+            totaisPorProprietario[prop.id] = 0;
         });
 
-        // Coluna de total
-        columns.push({
-            key: 'total',
-            label: 'Total',
-            align: 'right',
-            type: 'currency',
-            formatter: (value, row) => {
-                const formatted = `R$ ${value.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
-                return row.isTotal 
-                    ? `<strong class="text-primary">${formatted}</strong>` 
-                    : `<strong>${formatted}</strong>`;
-            }
+        // Linhas de imóveis
+        this.imoveis.forEach(imovel => {
+            let totalImovel = 0;
+            let cellsHtml = `<td><strong>${SecurityUtils.escapeHtml(imovel.nome || 'Sem nome')}</strong></td>`;
+
+            // Célula para cada proprietário
+            this.proprietarios.forEach(prop => {
+                // Procurar o aluguel na matriz
+                const aluguel = this.matriz.find(a => 
+                    a.imovel_id === imovel.id && 
+                    a.proprietario_id === prop.id
+                );
+
+                const valor = aluguel ? parseFloat(aluguel.valor_liquido_proprietario || 0) : 0;
+                totalImovel += valor;
+                totaisPorProprietario[prop.id] += valor;
+
+                const displayVal = valor > 0 
+                    ? `R$ ${valor.toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2})}` 
+                    : '-';
+                cellsHtml += `<td class="text-end">${displayVal}</td>`;
+            });
+
+            granTotal += totalImovel;
+
+            // Célula de total
+            const totalFormatado = totalImovel > 0
+                ? `R$ ${totalImovel.toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`
+                : '-';
+            cellsHtml += `<td class="text-end"><strong>${totalFormatado}</strong></td>`;
+
+            rowsHtml.push(`<tr>${cellsHtml}</tr>`);
         });
 
-        return columns;
+        // Linha de totais
+        let totalRowHtml = '<td><strong>Total por Proprietário</strong></td>';
+        this.proprietarios.forEach(prop => {
+            const total = totaisPorProprietario[prop.id];
+            const totalFormatado = total > 0
+                ? `R$ ${total.toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`
+                : '-';
+            totalRowHtml += `<td class="text-end"><strong>${totalFormatado}</strong></td>`;
+        });
+        const granTotalFormatado = `R$ ${granTotal.toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+        totalRowHtml += `<td class="text-end"><strong class="text-primary">${granTotalFormatado}</strong></td>`;
+        rowsHtml.push(`<tr class="table-primary">${totalRowHtml}</tr>`);
+
+        this.container.innerHTML = rowsHtml.join('');
+        
+        // Mostrar a tabela
+        const tableContainer = document.getElementById('alugueis-table-container');
+        if (tableContainer) {
+            tableContainer.style.display = 'block';
+        }
     }
 
     applyPermissions(isAdmin) {
