@@ -35,23 +35,31 @@ class ParticipacoesModule {
         this.isMobile = window.deviceManager && window.deviceManager.deviceType === 'mobile';
         
         // Identificar container - usar tbody para desktop
-        this.container = this.isMobile
+        const getContainer = () => this.isMobile
             ? document.getElementById('participacoes-list-mobile')
             : document.getElementById('participacoes-matrix-body');
 
-        // Retry se não encontrar (timing issue)
+        this.container = getContainer();
+
+        // Retry múltiplas vezes se não encontrar (timing issue)
         if (!this.container) {
-            await new Promise(resolve => setTimeout(resolve, 100));
-            this.container = this.isMobile
-                ? document.getElementById('participacoes-list-mobile')
-                : document.getElementById('participacoes-matrix-body');
+            console.log('[ParticipacoesModule] Container not found, retrying...');
+            for (let i = 0; i < 5; i++) {
+                await new Promise(resolve => setTimeout(resolve, 200));
+                this.container = getContainer();
+                if (this.container) {
+                    console.log(`[ParticipacoesModule] Container found after ${i + 1} retries`);
+                    break;
+                }
+            }
         }
 
         if (!this.container) {
-            console.warn("ParticipacoesModule: Container not found. View might not be active.");
+            console.warn("ParticipacoesModule: Container not found after retries. View might not be active.");
             return;
         }
 
+        console.log('[ParticipacoesModule] Container found, initializing...');
         this.bindContainerEvents();
         await this.loadDatas();
     }
@@ -491,6 +499,13 @@ class ParticipacoesModule {
 
             // Agregar las participações editadas del imóvel actual
             allParticipacoes.push(...updatedForImovel);
+
+            console.log('[EditParticipacao] Total de participações a enviar:', allParticipacoes.length);
+            console.log('[EditParticipacao] Total de imóveis:', this.imoveis.length);
+            console.log('[EditParticipacao] Total de proprietários:', this.proprietarios.length);
+            console.log('[EditParticipacao] Esperado total:', this.imoveis.length * this.proprietarios.length);
+            console.log('[EditParticipacao] Participações editadas do imóvel:', updatedForImovel);
+            console.log('[EditParticipacao] Primeiras 5 participações:', allParticipacoes.slice(0, 5));
 
             try {
                 this.uiManager.showLoading('Salvando participações...');
