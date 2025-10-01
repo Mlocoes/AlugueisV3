@@ -225,6 +225,11 @@ class ProprietariosModule {
 
         // Criar novo grid com o ID correto do tbody
         this.grid = new GridComponent('proprietarios-table-body', gridConfig);
+        
+        // Renderizar o grid
+        if (this.grid && typeof this.grid.render === 'function') {
+            this.grid.render();
+        }
     }
 
     buildColumns() {

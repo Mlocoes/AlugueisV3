@@ -8,7 +8,7 @@ from typing import List, Dict, Optional, Any
 from datetime import datetime, date
 from decimal import Decimal
 
-from models_final import AluguelSimples, Proprietario, Imovel, Participacao
+from models_final import AluguelSimples, Proprietario, Imovel
 
 
 class AluguelService:
@@ -39,47 +39,40 @@ class AluguelService:
         # Base query com joinedload para evitar N+1
         query = db.query(AluguelSimples).options(
             joinedload(AluguelSimples.imovel),
-            joinedload(AluguelSimples.participacoes).joinedload(Participacao.proprietario)
+            joinedload(AluguelSimples.proprietario)
         )
         
         # Aplicar filtros
         if ano:
-            query = query.filter(extract('year', AluguelSimples.data_referencia) == ano)
+            query = query.filter(AluguelSimples.ano == ano)
         if mes and agregacao == "mensal":
-            query = query.filter(extract('month', AluguelSimples.data_referencia) == mes)
+            query = query.filter(AluguelSimples.mes == mes)
         
-        # Filtro de proprietário (aplicado na query principal via join)
+        # Filtro de proprietário
         if proprietario_id:
-            query = query.join(AluguelSimples.participacoes).filter(
-                Participacao.proprietario_id == proprietario_id
-            )
+            query = query.filter(AluguelSimples.proprietario_id == proprietario_id)
         
         alugueis = query.all()
         
         # Processar resultados
         resultado = []
         for aluguel in alugueis:
-            # Calcular valores por proprietário
-            for participacao in aluguel.participacoes:
-                valor_proprietario = (
-                    aluguel.valor_aluguel * participacao.porcentagem_participacao / 100
-                )
-                
-                resultado.append({
-                    "aluguel_id": aluguel.id,
-                    "data_referencia": aluguel.data_referencia.isoformat(),
-                    "imovel_id": aluguel.imovel_id,
-                    "imovel_nome": aluguel.imovel.apelido if aluguel.imovel else "N/A",
-                    "proprietario_id": participacao.proprietario_id,
-                    "proprietario_nome": (
-                        f"{participacao.proprietario.nome} "
-                        f"{participacao.proprietario.sobrenome or ''}"
-                    ).strip() if participacao.proprietario else "N/A",
-                    "valor_total": float(aluguel.valor_aluguel),
-                    "participacao": float(participacao.porcentagem_participacao),
-                    "valor_proprietario": float(valor_proprietario),
-                    "status": aluguel.status
-                })
+            resultado.append({
+                "aluguel_id": aluguel.id,
+                "periodo": f"{aluguel.mes:02d}/{aluguel.ano}",
+                "mes": aluguel.mes,
+                "ano": aluguel.ano,
+                "imovel_id": aluguel.imovel_id,
+                "imovel_nome": aluguel.imovel.apelido if aluguel.imovel else "N/A",
+                "proprietario_id": aluguel.proprietario_id,
+                "proprietario_nome": (
+                    f"{aluguel.proprietario.nome} "
+                    f"{aluguel.proprietario.sobrenome or ''}"
+                ).strip() if aluguel.proprietario else "N/A",
+                "taxa_administracao_total": float(aluguel.taxa_administracao_total or 0),
+                "taxa_administracao_proprietario": float(aluguel.taxa_administracao_proprietario or 0),
+                "valor_liquido_proprietario": float(aluguel.valor_liquido_proprietario or 0)
+            })
         
         return resultado
     

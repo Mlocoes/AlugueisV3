@@ -199,15 +199,18 @@ class ImoveisModule {
             }
         };
 
-        // Crear o actualizar GridComponent con el ID del container (string)
+        // Destruir grid anterior e criar novo
         const containerId = 'imoveis-table-body';
-        if (!this.gridComponent) {
-            this.gridComponent = new GridComponent(containerId, gridConfig);
-        } else {
-            this.gridComponent.updateConfig(gridConfig);
+        if (this.gridComponent && typeof this.gridComponent.destroy === 'function') {
+            this.gridComponent.destroy();
         }
-
-        this.gridComponent.render();
+        
+        this.gridComponent = new GridComponent(containerId, gridConfig);
+        
+        // Renderizar o grid
+        if (this.gridComponent && typeof this.gridComponent.render === 'function') {
+            this.gridComponent.render();
+        }
     }
 
     /**
