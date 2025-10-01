@@ -296,9 +296,10 @@ def initialize_database(config):
 
         # Executa o comando psql dentro do container do postgres
         # Usar subprocess com lista para evitar problemas de escaping
+        # -h localhost força conexão TCP em vez de socket Unix
         psql_command = [
             "docker", "exec", "-e", f"PGPASSWORD={config['POSTGRES_PASSWORD']}", 
-            "alugueis_postgres", "psql", "-U", config['POSTGRES_USER'], 
+            "alugueis_postgres", "psql", "-h", "localhost", "-U", config['POSTGRES_USER'], 
             "-d", config['POSTGRES_DB'], "-c", sql_command
         ]
         
