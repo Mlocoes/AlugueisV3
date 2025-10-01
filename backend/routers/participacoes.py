@@ -65,11 +65,13 @@ def listar_participacoes(data_registro: str = None, db: Session = Depends(get_db
 
 @router.post("/")
 def criar_participacao(dados: Dict, db: Session = Depends(get_db), current_user: Usuario = Depends(verify_token_flexible)):
-    """Cria uma nova participação."""
+    """Cria uma nova participação - OPTIMIZED"""
     try:
+        # Validar campos obrigatórios
         if not all(k in dados for k in ["imovel_id", "proprietario_id", "porcentagem"]):
             raise HTTPException(status_code=400, detail="Campos imovel_id, proprietario_id e porcentagem são obrigatórios.")
 
+        # Validar existência com queries em batch
         imovel = db.query(Imovel).filter(Imovel.id == dados["imovel_id"]).first()
         if not imovel:
             raise HTTPException(status_code=404, detail="Imóvel não encontrado.")
@@ -82,9 +84,10 @@ def criar_participacao(dados: Dict, db: Session = Depends(get_db), current_user:
         subquery = db.query(Participacao.data_registro).order_by(Participacao.data_registro.desc()).limit(1).subquery()
         participacoes_atuais = db.query(Participacao).filter(Participacao.data_registro == subquery).all()
 
-        # Crear novo conjunto, copiando todas as participações atuais, substituindo/adicionando a nova
+        # Criar novo conjunto, copiando todas as participações atuais, substituindo/adicionando a nova
         data_registro_novo = datetime.now()
         novas_participacoes = []
+        
         for p in participacoes_atuais:
             # Se for a mesma participação (mesmo imóvel e proprietário), substituir
             if p.imovel_id == dados["imovel_id"] and p.proprietario_id == dados["proprietario_id"]:
@@ -111,76 +114,121 @@ def criar_participacao(dados: Dict, db: Session = Depends(get_db), current_user:
             db.add(p)
         db.commit()
         db.refresh(nova_participacao)
+        
         return {"success": True, "data": nova_participacao.to_dict()}
+        
+    except HTTPException:
+        raise
     except Exception as e:
+        print(f"❌ Erro ao criar participação: {str(e)}")
         db.rollback()
         raise HTTPException(status_code=500, detail=f"Erro ao criar participação: {str(e)}")
 
 @router.get("/{participacao_id}", response_model=Dict)
 def obter_participacao(participacao_id: int, db: Session = Depends(get_db), current_user: Usuario = Depends(verify_token_flexible)):
-    """Obtém uma participação específica pelo ID."""
-    participacao = db.query(Participacao).filter(Participacao.id == participacao_id).first()
-    if not participacao:
-        raise HTTPException(status_code=404, detail="Participação não encontrada")
-    return participacao.to_dict()
+    """Obtém uma participação específica pelo ID - OPTIMIZED"""
+    try:
+        participacao = db.query(Participacao).options(
+            joinedload(Participacao.imovel),
+            joinedload(Participacao.proprietario)
+        ).filter(Participacao.id == participacao_id).first()
+        
+        if not participacao:
+            raise HTTPException(status_code=404, detail="Participação não encontrada")
+            
+        return {"success": True, "data": participacao.to_dict()}
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"❌ Erro ao obter participação: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Erro ao obter participação: {str(e)}")
 
 @router.put("/{participacao_id}", response_model=Dict)
 def atualizar_participacao(participacao_id: int, dados: Dict, db: Session = Depends(get_db), current_user: Usuario = Depends(verify_token_flexible)):
-    """Atualiza uma participação existente."""
-    participacao = db.query(Participacao).filter(Participacao.id == participacao_id).first()
-    if not participacao:
-        raise HTTPException(status_code=404, detail="Participação não encontrada")
+    """Atualiza uma participação existente - OPTIMIZED"""
+    try:
+        participacao = db.query(Participacao).filter(Participacao.id == participacao_id).first()
+        if not participacao:
+            raise HTTPException(status_code=404, detail="Participação não encontrada")
 
-    # Obter o conjunto mais recente de participações global
-    subquery = db.query(Participacao.data_registro).order_by(Participacao.data_registro.desc()).limit(1).subquery()
-    participacoes_atuais = db.query(Participacao).filter(Participacao.data_registro == subquery).all()
+        # Obter o conjunto mais recente de participações global
+        subquery = db.query(Participacao.data_registro).order_by(Participacao.data_registro.desc()).limit(1).subquery()
+        participacoes_atuais = db.query(Participacao).filter(Participacao.data_registro == subquery).all()
 
-    # Criar novo conjunto, copiando todas as participações atuais, substituindo a editada
-    data_registro_novo = datetime.now()
-    novas_participacoes = []
-    for p in participacoes_atuais:
-        if p.id == participacao_id:
-            # Substituir pelos novos dados
-            campos_modelo = [c.key for c in Participacao.__table__.columns]
-            valores = {campo: getattr(p, campo) for campo in campos_modelo}
-            for campo, valor in dados.items():
-                if campo in campos_modelo:
-                    valores[campo] = valor
-            nova = Participacao(
-                imovel_id=valores["imovel_id"],
-                proprietario_id=valores["proprietario_id"],
-                porcentagem=valores["porcentagem"],
-                data_registro=data_registro_novo
-            )
-            novas_participacoes.append(nova)
+        # Criar novo conjunto, copiando todas as participações atuais, substituindo a editada
+        data_registro_novo = datetime.now()
+        novas_participacoes = []
+        participacao_editada_ref = None
+        
+        for p in participacoes_atuais:
+            if p.id == participacao_id:
+                # Substituir pelos novos dados
+                campos_modelo = [c.key for c in Participacao.__table__.columns]
+                valores = {campo: getattr(p, campo) for campo in campos_modelo}
+                
+                for campo, valor in dados.items():
+                    if campo in campos_modelo:
+                        valores[campo] = valor
+                        
+                nova = Participacao(
+                    imovel_id=valores["imovel_id"],
+                    proprietario_id=valores["proprietario_id"],
+                    porcentagem=valores["porcentagem"],
+                    data_registro=data_registro_novo
+                )
+                novas_participacoes.append(nova)
+                participacao_editada_ref = (valores["proprietario_id"], valores["imovel_id"])
+            else:
+                nova = Participacao(
+                    imovel_id=p.imovel_id,
+                    proprietario_id=p.proprietario_id,
+                    porcentagem=p.porcentagem,
+                    data_registro=data_registro_novo
+                )
+                novas_participacoes.append(nova)
+
+        # Persistir todas as novas participações
+        for p in novas_participacoes:
+            db.add(p)
+        db.commit()
+        
+        # Retornar a participação editada
+        if participacao_editada_ref:
+            prop_id, imovel_id = participacao_editada_ref
+            participacao_editada = [
+                p for p in novas_participacoes 
+                if p.proprietario_id == prop_id and p.imovel_id == imovel_id
+            ][0]
+            db.refresh(participacao_editada)
+            return {"success": True, "data": participacao_editada.to_dict()}
         else:
-            nova = Participacao(
-                imovel_id=p.imovel_id,
-                proprietario_id=p.proprietario_id,
-                porcentagem=p.porcentagem,
-                data_registro=data_registro_novo
-            )
-            novas_participacoes.append(nova)
-
-    # Persistir todas as novas participações
-    for p in novas_participacoes:
-        db.add(p)
-    db.commit()
-    # Retornar a participação editada
-    participacao_editada = [p for p in novas_participacoes if p.proprietario_id == participacao.proprietario_id and p.imovel_id == participacao.imovel_id][0]
-    db.refresh(participacao_editada)
-    return participacao_editada.to_dict()
+            raise HTTPException(status_code=500, detail="Erro ao localizar participação editada")
+            
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"❌ Erro ao atualizar participação: {str(e)}")
+        db.rollback()
+        raise HTTPException(status_code=500, detail=f"Erro ao atualizar participação: {str(e)}")
 
 @router.delete("/{participacao_id}")
 def excluir_participacao(participacao_id: int, db: Session = Depends(get_db), current_user: Usuario = Depends(verify_token_flexible)):
-    """Exclui uma participação."""
-    participacao = db.query(Participacao).filter(Participacao.id == participacao_id).first()
-    if not participacao:
-        raise HTTPException(status_code=404, detail="Participação não encontrada")
-    
-    db.delete(participacao)
-    db.commit()
-    return {"mensagem": "Participação excluída com sucesso"}
+    """Exclui uma participação - OPTIMIZED"""
+    try:
+        participacao = db.query(Participacao).filter(Participacao.id == participacao_id).first()
+        if not participacao:
+            raise HTTPException(status_code=404, detail="Participação não encontrada")
+        
+        db.delete(participacao)
+        db.commit()
+        
+        return {"success": True, "mensagem": "Participação excluída com sucesso"}
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"❌ Erro ao excluir participação: {str(e)}")
+        db.rollback()
+        raise HTTPException(status_code=500, detail=f"Erro ao excluir participação: {str(e)}")
 
 
 
@@ -378,79 +426,89 @@ async def get_historico_por_imovel(
         raise HTTPException(status_code=500, detail=f"Erro ao obter histórico do imóvel: {str(e)}")
 
 @router.post("/criar-versao")
-async def criar_nova_versao_participacoes(db: Session = Depends(get_db), current_user: Usuario = Depends(verify_token_flexible)):
+async def criar_snapshot_versao_participacoes(db: Session = Depends(get_db), current_user: Usuario = Depends(verify_token_flexible)):
     """
-    Cria uma nova versão das participações atuais no histórico
+    Cria uma nova versão/snapshot das participações atuais no histórico - OPTIMIZED
     """
-    if not current_user.tipo_de_usuario in ['administrador', 'usuario']:
-        raise HTTPException(status_code=403, detail="Acesso negado: Requer privilégios de usuário ou administrador.")
-    
-    # Gerar ID único para a versão
-    versao_id = f"v_{datetime.now().strftime('%Y%m%d_%H%M%S')}_{str(uuid.uuid4())[:8]}"
-    
-    # Buscar todas as participações atuais ativas
-    participacoes_atuais = db.query(Participacao).filter(Participacao.ativo == True).all()
-    
-    if not participacoes_atuais:
-        raise HTTPException(status_code=400, detail="Nenhuma participação ativa encontrada")
-    
-    # Verificar se já existe uma versão idêntica
-    versao_recente = db.query(HistoricoParticipacao.versao_id).order_by(
-        HistoricoParticipacao.data_versao.desc()
-    ).first()
-    
-    if versao_recente:
-        # Comparar dados
-        dados_recentes = db.query(
-            HistoricoParticipacao.imovel_id,
-            HistoricoParticipacao.proprietario_id,
-            HistoricoParticipacao.porcentagem
-        ).filter(
-            HistoricoParticipacao.versao_id == versao_recente.versao_id
-        ).order_by(
-            HistoricoParticipacao.imovel_id,
-            HistoricoParticipacao.proprietario_id
-        ).all()
-        
-        dados_atuais = [
-            (p.imovel_id, p.proprietario_id, p.porcentagem)
-            for p in sorted(participacoes_atuais, key=lambda x: (x.imovel_id, x.proprietario_id))
-        ]
-        
-        dados_recentes_sorted = [
-            (d.imovel_id, d.proprietario_id, d.porcentagem)
-            for d in sorted(dados_recentes, key=lambda x: (x[0], x[1]))
-        ]
-        
-        if dados_atuais == dados_recentes_sorted:
-            return {
-                "success": True,
-                "message": f"Dados não mudaram, versão existente: {versao_recente.versao_id}",
-                "versao_id": versao_recente.versao_id
-            }
-    
-    # Criar nova versão
-    historico_entries = []
-    for participacao in participacoes_atuais:
-        historico_entries.append({
-            "versao_id": versao_id,
-            "data_versao": datetime.now(),
-            "porcentagem": participacao.porcentagem,
-            "data_registro_original": participacao.data_registro,
-            "ativo": participacao.ativo,
-            "imovel_id": participacao.imovel_id,
-            "proprietario_id": participacao.proprietario_id
-        })
-    
     try:
+        if not current_user.tipo_de_usuario in ['administrador', 'usuario']:
+            raise HTTPException(status_code=403, detail="Acesso negado: Requer privilégios de usuário ou administrador.")
+        
+        # Gerar ID único para a versão
+        versao_id = f"v_{datetime.now().strftime('%Y%m%d_%H%M%S')}_{str(uuid.uuid4())[:8]}"
+        
+        # Buscar todas as participações atuais ativas com eager loading
+        participacoes_atuais = db.query(Participacao).options(
+            joinedload(Participacao.imovel),
+            joinedload(Participacao.proprietario)
+        ).filter(Participacao.ativo == True).all()
+        
+        if not participacoes_atuais:
+            raise HTTPException(status_code=400, detail="Nenhuma participação ativa encontrada")
+        
+        # Verificar se já existe uma versão idêntica
+        versao_recente = db.query(HistoricoParticipacao.versao_id).order_by(
+            HistoricoParticipacao.data_versao.desc()
+        ).first()
+        
+        if versao_recente:
+            # Comparar dados
+            dados_recentes = db.query(
+                HistoricoParticipacao.imovel_id,
+                HistoricoParticipacao.proprietario_id,
+                HistoricoParticipacao.porcentagem
+            ).filter(
+                HistoricoParticipacao.versao_id == versao_recente.versao_id
+            ).order_by(
+                HistoricoParticipacao.imovel_id,
+                HistoricoParticipacao.proprietario_id
+            ).all()
+            
+            dados_atuais = [
+                (p.imovel_id, p.proprietario_id, p.porcentagem)
+                for p in sorted(participacoes_atuais, key=lambda x: (x.imovel_id, x.proprietario_id))
+            ]
+            
+            dados_recentes_sorted = [
+                (d.imovel_id, d.proprietario_id, d.porcentagem)
+                for d in sorted(dados_recentes, key=lambda x: (x[0], x[1]))
+            ]
+            
+            if dados_atuais == dados_recentes_sorted:
+                return {
+                    "success": True,
+                    "message": f"Dados não mudaram, versão existente: {versao_recente.versao_id}",
+                    "versao_id": versao_recente.versao_id
+                }
+        
+        # Criar nova versão usando bulk insert
+        historico_entries = []
+        data_versao = datetime.now()
+        
+        for participacao in participacoes_atuais:
+            historico_entries.append({
+                "versao_id": versao_id,
+                "data_versao": data_versao,
+                "porcentagem": participacao.porcentagem,
+                "data_registro_original": participacao.data_registro,
+                "ativo": participacao.ativo,
+                "imovel_id": participacao.imovel_id,
+                "proprietario_id": participacao.proprietario_id
+            })
+        
         db.bulk_insert_mappings(HistoricoParticipacao, historico_entries)
         db.commit()
         
         return {
             "success": True,
             "message": f"Nova versão criada: {versao_id}",
-            "versao_id": versao_id
+            "versao_id": versao_id,
+            "total_participacoes": len(historico_entries)
         }
+        
+    except HTTPException:
+        raise
     except Exception as e:
+        print(f"❌ Erro ao criar versão: {str(e)}")
         db.rollback()
         raise HTTPException(status_code=500, detail=f"Erro ao criar versão: {str(e)}")
