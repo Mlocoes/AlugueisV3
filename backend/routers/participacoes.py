@@ -1,5 +1,5 @@
 from fastapi import APIRouter, HTTPException, Depends, UploadFile, File
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 from sqlalchemy import func
 from typing import List, Dict
 import pandas as pd
@@ -9,84 +9,58 @@ from datetime import datetime, timedelta
 from models_final import Participacao, Proprietario, Imovel, Usuario, HistoricoParticipacao
 from config import get_db
 from .auth import verify_token_flexible, is_admin
+from services.participacao_service import ParticipacaoService
 
 router = APIRouter(prefix="/api/participacoes", tags=["participacoes"])
 
 @router.get("/datas", response_model=Dict)
 def listar_datas_participacoes(db: Session = Depends(get_db), current_user: Usuario = Depends(verify_token_flexible)):
-    """Lista todas as datas de conjuntos de participações disponíveis (incluindo histórico)."""
-    # Buscar versões do histórico - uma por versao_id com a data mais recente
-    from sqlalchemy import func
-    versoes_historico = db.query(
-        HistoricoParticipacao.versao_id,
-        func.max(HistoricoParticipacao.data_versao).label('data_versao')
-    )\
-    .group_by(HistoricoParticipacao.versao_id)\
-    .order_by(func.max(HistoricoParticipacao.data_versao).desc())\
-    .all()
-    
-    # Buscar datas das participações ativas atuais
-    datas_ativas = db.query(Participacao.data_registro)\
-        .filter(Participacao.ativo == True)\
-        .order_by(Participacao.data_registro.desc())\
-        .all()
-    
-    # Combinar e filtrar datas distintas
-    seen = set()
-    datas_list = []
-    
-    # Adicionar versões do histórico
-    for versao in versoes_historico:
-        versao_id, data_versao = versao
-        if data_versao:
-            datas_list.append({
-                "data": data_versao.isoformat(),
-                "tipo": "histórico",
-                "versao_id": versao_id,
-                "label": f"Versão {versao_id} - {data_versao.strftime('%d/%m/%Y %H:%M')}"
-            })
-    
-    # Adicionar datas ativas (se não estiverem no histórico)
-    seen_dates = {item["data"].split("T")[0] for item in datas_list}  # Extrair apenas a data (YYYY-MM-DD)
-    for d in datas_ativas:
-        if d[0]:
-            key = d[0].date().isoformat()
-            if key not in seen_dates:
-                seen_dates.add(key)
-                datas_list.append({
-                    "data": d[0].isoformat(),
-                    "tipo": "ativo",
-                    "versao_id": "ativo",
-                    "label": f"Participações Ativas - {d[0].strftime('%d/%m/%Y %H:%M')}"
-                })
-    
-    # Ordenar por data descendente
-    datas_list.sort(key=lambda x: x["data"], reverse=True)
-    
-    return {"success": True, "datas": datas_list}
+    """Lista todas as datas de conjuntos de participações disponíveis (incluindo histórico) - OPTIMIZED"""
+    try:
+        datas_list = ParticipacaoService.listar_datas_versoes(db=db)
+        return {"success": True, "datas": datas_list}
+    except Exception as e:
+        print(f"❌ Erro ao listar datas: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Erro ao listar datas: {str(e)}")
 
 @router.get("/", response_model=Dict)
 def listar_participacoes(data_registro: str = None, db: Session = Depends(get_db), current_user: Usuario = Depends(verify_token_flexible)):
-    """Lista participações do conjunto mais recente ou de uma data específica."""
+    """Lista participações do conjunto mais recente ou de uma data específica - OPTIMIZED"""
     try:
-        query = db.query(Participacao)
         if data_registro:
             from dateutil import parser
             try:
                 dt = parser.isoparse(data_registro)
             except Exception:
                 raise HTTPException(status_code=400, detail=f"Formato de data_registro inválido: {data_registro}")
-            # Filtra apenas por dia, mês e ano
-            query = query.filter(
+            
+            # Filtrar por data específica
+            query = db.query(Participacao).options(
+                joinedload(Participacao.imovel),
+                joinedload(Participacao.proprietario)
+            ).filter(
                 func.date(Participacao.data_registro) == dt.date()
             )
         else:
-            # Busca o conjunto mais recente (maior data)
-            subquery = db.query(Participacao.data_registro).order_by(Participacao.data_registro.desc()).limit(1).subquery()
-            query = query.filter(Participacao.data_registro == subquery)
+            # Buscar conjunto mais recente com eager loading
+            subquery = db.query(Participacao.data_registro).order_by(
+                Participacao.data_registro.desc()
+            ).limit(1).subquery()
+            
+            query = db.query(Participacao).options(
+                joinedload(Participacao.imovel),
+                joinedload(Participacao.proprietario)
+            ).filter(
+                Participacao.data_registro == subquery
+            )
+        
         participacoes = query.all()
         return {"success": True, "data": [p.to_dict() for p in participacoes]}
+        
+    except HTTPException:
+        raise
     except Exception as e:
+        print(f"❌ Erro ao listar participações: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Erro ao listar participações: {str(e)}")
 
 @router.post("/")
