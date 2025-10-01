@@ -63,7 +63,7 @@ class AluguelService:
                 "mes": aluguel.mes,
                 "ano": aluguel.ano,
                 "imovel_id": aluguel.imovel_id,
-                "imovel_nome": aluguel.imovel.apelido if aluguel.imovel else "N/A",
+                "imovel_nome": aluguel.imovel.nome if aluguel.imovel else "N/A",
                 "proprietario_id": aluguel.proprietario_id,
                 "proprietario_nome": (
                     f"{aluguel.proprietario.nome} "
