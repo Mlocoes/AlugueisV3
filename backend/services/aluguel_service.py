@@ -8,7 +8,7 @@ from typing import List, Dict, Optional, Any
 from datetime import datetime, date
 from decimal import Decimal
 
-from backend.models_final import Aluguel, Proprietario, Imovel, Participacao
+from models_final import AluguelSimples, Proprietario, Imovel, Participacao
 
 
 class AluguelService:
@@ -35,16 +35,16 @@ class AluguelService:
             Lista de dicionários com dados agregados
         """
         # Base query com joinedload para evitar N+1
-        query = db.query(Aluguel).options(
-            joinedload(Aluguel.imovel),
-            joinedload(Aluguel.participacoes).joinedload(Participacao.proprietario)
+        query = db.query(AluguelSimples).options(
+            joinedload(AluguelSimples.imovel),
+            joinedload(AluguelSimples.participacoes).joinedload(Participacao.proprietario)
         )
         
         # Aplicar filtros
         if ano:
-            query = query.filter(extract('year', Aluguel.data_referencia) == ano)
+            query = query.filter(extract('year', AluguelSimples.data_referencia) == ano)
         if mes and agregacao == "mensal":
-            query = query.filter(extract('month', Aluguel.data_referencia) == mes)
+            query = query.filter(extract('month', AluguelSimples.data_referencia) == mes)
         
         alugueis = query.all()
         
@@ -93,13 +93,13 @@ class AluguelService:
             Dicionário com totais agregados
         """
         result = db.query(
-            func.sum(Aluguel.valor_aluguel).label('total'),
-            func.count(Aluguel.id).label('quantidade'),
-            func.avg(Aluguel.valor_aluguel).label('media')
+            func.sum(AluguelSimples.valor_aluguel).label('total'),
+            func.count(AluguelSimples.id).label('quantidade'),
+            func.avg(AluguelSimples.valor_aluguel).label('media')
         ).filter(
             and_(
-                Aluguel.data_referencia >= data_inicio,
-                Aluguel.data_referencia <= data_fim
+                AluguelSimples.data_referencia >= data_inicio,
+                AluguelSimples.data_referencia <= data_fim
             )
         ).first()
         
@@ -131,7 +131,7 @@ class AluguelService:
         Returns:
             Lista de dicionários com totais por imóvel
         """
-        from backend.models_final import AluguelSimples
+        from models_final import AluguelSimples
         
         # Query otimizada com joinedload
         resultado = db.query(
@@ -183,7 +183,7 @@ class AluguelService:
         Returns:
             Dicionário com totais mensais
         """
-        from backend.models_final import AluguelSimples
+        from models_final import AluguelSimples
         import calendar
         
         # Obter todos os períodos disponíveis ordenados por data
@@ -233,7 +233,7 @@ class AluguelService:
         db: Session,
         imovel_id: int,
         limit: Optional[int] = None
-    ) -> List[Aluguel]:
+    ) -> List[AluguelSimples]:
         """
         Retorna alugueis de um imóvel específico
         Com eager loading de relacionamentos
@@ -246,11 +246,11 @@ class AluguelService:
         Returns:
             Lista de alugueis
         """
-        query = db.query(Aluguel).options(
-            joinedload(Aluguel.imovel),
-            joinedload(Aluguel.participacoes).joinedload(Participacao.proprietario)
-        ).filter(Aluguel.imovel_id == imovel_id).order_by(
-            Aluguel.data_referencia.desc()
+        query = db.query(AluguelSimples).options(
+            joinedload(AluguelSimples.imovel),
+            joinedload(AluguelSimples.participacoes).joinedload(Participacao.proprietario)
+        ).filter(AluguelSimples.imovel_id == imovel_id).order_by(
+            AluguelSimples.data_referencia.desc()
         )
         
         if limit:
@@ -312,10 +312,10 @@ class AluguelService:
             return False, f"Imóvel {imovel_id} não encontrado"
         
         # Verificar duplicação
-        aluguel_existente = db.query(Aluguel).filter(
+        aluguel_existente = db.query(AluguelSimples).filter(
             and_(
-                Aluguel.imovel_id == imovel_id,
-                Aluguel.data_referencia == data_referencia
+                AluguelSimples.imovel_id == imovel_id,
+                AluguelSimples.data_referencia == data_referencia
             )
         ).first()
         

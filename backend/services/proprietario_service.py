@@ -7,7 +7,7 @@ from sqlalchemy import func, or_, and_
 from typing import List, Dict, Optional, Any, Tuple
 from datetime import datetime
 
-from backend.models_final import Proprietario, Participacao, AluguelSimples
+from models_final import Proprietario, Participacao, AluguelSimples
 
 
 class ProprietarioService:

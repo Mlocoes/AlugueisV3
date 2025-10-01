@@ -8,7 +8,7 @@ from typing import List, Dict, Optional, Any
 from datetime import datetime, date, timedelta
 from decimal import Decimal
 
-from backend.models_final import (
+from models_final import (
     Participacao, HistoricoParticipacao, Imovel, Proprietario
 )
 
