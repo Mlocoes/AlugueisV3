@@ -5,7 +5,7 @@ Centraliza toda a lógica relacionada a participações e versionamento
 from sqlalchemy.orm import Session, joinedload
 from sqlalchemy import and_, desc, func
 from typing import List, Dict, Optional, Any
-from datetime import datetime, date
+from datetime import datetime, date, timedelta
 from decimal import Decimal
 
 from backend.models_final import (
@@ -325,3 +325,125 @@ class ParticipacaoService:
             return False, "Proprietários duplicados na lista"
         
         return True, None
+    
+    @staticmethod
+    def criar_nova_versao_global(
+        db: Session,
+        participacoes: List[Dict[str, Any]],
+        usuario_id: Optional[int] = None
+    ) -> tuple[bool, Optional[str], Optional[Dict[str, Any]]]:
+        """
+        Cria uma nova versão GLOBAL do conjunto de participações
+        (Similar ao sistema antigo com data_registro único)
+        
+        Args:
+            db: Sessão do banco de dados
+            participacoes: Lista com [{ imovel_id, proprietario_id, porcentagem }]
+            usuario_id: ID do usuário (para auditoria)
+        
+        Returns:
+            Tupla (sucesso, mensagem_erro, resultado)
+        """
+        try:
+            # Validar payload
+            if not isinstance(participacoes, list) or not participacoes:
+                return False, "Participações deve ser uma lista não vazia", None
+            
+            # Validar e normalizar dados
+            por_imovel: Dict[int, float] = {}
+            normalizados = []
+            
+            for idx, item in enumerate(participacoes):
+                # Validar IDs
+                try:
+                    imovel_id = int(item.get("imovel_id"))
+                    proprietario_id = int(item.get("proprietario_id"))
+                except (ValueError, TypeError):
+                    return False, f"Item #{idx+1}: imovel_id/proprietario_id inválido", None
+                
+                # Verificar existência (batch query seria melhor, mas mantemos compatibilidade)
+                if not db.query(Imovel.id).filter(Imovel.id == imovel_id).first():
+                    return False, f"Imóvel id={imovel_id} não encontrado", None
+                if not db.query(Proprietario.id).filter(Proprietario.id == proprietario_id).first():
+                    return False, f"Proprietário id={proprietario_id} não encontrado", None
+                
+                # Normalizar porcentagem
+                porcentagem = item.get("porcentagem")
+                if isinstance(porcentagem, str):
+                    porcentagem = porcentagem.strip().replace('%', '').replace(',', '.')
+                    try:
+                        porcentagem = float(porcentagem)
+                    except ValueError:
+                        return False, f"Item #{idx+1}: porcentagem inválida", None
+                
+                try:
+                    porcentagem = float(porcentagem)
+                except (ValueError, TypeError):
+                    return False, f"Item #{idx+1}: porcentagem inválida", None
+                
+                if porcentagem < 0:
+                    return False, f"Item #{idx+1}: porcentagem negativa", None
+                
+                # Acumular por imóvel (para validação futura se necessário)
+                por_imovel[imovel_id] = por_imovel.get(imovel_id, 0.0) + porcentagem
+                
+                normalizados.append({
+                    "imovel_id": imovel_id,
+                    "proprietario_id": proprietario_id,
+                    "porcentagem": porcentagem
+                })
+            
+            # Criar data_registro única
+            data_registro_novo = datetime.now()
+            tentativas = 0
+            while True:
+                existe = db.query(Participacao).filter(
+                    Participacao.data_registro == data_registro_novo
+                ).first()
+                if not existe:
+                    break
+                tentativas += 1
+                data_registro_novo = data_registro_novo + timedelta(microseconds=tentativas)
+            
+            # Criar novas participações
+            novas_participacoes = []
+            for item in normalizados:
+                participacao = Participacao(
+                    imovel_id=item["imovel_id"],
+                    proprietario_id=item["proprietario_id"],
+                    porcentagem=item["porcentagem"],
+                    data_registro=data_registro_novo
+                )
+                db.add(participacao)
+                novas_participacoes.append(participacao)
+            
+            db.flush()  # Para obter IDs
+            
+            # Salvar no histórico
+            versao_id = data_registro_novo.isoformat()
+            for participacao in novas_participacoes:
+                historico = HistoricoParticipacao(
+                    versao_id=versao_id,
+                    data_versao=data_registro_novo,
+                    porcentagem=participacao.porcentagem,
+                    data_registro_original=participacao.data_registro,
+                    imovel_id=participacao.imovel_id,
+                    proprietario_id=participacao.proprietario_id
+                )
+                db.add(historico)
+            
+            db.commit()
+            
+            resultado = {
+                "success": True,
+                "data_registro": data_registro_novo.isoformat(),
+                "quantidade": len(novas_participacoes),
+                "versao_id": versao_id
+            }
+            
+            return True, None, resultado
+            
+        except Exception as e:
+            db.rollback()
+            return False, f"Erro ao criar nova versão: {str(e)}", None
+

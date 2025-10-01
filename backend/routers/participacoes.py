@@ -187,107 +187,36 @@ def excluir_participacao(participacao_id: int, db: Session = Depends(get_db), cu
 
 @router.post("/nova-versao", response_model=Dict)
 def criar_nova_versao_participacoes(payload: Dict, db: Session = Depends(get_db), admin_user: Usuario = Depends(is_admin)):
-    """Criar uma NOVA VERSÃO do conjunto de participações.
+    """Criar uma NOVA VERSÃO do conjunto de participações - OPTIMIZED
+    
     Espera payload com a chave 'participacoes' contendo lista de itens:
     [{ imovel_id, proprietario_id, porcentagem }]
 
     Regras:
-    - Somatório de porcentagem por imóvel deve ser 100 (±0.001 de tolerância).
-    - Apenas administradores podem criar nova versão.
-    - Cria um novo data_registro para TODO o conjunto recebido (histórico mantido).
-    - Valida existência de imovel e proprietario.
+    - Apenas administradores podem criar nova versão
+    - Cria um novo data_registro para TODO o conjunto recebido
+    - Histórico mantido automaticamente
+    - Valida existência de imovel e proprietario
     """
     try:
         itens = payload.get("participacoes")
-        if not isinstance(itens, list) or not itens:
-            raise HTTPException(status_code=400, detail="Payload inválido: 'participacoes' deve ser uma lista não vazia")
-
-        # Validar IDs e normalizar porcentagens
-        por_imovel: Dict[int, float] = {}
-        normalizados = []
-        for idx, it in enumerate(itens):
-            try:
-                imovel_id = int(it.get("imovel_id"))
-                proprietario_id = int(it.get("proprietario_id"))
-            except Exception:
-                raise HTTPException(status_code=400, detail=f"Item #{idx+1}: imovel_id/proprietario_id inválido")
-
-            # Validar existência
-            if not db.query(Imovel.id).filter(Imovel.id == imovel_id).first():
-                raise HTTPException(status_code=404, detail=f"Imóvel id={imovel_id} não encontrado")
-            if not db.query(Proprietario.id).filter(Proprietario.id == proprietario_id).first():
-                raise HTTPException(status_code=404, detail=f"Proprietário id={proprietario_id} não encontrado")
-
-            porcentagem = it.get("porcentagem")
-            if isinstance(porcentagem, str):
-                p = porcentagem.strip().replace('%','').replace(',','.')
-                try:
-                    porcentagem = float(p)
-                except Exception:
-                    raise HTTPException(status_code=400, detail=f"Item #{idx+1}: porcentagem inválida")
-            try:
-                porcentagem = float(porcentagem)
-            except Exception:
-                raise HTTPException(status_code=400, detail=f"Item #{idx+1}: porcentagem inválida")
-            if porcentagem < 0:
-                raise HTTPException(status_code=400, detail=f"Item #{idx+1}: porcentagem negativa")
-
-            por_imovel[imovel_id] = por_imovel.get(imovel_id, 0.0) + porcentagem
-
-            normalizados.append({
-                "imovel_id": imovel_id,
-                "proprietario_id": proprietario_id,
-                "porcentagem": porcentagem
-            })
-
-    # Removida validação de soma de porcentagens por imóvel. Apenas grava os valores recebidos.
-
-        # Criar nova versão (data_registro único)
-        data_registro_novo = datetime.now()
-        # Garante que data_registro seja único
-        tentativas = 0
-        while True:
-            existe = db.query(Participacao).filter(Participacao.data_registro == data_registro_novo).first()
-            if not existe:
-                break
-            tentativas += 1
-            # Adiciona 1 microsegundo para evitar duplicidade
-            data_registro_novo = data_registro_novo + timedelta(microseconds=tentativas)
-
-        novas = []
-        for it in normalizados:
-            novas.append(Participacao(
-                imovel_id=it["imovel_id"],
-                proprietario_id=it["proprietario_id"],
-                porcentagem=it["porcentagem"],
-                data_registro=data_registro_novo
-            ))
-
-        for p in novas:
-            db.add(p)
-        db.commit()
-
-        # Salvar no histórico
-        versao_id = data_registro_novo.isoformat()
-        for p in novas:
-            db.add(HistoricoParticipacao(
-                versao_id=versao_id,
-                data_versao=data_registro_novo,
-                porcentagem=p.porcentagem,
-                data_registro_original=p.data_registro,
-                imovel_id=p.imovel_id,
-                proprietario_id=p.proprietario_id
-            ))
-        db.commit()
-
-        return {
-            "success": True,
-            "data_registro": data_registro_novo.isoformat(),
-            "quantidade": len(novas)
-        }
+        
+        # Usar service para criar nova versão
+        sucesso, erro, resultado = ParticipacaoService.criar_nova_versao_global(
+            db=db,
+            participacoes=itens,
+            usuario_id=admin_user.id if admin_user else None
+        )
+        
+        if not sucesso:
+            raise HTTPException(status_code=400, detail=erro)
+        
+        return resultado
+        
     except HTTPException:
         raise
     except Exception as e:
+        print(f"❌ Erro ao criar nova versão: {str(e)}")
         db.rollback()
         raise HTTPException(status_code=500, detail=f"Erro ao criar nova versão: {str(e)}")
 
@@ -298,29 +227,33 @@ def criar_nova_versao_participacoes(payload: Dict, db: Session = Depends(get_db)
 @router.get("/historico/versoes")
 async def get_versoes_historico(db: Session = Depends(get_db), current_user: Usuario = Depends(verify_token_flexible)):
     """
-    Retorna lista de todas as versões históricas disponíveis
+    Retorna lista de todas as versões históricas disponíveis - OPTIMIZED
     """
-    versoes = db.query(
-        HistoricoParticipacao.versao_id,
-        HistoricoParticipacao.data_versao,
-        func.count(HistoricoParticipacao.id).label('total_participacoes')
-    ).group_by(
-        HistoricoParticipacao.versao_id,
-        HistoricoParticipacao.data_versao
-    ).order_by(
-        HistoricoParticipacao.data_versao.desc()
-    ).all()
-    
-    return {
-        "success": True,
-        "data": [
-            {
-                "versao_id": v.versao_id,
-                "data_versao": v.data_versao.isoformat(),
-                "total_participacoes": v.total_participacoes
-            } for v in versoes
-        ]
-    }
+    try:
+        versoes = db.query(
+            HistoricoParticipacao.versao_id,
+            HistoricoParticipacao.data_versao,
+            func.count(HistoricoParticipacao.id).label('total_participacoes')
+        ).group_by(
+            HistoricoParticipacao.versao_id,
+            HistoricoParticipacao.data_versao
+        ).order_by(
+            HistoricoParticipacao.data_versao.desc()
+        ).all()
+        
+        return {
+            "success": True,
+            "data": [
+                {
+                    "versao_id": v.versao_id,
+                    "data_versao": v.data_versao.isoformat(),
+                    "total_participacoes": v.total_participacoes
+                } for v in versoes
+            ]
+        }
+    except Exception as e:
+        print(f"❌ Erro ao obter versões: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Erro ao obter versões: {str(e)}")
 
 @router.get("/historico/{versao_id}")
 async def get_historico_por_versao(
@@ -330,36 +263,62 @@ async def get_historico_por_versao(
     current_user: Usuario = Depends(verify_token_flexible)
 ):
     """
-    Retorna as participações de uma versão específica do histórico ou ativas
+    Retorna as participações de uma versão específica do histórico ou ativas - OPTIMIZED
     """
-    if versao_id == "ativo":
-        # Carregar participações ativas
-        query = db.query(Participacao).filter(Participacao.ativo == True)
-        if imovel_id:
-            query = query.filter(Participacao.imovel_id == imovel_id)
-        participacoes = query.order_by(Participacao.imovel_id, Participacao.proprietario_id).all()
-        if not participacoes:
-            raise HTTPException(status_code=404, detail="Nenhuma participação ativa encontrada")
-        return {
-            "success": True,
-            "versao_id": "ativo",
-            "data_versao": participacoes[0].data_registro.isoformat() if participacoes else None,
-            "data": [p.to_dict() for p in participacoes]
-        }
-    else:
-        # Carregar do histórico
-        query = db.query(HistoricoParticipacao).filter(HistoricoParticipacao.versao_id == versao_id)
-        if imovel_id:
-            query = query.filter(HistoricoParticipacao.imovel_id == imovel_id)
-        historico = query.order_by(HistoricoParticipacao.imovel_id, HistoricoParticipacao.proprietario_id).all()
-        if not historico:
-            raise HTTPException(status_code=404, detail=f"Versão {versao_id} não encontrada")
-        return {
-            "success": True,
-            "versao_id": versao_id,
-            "data_versao": historico[0].data_versao.isoformat(),
-            "data": [h.to_dict() for h in historico]
-        }
+    try:
+        if versao_id == "ativo":
+            # Carregar participações ativas com eager loading
+            query = db.query(Participacao).options(
+                joinedload(Participacao.imovel),
+                joinedload(Participacao.proprietario)
+            ).filter(Participacao.ativo == True)
+            
+            if imovel_id:
+                query = query.filter(Participacao.imovel_id == imovel_id)
+                
+            participacoes = query.order_by(
+                Participacao.imovel_id, 
+                Participacao.proprietario_id
+            ).all()
+            
+            if not participacoes:
+                raise HTTPException(status_code=404, detail="Nenhuma participação ativa encontrada")
+                
+            return {
+                "success": True,
+                "versao_id": "ativo",
+                "data_versao": participacoes[0].data_registro.isoformat() if participacoes else None,
+                "data": [p.to_dict() for p in participacoes]
+            }
+        else:
+            # Carregar do histórico com eager loading
+            query = db.query(HistoricoParticipacao).options(
+                joinedload(HistoricoParticipacao.imovel),
+                joinedload(HistoricoParticipacao.proprietario)
+            ).filter(HistoricoParticipacao.versao_id == versao_id)
+            
+            if imovel_id:
+                query = query.filter(HistoricoParticipacao.imovel_id == imovel_id)
+                
+            historico = query.order_by(
+                HistoricoParticipacao.imovel_id,
+                HistoricoParticipacao.proprietario_id
+            ).all()
+            
+            if not historico:
+                raise HTTPException(status_code=404, detail=f"Versão {versao_id} não encontrada")
+                
+            return {
+                "success": True,
+                "versao_id": versao_id,
+                "data_versao": historico[0].data_versao.isoformat(),
+                "data": [h.to_dict() for h in historico]
+            }
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"❌ Erro ao obter histórico: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Erro ao obter histórico: {str(e)}")
 
 @router.get("/historico/imovel/{imovel_id}")
 async def get_historico_por_imovel(
@@ -368,45 +327,55 @@ async def get_historico_por_imovel(
     current_user: Usuario = Depends(verify_token_flexible)
 ):
     """
-    Retorna todo o histórico de participações para um imóvel específico
+    Retorna todo o histórico de participações para um imóvel específico - OPTIMIZED
     """
-    # Verificar se imóvel existe
-    imovel = db.query(Imovel).filter(Imovel.id == imovel_id).first()
-    if not imovel:
-        raise HTTPException(status_code=404, detail="Imóvel não encontrado")
-    
-    # Buscar todas as versões históricas para este imóvel
-    versoes = db.query(
-        HistoricoParticipacao.versao_id,
-        HistoricoParticipacao.data_versao
-    ).filter(
-        HistoricoParticipacao.imovel_id == imovel_id
-    ).distinct().order_by(
-        HistoricoParticipacao.data_versao.desc()
-    ).all()
-    
-    historico_completo = []
-    for versao in versoes:
-        participacoes_versao = db.query(HistoricoParticipacao).filter(
-            HistoricoParticipacao.versao_id == versao.versao_id,
-            HistoricoParticipacao.imovel_id == imovel_id
-        ).order_by(HistoricoParticipacao.proprietario_id).all()
+    try:
+        # Verificar se imóvel existe
+        imovel = db.query(Imovel).filter(Imovel.id == imovel_id).first()
+        if not imovel:
+            raise HTTPException(status_code=404, detail="Imóvel não encontrado")
         
-        historico_completo.append({
-            "versao_id": versao.versao_id,
-            "data_versao": versao.data_versao.isoformat(),
-            "participacoes": [p.to_dict() for p in participacoes_versao]
-        })
-    
-    return {
-        "success": True,
-        "imovel": {
-            "id": imovel.id,
-            "nome": imovel.nome,
-            "endereco": imovel.endereco
-        },
-        "historico": historico_completo
-    }
+        # Buscar todas as versões históricas para este imóvel
+        versoes = db.query(
+            HistoricoParticipacao.versao_id,
+            HistoricoParticipacao.data_versao
+        ).filter(
+            HistoricoParticipacao.imovel_id == imovel_id
+        ).distinct().order_by(
+            HistoricoParticipacao.data_versao.desc()
+        ).all()
+        
+        # Buscar todas as participações de uma vez com eager loading
+        historico_completo = []
+        for versao in versoes:
+            participacoes_versao = db.query(HistoricoParticipacao).options(
+                joinedload(HistoricoParticipacao.proprietario),
+                joinedload(HistoricoParticipacao.imovel)
+            ).filter(
+                HistoricoParticipacao.versao_id == versao.versao_id,
+                HistoricoParticipacao.imovel_id == imovel_id
+            ).order_by(HistoricoParticipacao.proprietario_id).all()
+            
+            historico_completo.append({
+                "versao_id": versao.versao_id,
+                "data_versao": versao.data_versao.isoformat(),
+                "participacoes": [p.to_dict() for p in participacoes_versao]
+            })
+        
+        return {
+            "success": True,
+            "imovel": {
+                "id": imovel.id,
+                "nome": imovel.nome,
+                "endereco": imovel.endereco
+            },
+            "historico": historico_completo
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"❌ Erro ao obter histórico do imóvel: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Erro ao obter histórico do imóvel: {str(e)}")
 
 @router.post("/criar-versao")
 async def criar_nova_versao_participacoes(db: Session = Depends(get_db), current_user: Usuario = Depends(verify_token_flexible)):
