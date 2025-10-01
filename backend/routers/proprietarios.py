@@ -8,6 +8,7 @@ import io
 from models_final import Proprietario, Usuario, ProprietarioUpdateSchema, ProprietarioCreateSchema
 from config import get_db
 from .auth import verify_token_flexible, is_admin
+from services.proprietario_service import ProprietarioService
 
 router = APIRouter(prefix="/api/proprietarios", tags=["proprietarios"])
 
@@ -15,91 +16,125 @@ router = APIRouter(prefix="/api/proprietarios", tags=["proprietarios"])
 MAX_FILE_SIZE = 10 * 1024 * 1024
 
 # ===========================================
-# DEPENDENCIES
-# ===========================================
-
-def get_proprietario_or_404(proprietario_id: int, db: Session = Depends(get_db)) -> Proprietario:
-    """Dependency to get a proprietario by ID, raises 404 if not found."""
-    proprietario = db.query(Proprietario).filter(Proprietario.id == proprietario_id).first()
-    if not proprietario:
-        raise HTTPException(status_code=404, detail="Proprietário não encontrado")
-    return proprietario
-
-# ===========================================
 # ROUTES
 # ===========================================
 
 @router.get("/", response_model=List[Dict])
 def listar_proprietarios(db: Session = Depends(get_db), current_user: Usuario = Depends(verify_token_flexible)):
-    """Lista todos os proprietários em ordem alfabética."""
+    """Lista todos os proprietários em ordem alfabética - OPTIMIZED"""
     try:
-        proprietarios = db.query(Proprietario).order_by(Proprietario.nome).all()
+        proprietarios = ProprietarioService.listar_todos(db=db, ordem="nome")
         return [p.to_dict() for p in proprietarios]
-    except SQLAlchemyError as e:
-        traceback.print_exc()
-        raise HTTPException(status_code=500, detail=f"Erro de banco de dados ao listar proprietários.")
     except Exception as e:
+        print(f"❌ Erro ao listar proprietários: {str(e)}")
         traceback.print_exc()
-        raise HTTPException(status_code=500, detail=f"Erro inesperado ao listar proprietários.")
+        raise HTTPException(status_code=500, detail="Erro ao listar proprietários")
 
 @router.post("/", response_model=Dict, status_code=201)
 def criar_proprietario(dados: ProprietarioCreateSchema, db: Session = Depends(get_db), current_user: Usuario = Depends(is_admin)):
-    """Cria um novo proprietário."""
+    """Cria um novo proprietário - OPTIMIZED"""
     try:
-        novo_proprietario = Proprietario(**dados.dict())
-        db.add(novo_proprietario)
-        db.commit()
-        db.refresh(novo_proprietario)
-        return novo_proprietario.to_dict()
-    except SQLAlchemyError as e:
-        db.rollback()
-        traceback.print_exc()
-        raise HTTPException(status_code=500, detail="Erro de banco de dados ao criar proprietário.")
+        # Validar dados
+        valido, erro = ProprietarioService.validar_dados(dados.dict())
+        if not valido:
+            raise HTTPException(status_code=400, detail=erro)
+        
+        # Criar usando service
+        sucesso, erro, proprietario = ProprietarioService.criar(db=db, dados=dados.dict())
+        
+        if not sucesso:
+            raise HTTPException(status_code=400, detail=erro)
+        
+        return proprietario.to_dict()
+        
+    except HTTPException:
+        raise
     except Exception as e:
-        db.rollback()
+        print(f"❌ Erro ao criar proprietário: {str(e)}")
         traceback.print_exc()
-        raise HTTPException(status_code=500, detail=f"Erro interno ao criar proprietário.")
+        db.rollback()
+        raise HTTPException(status_code=500, detail="Erro interno ao criar proprietário")
 
 @router.get("/{proprietario_id}", response_model=Dict)
-def obter_proprietario(proprietario: Proprietario = Depends(get_proprietario_or_404), current_user: Usuario = Depends(verify_token_flexible)):
-    """Obtém um proprietário específico pelo seu ID."""
-    return proprietario.to_dict()
+def obter_proprietario(proprietario_id: int, db: Session = Depends(get_db), current_user: Usuario = Depends(verify_token_flexible)):
+    """Obtém um proprietário específico pelo seu ID - OPTIMIZED"""
+    try:
+        proprietario = ProprietarioService.buscar_por_id(
+            db=db,
+            proprietario_id=proprietario_id,
+            incluir_participacoes=False
+        )
+        
+        if not proprietario:
+            raise HTTPException(status_code=404, detail="Proprietário não encontrado")
+        
+        return proprietario.to_dict()
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"❌ Erro ao obter proprietário: {str(e)}")
+        raise HTTPException(status_code=500, detail="Erro ao obter proprietário")
 
 @router.put("/{proprietario_id}", response_model=Dict)
-def atualizar_proprietario(dados: ProprietarioUpdateSchema, proprietario: Proprietario = Depends(get_proprietario_or_404), db: Session = Depends(get_db), current_user: Usuario = Depends(is_admin)):
-    """Atualiza os dados de um proprietário existente."""
+def atualizar_proprietario(
+    proprietario_id: int,
+    dados: ProprietarioUpdateSchema,
+    db: Session = Depends(get_db),
+    current_user: Usuario = Depends(is_admin)
+):
+    """Atualiza os dados de um proprietário existente - OPTIMIZED"""
     try:
+        # Atualizar usando service
         update_data = dados.dict(exclude_unset=True)
-        for field, value in update_data.items():
-            setattr(proprietario, field, value)
-
-        db.commit()
-        db.refresh(proprietario)
+        sucesso, erro, proprietario = ProprietarioService.atualizar(
+            db=db,
+            proprietario_id=proprietario_id,
+            dados=update_data
+        )
+        
+        if not sucesso:
+            if "não encontrado" in erro:
+                raise HTTPException(status_code=404, detail=erro)
+            raise HTTPException(status_code=400, detail=erro)
+        
         return proprietario.to_dict()
-    except SQLAlchemyError as e:
-        db.rollback()
-        traceback.print_exc()
-        raise HTTPException(status_code=500, detail="Erro de banco de dados ao atualizar proprietário.")
+        
+    except HTTPException:
+        raise
     except Exception as e:
-        db.rollback()
+        print(f"❌ Erro ao atualizar proprietário: {str(e)}")
         traceback.print_exc()
-        raise HTTPException(status_code=500, detail="Erro interno ao atualizar proprietário.")
+        db.rollback()
+        raise HTTPException(status_code=500, detail="Erro interno ao atualizar proprietário")
 
 
 @router.delete("/{proprietario_id}")
-def excluir_proprietario(proprietario: Proprietario = Depends(get_proprietario_or_404), db: Session = Depends(get_db), current_user: Usuario = Depends(is_admin)):
-    """Exclui um proprietário. A exclusão falhará se houver aluguéis ou participações associadas."""
+def excluir_proprietario(
+    proprietario_id: int,
+    db: Session = Depends(get_db),
+    current_user: Usuario = Depends(is_admin)
+):
+    """Exclui um proprietário - OPTIMIZED
+    A exclusão falhará se houver aluguéis ou participações associadas.
+    """
     try:
-        db.delete(proprietario)
-        db.commit()
-        return {"mensagem": "Proprietário excluído com sucesso"}
-    except SQLAlchemyError as e:
-        db.rollback()
-        if "violates foreign key constraint" in str(e).lower():
-            raise HTTPException(status_code=400, detail="Não é possível excluir o proprietário. Existem dependências associadas.")
-        traceback.print_exc()
-        raise HTTPException(status_code=500, detail="Erro de banco de dados ao excluir proprietário.")
+        # Excluir usando service
+        sucesso, erro = ProprietarioService.excluir(db=db, proprietario_id=proprietario_id)
+        
+        if not sucesso:
+            if "não encontrado" in erro:
+                raise HTTPException(status_code=404, detail=erro)
+            if "dependências" in erro or "foreign key" in erro.lower():
+                raise HTTPException(status_code=400, detail=erro)
+            raise HTTPException(status_code=400, detail=erro)
+        
+        return {"success": True, "mensagem": "Proprietário excluído com sucesso"}
+        
+    except HTTPException:
+        raise
     except Exception as e:
-        db.rollback()
+        print(f"❌ Erro ao excluir proprietário: {str(e)}")
         traceback.print_exc()
-        raise HTTPException(status_code=500, detail="Erro interno ao excluir proprietário.")
+        db.rollback()
+        raise HTTPException(status_code=500, detail="Erro interno ao excluir proprietário")
