@@ -111,8 +111,12 @@ class ImovelService:
             # Validar dados
             ImovelService.validar_dados(dados)
             
+            # Filtrar apenas campos válidos do modelo
+            campos_modelo = [c.key for c in Imovel.__table__.columns]
+            dados_filtrados = {k: v for k, v in dados.items() if k in campos_modelo}
+            
             # Criar novo imóvel
-            novo_imovel = Imovel(**dados)
+            novo_imovel = Imovel(**dados_filtrados)
             
             db.add(novo_imovel)
             db.commit()
