@@ -33,12 +33,40 @@ class ModalManager {
         }
     }
 
-    show() { // Add a generic show method to simplify calls from modules
-        this.abrirModalCadastro(); // Assuming show() means show the cadastro modal
+    show(modalId) { 
+        // If modalId is provided, show that specific modal
+        if (modalId) {
+            const modalEl = document.getElementById(modalId);
+            if (modalEl) {
+                const modal = new bootstrap.Modal(modalEl);
+                modal.show();
+                console.log(`[ModalManager] Showing modal: ${modalId}`);
+            } else {
+                console.warn(`[ModalManager] Modal ${modalId} not found`);
+            }
+        } else {
+            // Default behavior: show cadastro modal
+            this.abrirModalCadastro();
+        }
     }
 
-    hide() { // Add a generic hide method
-        this.fecharModalCadastro(); // Assuming hide() means hide the cadastro modal
+    hide(modalId) { 
+        // If modalId is provided, hide that specific modal
+        if (modalId) {
+            const modalEl = document.getElementById(modalId);
+            if (modalEl) {
+                const modal = bootstrap.Modal.getInstance(modalEl);
+                if (modal) {
+                    modal.hide();
+                    console.log(`[ModalManager] Hiding modal: ${modalId}`);
+                }
+            } else {
+                console.warn(`[ModalManager] Modal ${modalId} not found`);
+            }
+        } else {
+            // Default behavior: hide cadastro modal
+            this.fecharModalCadastro();
+        }
     }
 
     abrirModalCadastro() {
