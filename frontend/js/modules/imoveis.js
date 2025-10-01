@@ -180,7 +180,6 @@ class ImoveisModule {
         const gridConfig = {
             columns: columns,
             data: tableData,
-            container: this.container.parentElement, // Usar parent para reemplazar tbody
             sortable: true,
             searchable: true,
             searchPlaceholder: 'Buscar por nome, endereço, tipo...',
@@ -200,9 +199,10 @@ class ImoveisModule {
             }
         };
 
-        // Crear o actualizar GridComponent
+        // Crear o actualizar GridComponent con el ID del container (string)
+        const containerId = 'imoveis-table-body';
         if (!this.gridComponent) {
-            this.gridComponent = new GridComponent(gridConfig);
+            this.gridComponent = new GridComponent(containerId, gridConfig);
         } else {
             this.gridComponent.updateConfig(gridConfig);
         }

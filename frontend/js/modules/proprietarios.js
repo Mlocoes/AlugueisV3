@@ -223,8 +223,8 @@ class ProprietariosModule {
             this.grid.destroy();
         }
 
-        // Criar novo grid
-        this.grid = new GridComponent('proprietarios-container', gridConfig);
+        // Criar novo grid com o ID correto do tbody
+        this.grid = new GridComponent('proprietarios-table-body', gridConfig);
     }
 
     buildColumns() {
