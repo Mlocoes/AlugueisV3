@@ -27,17 +27,17 @@ class ProprietariosModule {
     }
 
     load() {
-        // Identificar container
+        // Identificar container - usar tbody para desktop
         this.container = this.isMobile
             ? document.getElementById('proprietarios-list-mobile')
-            : document.getElementById('proprietarios-container');
+            : document.getElementById('proprietarios-table-body');
 
         // Retry se não encontrar (timing issue)
         if (!this.container) {
             setTimeout(() => {
                 this.container = this.isMobile
                     ? document.getElementById('proprietarios-list-mobile')
-                    : document.getElementById('proprietarios-container');
+                    : document.getElementById('proprietarios-table-body');
                 
                 if (this.container) {
                     this.init();
