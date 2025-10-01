@@ -34,12 +34,12 @@ def listar_participacoes(data_registro: str = None, db: Session = Depends(get_db
             except Exception:
                 raise HTTPException(status_code=400, detail=f"Formato de data_registro inválido: {data_registro}")
             
-            # Filtrar por data específica
+            # Filtrar por timestamp EXACTO (não apenas a data)
             query = db.query(Participacao).options(
                 joinedload(Participacao.imovel),
                 joinedload(Participacao.proprietario)
             ).filter(
-                func.date(Participacao.data_registro) == dt.date()
+                Participacao.data_registro == dt
             )
         else:
             # Buscar conjunto mais recente com eager loading
