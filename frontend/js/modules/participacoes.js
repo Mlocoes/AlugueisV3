@@ -436,29 +436,68 @@ class ParticipacoesModule {
 
         // Event listener para salvar
         document.getElementById('save-edit-participacao').addEventListener('click', async () => {
-            const updatedParticipacoes = participacoes.map(p => {
+            // Recopilar datos modificados para este imóvel
+            const updatedForImovel = participacoes.map(p => {
                 const input = modalInstance.querySelector(`#edit-prop-${p.proprietario.id}`);
                 return {
                     imovel_id: imovel.id,
                     proprietario_id: p.proprietario.id,
-                    porcentagem: parseFloat(input.value) || 0,
-                    versao_id: versaoId
+                    porcentagem: parseFloat(input.value) || 0
                 };
             });
 
-            // Validar total
-            const total = updatedParticipacoes.reduce((sum, p) => sum + p.porcentagem, 0);
-            if (Math.abs(100 - total) > 0.01) {
+            // Validar total para este imóvel
+            const totalImovel = updatedForImovel.reduce((sum, p) => sum + p.porcentagem, 0);
+            if (Math.abs(100 - totalImovel) > 0.01) {
                 this.uiManager.showError("A soma das porcentagens deve ser 100.");
                 return;
             }
 
+            // Construir lista completa de participações: 
+            // - Mantener todas las participaciones existentes de otros imóveis
+            // - Reemplazar solo las del imóvel editado
+            const allParticipacoes = [];
+            
+            // Determinar versão target
+            const targetVersaoId = (this.selectedData === 'ativo' || this.selectedData === null) 
+                ? null 
+                : this.selectedData;
+
+            // Agregar participações de TODOS los otros imóveis (sin cambios)
+            this.imoveis.forEach(im => {
+                if (im.id !== imovel.id) {
+                    // Para otros imóveis, mantener sus participações actuales
+                    this.proprietarios.forEach(prop => {
+                        const part = this.participacoes.find(p => 
+                            p.imovel_id === im.id && 
+                            p.proprietario_id === prop.id &&
+                            (p.versao_id || null) === targetVersaoId
+                        );
+                        
+                        if (part) {
+                            const porcentagem = part.porcentagem < 1 
+                                ? part.porcentagem * 100 
+                                : part.porcentagem;
+                            
+                            allParticipacoes.push({
+                                imovel_id: im.id,
+                                proprietario_id: prop.id,
+                                porcentagem: porcentagem
+                            });
+                        }
+                    });
+                }
+            });
+
+            // Agregar las participações editadas del imóvel actual
+            allParticipacoes.push(...updatedForImovel);
+
             try {
                 this.uiManager.showLoading('Salvando participações...');
                 
-                // Usar o mesmo endpoint de nova versão (cria uma nova versão com os dados atualizados)
+                // Enviar TODAS las participaciones al endpoint
                 await this.apiService.createNovaVersaoParticipacoes({ 
-                    participacoes: updatedParticipacoes 
+                    participacoes: allParticipacoes 
                 });
                 
                 // Invalidar cache
