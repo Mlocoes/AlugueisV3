@@ -9,6 +9,7 @@ from pydantic import BaseModel
 
 from config import get_db
 from models_final import *
+from .auth import verify_token_flexible
 
 router = APIRouter(prefix="/api/reportes", tags=["reportes"])
 
@@ -39,7 +40,8 @@ async def get_reportes_info():
 
 @router.get("/anos-disponiveis")
 async def get_anos_disponiveis(
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: Usuario = Depends(verify_token_flexible)
 ):
     """
     Obtém lista de anos disponíveis nos dados
@@ -60,7 +62,8 @@ async def get_resumen_mensual(
     ano: Optional[int] = None,
     proprietario_id: Optional[int] = None,
     nome_proprietario: Optional[str] = None,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: Usuario = Depends(verify_token_flexible)
 ):
     """
     Obtém resumo mensal de aluguéis agrupado por proprietário
