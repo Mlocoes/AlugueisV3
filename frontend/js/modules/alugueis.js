@@ -1,14 +1,35 @@
+/**
+ * Módulo de Aluguéis - Refactorizado com GridComponent
+ * 
+ * Melhorias:
+ * - Uso de GridComponent para renderização
+ * - Cache inteligente de proprietários e imóveis
+ * - Código mais limpo e manutenível
+ * - Performance melhorada
+ * 
+ * @version 2.0.0
+ */
+
 class AlugueisModule {
     constructor() {
         this.apiService = window.apiService;
         this.uiManager = window.uiManager;
+        this.cacheService = window.cacheService;
+        
+        // Dados
         this.matriz = [];
         this.proprietarios = [];
         this.imoveis = [];
+        
+        // Estado
         this.initialized = false;
         this.anosDisponiveis = [];
         this.anoSelecionado = null;
         this.mesSelecionado = null;
+        
+        // UI
+        this.container = null;
+        this.grid = null;
         this.isMobile = window.deviceManager && window.deviceManager.deviceType === 'mobile';
     }
 
@@ -22,15 +43,17 @@ class AlugueisModule {
     init() {
         if (this.initialized) return;
 
+        // Identificar container
         this.container = this.isMobile
             ? document.getElementById('alugueis-list-mobile')
-            : document.getElementById('alugueis-matrix-body');
+            : document.getElementById('alugueis-matrix-container');
 
         if (!this.container) {
             console.warn("Container for AlugueisModule not found.");
             return;
         }
 
+        // Setup dropdowns
         const suffix = this.isMobile ? '-mobile' : '';
         this.anoSelect = document.getElementById(`alugueis-ano-select${suffix}`);
         this.mesSelect = document.getElementById(`alugueis-mes-select${suffix}`);
@@ -41,7 +64,9 @@ class AlugueisModule {
 
     async loadAnosDisponiveis() {
         try {
-            const resp = await this.apiService.getAnosDisponiveisAlugueis();
+            // Usar cache para anos disponíveis
+            const resp = await this.apiService.getAnosDisponiveisAlugueis(true);
+            
             if (resp && resp.anos && resp.anos.length > 0) {
                 this.anosDisponiveis = resp.anos.sort((a, b) => b - a);
                 this.anoSelecionado = this.anosDisponiveis[0];
@@ -49,21 +74,27 @@ class AlugueisModule {
                 this.anosDisponiveis = [new Date().getFullYear()];
                 this.anoSelecionado = this.anosDisponiveis[0];
             }
+            
             this.populateAnoDropdown();
             await this.loadMesReciente();
         } catch (error) {
             console.error('Erro ao carregar anos:', error);
+            this.anosDisponiveis = [new Date().getFullYear()];
+            this.anoSelecionado = this.anosDisponiveis[0];
+            this.populateAnoDropdown();
         }
     }
 
     async loadMesReciente() {
         try {
             const ultimoPeriodo = await this.apiService.get('/api/alugueis/ultimo-periodo/');
+            
             if (ultimoPeriodo?.success && ultimoPeriodo?.data?.mes) {
                 this.mesSelecionado = ultimoPeriodo.data.mes;
             } else {
                 this.mesSelecionado = 'todos';
             }
+            
             this.populateMesDropdown();
             this.loadMatrizAlugueis(this.anoSelecionado, this.mesSelecionado);
         } catch (error) {
@@ -75,6 +106,7 @@ class AlugueisModule {
 
     populateAnoDropdown() {
         if (!this.anoSelect) return;
+        
         this.anoSelect.innerHTML = '';
         this.anosDisponiveis.forEach(ano => {
             const option = new Option(ano, ano);
@@ -85,12 +117,17 @@ class AlugueisModule {
 
     populateMesDropdown() {
         if (!this.mesSelect) return;
+        
         this.mesSelect.innerHTML = '';
         this.mesSelect.add(new Option('Todos os meses', 'todos'));
-        const meses = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
+        
+        const meses = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", 
+                       "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
+        
         meses.forEach((nome, index) => {
             this.mesSelect.add(new Option(nome, index + 1));
         });
+        
         this.mesSelect.value = this.mesSelecionado;
         this.mesSelect.disabled = false;
     }
@@ -102,6 +139,7 @@ class AlugueisModule {
                 this.loadMatrizAlugueis(this.anoSelecionado, this.mesSelecionado);
             });
         }
+        
         if (this.mesSelect) {
             this.mesSelect.addEventListener('change', (e) => {
                 this.mesSelecionado = e.target.value === 'todos' ? 'todos' : parseInt(e.target.value);
@@ -112,26 +150,38 @@ class AlugueisModule {
 
     async loadMatrizAlugueis(ano, mes) {
         if (!ano) return;
+        
         try {
             this.uiManager.showLoading('Carregando aluguéis...');
+            
+            // Endpoint
             const endpoint = (mes === 'todos' || !mes)
                 ? `/api/alugueis/distribuicao-todos-meses/?ano=${ano}`
                 : `/api/alugueis/distribuicao-matriz/?ano=${ano}&mes=${mes}`;
             
-            const resp = await this.apiService.get(endpoint);
+            // Carregar dados em paralelo com cache
+            const [matrizResp, proprietarios, imoveis] = await Promise.all([
+                this.apiService.get(endpoint),
+                this.cacheService ? this.apiService.getProprietarios(true) : this.apiService.getProprietarios(false),
+                this.cacheService ? this.apiService.getImoveis(true) : this.apiService.getImoveis(false)
+            ]);
             
-            if (resp.success && resp.data) {
-                this.matriz = resp.data.matriz || [];
-                this.proprietarios = resp.data.proprietarios || [];
-                this.imoveis = resp.data.imoveis || [];
+            // Processar matriz
+            if (matrizResp.success && matrizResp.data) {
+                this.matriz = matrizResp.data.matriz || [];
+                // Se a resposta incluir proprietarios/imoveis, usar esses (mais frescos)
+                this.proprietarios = matrizResp.data.proprietarios || proprietarios || [];
+                this.imoveis = matrizResp.data.imoveis || imoveis || [];
             } else {
                 this.matriz = [];
-                this.proprietarios = [];
-                this.imoveis = [];
+                this.proprietarios = proprietarios || [];
+                this.imoveis = imoveis || [];
             }
+            
             this.render();
         } catch (error) {
             this.uiManager.showError('Erro ao carregar aluguéis: ' + error.message);
+            console.error('Erro ao carregar matriz:', error);
         } finally {
             this.uiManager.hideLoading();
         }
@@ -140,43 +190,53 @@ class AlugueisModule {
     render() {
         if (!this.container) return;
 
-        if (this.isMobile) {
-            this.renderMobileCards();
-        } else {
-            this.renderDesktopTable();
-        }
-    }
-
-    renderMobileCards() {
+        // Verificar se temos dados
         if (this.imoveis.length === 0) {
-            this.container.innerHTML = `<div class="text-center p-4">Nenhum aluguel encontrado para o período.</div>`;
+            this.container.innerHTML = '<div class="alert alert-info">Nenhum aluguel encontrado para o período selecionado.</div>';
             return;
         }
 
-        const cardsHtml = this.imoveis.map(imovel => {
+        if (this.isMobile) {
+            this.renderMobile();
+        } else {
+            this.renderDesktop();
+        }
+    }
+
+    renderMobile() {
+        // Preparar dados para cards mobile
+        const cardData = this.imoveis.map(imovel => {
             const alugueisDoImovel = this.matriz
-                .map(linha => ({
-                    proprietario: this.proprietarios.find(p => p.proprietario_id === linha.proprietario_id),
-                    valor: linha.valores[imovel.nome] || 0
-                }))
+                .map(linha => {
+                    const proprietario = this.proprietarios.find(p => p.proprietario_id === linha.proprietario_id);
+                    const valor = linha.valores[imovel.nome] || 0;
+                    return { proprietario, valor };
+                })
                 .filter(item => item.valor > 0);
 
-            if (alugueisDoImovel.length === 0) return '';
+            const totalImovel = alugueisDoImovel.reduce((sum, item) => sum + item.valor, 0);
 
-            const alugueisHtml = alugueisDoImovel.map(item => `
+            return {
+                imovel: imovel.nome,
+                alugueis: alugueisDoImovel,
+                total: totalImovel
+            };
+        }).filter(item => item.total > 0);
+
+        // Renderizar cards manualmente (mobile cards são customizados)
+        const cardsHtml = cardData.map(item => {
+            const alugueisHtml = item.alugueis.map(a => `
                 <li class="list-group-item d-flex justify-content-between align-items-center">
-                    ${item.proprietario ? SecurityUtils.escapeHtml(item.proprietario.nome) : 'Desconhecido'}
-                    <span class="badge bg-success rounded-pill">R$ ${item.valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
+                    ${a.proprietario ? SecurityUtils.escapeHtml(a.proprietario.nome) : 'Desconhecido'}
+                    <span class="badge bg-success rounded-pill">R$ ${a.valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
                 </li>
             `).join('');
-
-            const totalImovel = alugueisDoImovel.reduce((sum, item) => sum + item.valor, 0);
 
             return `
                 <div class="card mobile-card mb-3 shadow-sm">
                     <div class="card-header bg-light d-flex justify-content-between align-items-center">
-                        <h5 class="card-title mb-0">${SecurityUtils.escapeHtml(imovel.nome)}</h5>
-                        <strong class="text-primary">R$ ${totalImovel.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</strong>
+                        <h5 class="card-title mb-0">${SecurityUtils.escapeHtml(item.imovel)}</h5>
+                        <strong class="text-primary">R$ ${item.total.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</strong>
                     </div>
                     <ul class="list-group list-group-flush">
                         ${alugueisHtml}
@@ -185,58 +245,150 @@ class AlugueisModule {
             `;
         }).join('');
 
-        this.container.innerHTML = cardsHtml || `<div class="text-center p-4">Nenhum aluguel encontrado para o período.</div>`;
+        this.container.innerHTML = cardsHtml || '<div class="alert alert-info">Nenhum aluguel encontrado.</div>';
     }
 
-    renderDesktopTable() {
-        const tableHead = document.getElementById('alugueis-matrix-head');
-        const tableBody = this.container;
+    renderDesktop() {
+        // Preparar dados no formato tabular para GridComponent
+        const tableData = this.buildTableData();
         
-        if (!tableHead || !tableBody) return;
+        // Preparar colunas dinâmicas
+        const columns = this.buildColumns();
 
-        if (this.imoveis.length === 0 || this.proprietarios.length === 0) {
-            tableHead.innerHTML = '';
-            tableBody.innerHTML = '<tr><td colspan="1" class="text-center">Nenhum aluguel encontrado.</td></tr>';
-            return;
+        // Configuração do GridComponent
+        const gridConfig = {
+            columns: columns,
+            data: tableData,
+            responsive: {
+                mobile: 'cards',
+                desktop: 'table'
+            },
+            search: {
+                enabled: false  // Desabilitado para matriz de aluguéis
+            },
+            sort: {
+                enabled: false  // Desabilitado para matriz
+            },
+            pagination: {
+                enabled: false  // Não precisamos para matriz
+            },
+            emptyMessage: 'Nenhum aluguel encontrado para o período.'
+        };
+
+        // Destruir grid anterior se existir
+        if (this.grid) {
+            this.grid.destroy();
         }
 
-        const meses = ["", "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
-        const tituloPeriodo = this.mesSelecionado && this.mesSelecionado !== 'todos'
-            ? `${meses[this.mesSelecionado]} ${this.anoSelecionado}`
-            : `Ano ${this.anoSelecionado}`;
+        // Criar novo grid
+        this.grid = new GridComponent('alugueis-matrix-container', gridConfig);
+    }
 
-        let headHtml = `<tr><th style="width: 150px;">Imóvel (${tituloPeriodo})</th>`;
-        this.proprietarios.forEach(prop => headHtml += `<th>${SecurityUtils.escapeHtml(prop.nome)}</th>`);
-        headHtml += '<th>Total</th></tr>';
-        tableHead.innerHTML = headHtml;
+    buildTableData() {
+        // Construir linhas da tabela (uma por imóvel + linha de totais)
+        const rows = [];
 
-        tableBody.innerHTML = '';
-
+        // Linhas de imóveis
         this.imoveis.forEach(imovel => {
-            let rowHtml = `<tr><td><strong>${SecurityUtils.escapeHtml(imovel.nome)}</strong></td>`;
+            const row = {
+                imovel: imovel.nome,
+                isTotal: false
+            };
+
             let totalImovel = 0;
+
             this.proprietarios.forEach(prop => {
                 const linha = this.matriz.find(l => l.proprietario_id === prop.proprietario_id);
                 const valor = (linha && linha.valores[imovel.nome]) || 0;
+                row[`prop_${prop.proprietario_id}`] = valor;
                 totalImovel += valor;
-                rowHtml += `<td class="text-end">${valor > 0 ? `R$ ${valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}` : '-'}</td>`;
             });
-            rowHtml += `<td class="text-end"><strong>R$ ${totalImovel.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</strong></td></tr>`;
-            tableBody.innerHTML += rowHtml;
+
+            row.total = totalImovel;
+            rows.push(row);
         });
 
-        let totalRowHtml = '<tr class="table-secondary"><td class="fw-bold">Total por Proprietário</td>';
+        // Linha de totais
+        const totalRow = {
+            imovel: 'Total por Proprietário',
+            isTotal: true
+        };
+
         let granTotal = 0;
+
         this.proprietarios.forEach(prop => {
             const totalProp = this.matriz
                 .filter(l => l.proprietario_id === prop.proprietario_id)
                 .reduce((sum, l) => sum + Object.values(l.valores).reduce((s, v) => s + (v || 0), 0), 0);
+            
+            totalRow[`prop_${prop.proprietario_id}`] = totalProp;
             granTotal += totalProp;
-            totalRowHtml += `<td class="text-end fw-bold">R$ ${totalProp.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>`;
         });
-        totalRowHtml += `<td class="text-end fw-bold text-primary">R$ ${granTotal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td></tr>`;
-        tableBody.innerHTML += totalRowHtml;
+
+        totalRow.total = granTotal;
+        rows.push(totalRow);
+
+        return rows;
+    }
+
+    buildColumns() {
+        const meses = ["", "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", 
+                       "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
+        
+        const tituloPeriodo = this.mesSelecionado && this.mesSelecionado !== 'todos'
+            ? `${meses[this.mesSelecionado]} ${this.anoSelecionado}`
+            : `Ano ${this.anoSelecionado}`;
+
+        const columns = [
+            {
+                key: 'imovel',
+                label: `Imóvel (${tituloPeriodo})`,
+                width: '200px',
+                formatter: (value, row) => {
+                    return row.isTotal 
+                        ? `<strong>${SecurityUtils.escapeHtml(value)}</strong>` 
+                        : SecurityUtils.escapeHtml(value);
+                }
+            }
+        ];
+
+        // Colunas de proprietários
+        this.proprietarios.forEach(prop => {
+            columns.push({
+                key: `prop_${prop.proprietario_id}`,
+                label: prop.nome,
+                align: 'right',
+                type: 'currency',
+                formatter: (value, row) => {
+                    if (value === 0 || value === null) return '-';
+                    const formatted = `R$ ${value.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
+                    return row.isTotal ? `<strong>${formatted}</strong>` : formatted;
+                }
+            });
+        });
+
+        // Coluna de total
+        columns.push({
+            key: 'total',
+            label: 'Total',
+            align: 'right',
+            type: 'currency',
+            formatter: (value, row) => {
+                const formatted = `R$ ${value.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
+                return row.isTotal 
+                    ? `<strong class="text-primary">${formatted}</strong>` 
+                    : `<strong>${formatted}</strong>`;
+            }
+        });
+
+        return columns;
+    }
+
+    applyPermissions(isAdmin) {
+        // Implementar lógica de permissões se necessário
+        // Por enquanto, aluguéis são read-only
     }
 }
 
+// Exportar instância global
 window.alugueisModule = new AlugueisModule();

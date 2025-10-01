@@ -1,11 +1,21 @@
+/**
+ * Módulo Imóveis - Versión Refactorizada
+ * Utiliza GridComponent para renderización de tabla desktop
+ * Utiliza CacheService para optimizar llamadas API
+ * @version 2.0.0
+ */
 class ImoveisModule {
     constructor() {
         this.apiService = window.apiService;
         this.uiManager = window.uiManager;
+        this.cacheService = window.cacheService;
         this.modalManager = null;
         this.imoveis = [];
         this.currentEditId = null;
         this.isMobile = window.deviceManager && window.deviceManager.deviceType === 'mobile';
+        
+        // GridComponent instance
+        this.gridComponent = null;
     }
 
     load() {
@@ -80,26 +90,36 @@ class ImoveisModule {
 
     bindContainerEvents() {
         if (!this.container) return;
-        this.container.addEventListener('click', e => {
-            const editButton = e.target.closest('.edit-btn');
-            const deleteButton = e.target.closest('.delete-btn');
+        
+        // Event delegation for mobile cards
+        if (this.isMobile) {
+            this.container.addEventListener('click', e => {
+                const editButton = e.target.closest('.edit-btn');
+                const deleteButton = e.target.closest('.delete-btn');
 
-            const itemElement = e.target.closest('[data-id]');
-            if (!itemElement) return;
+                const itemElement = e.target.closest('[data-id]');
+                if (!itemElement) return;
 
-            const id = parseInt(itemElement.dataset.id, 10);
+                const id = parseInt(itemElement.dataset.id, 10);
 
-            if (editButton) this.editImovel(id);
-            if (deleteButton) this.deleteImovel(id);
-        });
+                if (editButton) this.editImovel(id);
+                if (deleteButton) this.deleteImovel(id);
+            });
+        }
+        // Desktop: GridComponent handles click events via row actions
     }
 
+    /**
+     * Carga imóveis desde API con cache
+     */
     async loadImoveis() {
         const result = await this.handleApiCall(
-            () => this.apiService.getImoveis(),
+            // Usa cache por defecto (TTL: 5 minutos)
+            () => this.apiService.getImoveis(true),
             'Carregando imóveis...',
             'Erro ao carregar imóveis'
         );
+        
         if (result && Array.isArray(result)) {
             this.imoveis = result;
             this.render();
@@ -110,8 +130,12 @@ class ImoveisModule {
         }
     }
 
+    /**
+     * Renderiza tabla o cards según dispositivo
+     */
     render() {
         if (!this.container) return;
+        
         if (this.imoveis.length === 0) {
             this.container.innerHTML = this.isMobile
                 ? `<div class="text-center p-4">Nenhum imóvel encontrado.</div>`
@@ -120,16 +144,154 @@ class ImoveisModule {
         }
 
         if (this.isMobile) {
-            this.container.innerHTML = this.imoveis.map(imovel => this.renderMobileCard(imovel)).join('');
+            this.renderMobile();
         } else {
-            this.container.innerHTML = this.imoveis.map(imovel => this.renderImovelRow(imovel)).join('');
+            this.renderDesktop();
         }
     }
 
+    /**
+     * Renderización DESKTOP con GridComponent
+     */
+    renderDesktop() {
+        const isAdmin = window.authService && window.authService.isAdmin();
+        
+        // Preparar datos para GridComponent
+        const tableData = this.buildTableData();
+        const columns = this.buildColumns();
+        
+        // Configurar acciones de fila
+        const rowActions = isAdmin ? [
+            {
+                icon: 'fas fa-edit',
+                label: 'Editar',
+                class: 'btn-outline-primary',
+                callback: (row) => this.editImovel(row.id)
+            },
+            {
+                icon: 'fas fa-trash',
+                label: 'Excluir',
+                class: 'btn-outline-danger',
+                callback: (row) => this.deleteImovel(row.id)
+            }
+        ] : [];
+
+        // Configuración del GridComponent
+        const gridConfig = {
+            columns: columns,
+            data: tableData,
+            container: this.container.parentElement, // Usar parent para reemplazar tbody
+            sortable: true,
+            searchable: true,
+            searchPlaceholder: 'Buscar por nome, endereço, tipo...',
+            pagination: true,
+            itemsPerPage: 20,
+            itemsPerPageOptions: [10, 20, 50, 100],
+            emptyMessage: 'Nenhum imóvel encontrado',
+            rowActions: rowActions,
+            responsive: {
+                enabled: true,
+                breakpoint: 768
+            },
+            classes: {
+                table: 'table table-hover',
+                headerCell: 'table-header-cell',
+                bodyCell: 'table-body-cell'
+            }
+        };
+
+        // Crear o actualizar GridComponent
+        if (!this.gridComponent) {
+            this.gridComponent = new GridComponent(gridConfig);
+        } else {
+            this.gridComponent.updateConfig(gridConfig);
+        }
+
+        this.gridComponent.render();
+    }
+
+    /**
+     * Transforma datos de API a formato de tabla
+     */
+    buildTableData() {
+        return this.imoveis.map(imovel => ({
+            id: imovel.id,
+            nome: imovel.nome || '',
+            tipo_imovel: imovel.tipo_imovel || 'Sem tipo',
+            endereco: imovel.endereco || '—',
+            area_total: imovel.area_total || '—',
+            valor_mercado: imovel.valor_mercado || 0,
+            valor_mercado_formatted: imovel.valor_mercado 
+                ? `R$ ${imovel.valor_mercado.toLocaleString('pt-BR')}` 
+                : '—',
+            alugado: imovel.alugado || false,
+            status_badge: imovel.alugado 
+                ? '<span class="badge bg-danger">Alugado</span>' 
+                : '<span class="badge bg-success">Disponível</span>'
+        }));
+    }
+
+    /**
+     * Define columnas para GridComponent
+     */
+    buildColumns() {
+        return [
+            {
+                key: 'nome',
+                label: 'Nome / Tipo',
+                sortable: true,
+                searchable: true,
+                render: (value, row) => `
+                    <strong>${this.sanitize(row.nome)}</strong>
+                    <br>
+                    <small class="text-muted">${this.sanitize(row.tipo_imovel)}</small>
+                `
+            },
+            {
+                key: 'endereco',
+                label: 'Endereço',
+                sortable: true,
+                searchable: true,
+                render: (value, row) => this.sanitize(value)
+            },
+            {
+                key: 'area_total',
+                label: 'Área (m²)',
+                sortable: true,
+                align: 'center',
+                render: (value, row) => {
+                    return value === '—' ? '—' : `${value} m²`;
+                }
+            },
+            {
+                key: 'valor_mercado',
+                label: 'Valor',
+                sortable: true,
+                align: 'right',
+                render: (value, row) => row.valor_mercado_formatted
+            },
+            {
+                key: 'alugado',
+                label: 'Status',
+                sortable: true,
+                align: 'center',
+                render: (value, row) => row.status_badge
+            }
+        ];
+    }
+
+    /**
+     * Renderización MOBILE con cards personalizados
+     */
+    renderMobile() {
+        this.container.innerHTML = this.imoveis.map(imovel => this.renderMobileCard(imovel)).join('');
+    }
+
     renderMobileCard(imovel) {
-        const sanitize = (str) => str ? String(str).replace(/[<>&"']/g, c => ({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;',"'":'&#39;','/':'&#x2F;'})[c]) : '';
         const dataIdAttribute = `data-id="${imovel.id}"`;
-        const statusAlugado = imovel.alugado ? '<span class="badge bg-danger">Alugado</span>' : '<span class="badge bg-success">Disponível</span>';
+        const statusAlugado = imovel.alugado 
+            ? '<span class="badge bg-danger">Alugado</span>' 
+            : '<span class="badge bg-success">Disponível</span>';
         const isAdmin = window.authService && window.authService.isAdmin();
         const disabledAttr = isAdmin ? '' : 'disabled';
 
@@ -138,16 +300,20 @@ class ImoveisModule {
                 <div class="card-body p-3">
                     <div class="d-flex justify-content-between align-items-start">
                         <div>
-                            <h5 class="card-title mb-1">${sanitize(imovel.nome)}</h5>
-                            <h6 class="card-subtitle mb-2 text-muted small">${sanitize(imovel.tipo_imovel) || 'Sem tipo'}</h6>
+                            <h5 class="card-title mb-1">${this.sanitize(imovel.nome)}</h5>
+                            <h6 class="card-subtitle mb-2 text-muted small">${this.sanitize(imovel.tipo_imovel) || 'Sem tipo'}</h6>
                         </div>
                         <div class="mobile-card-actions">
-                            <button class="btn btn-sm btn-outline-primary edit-btn" ${disabledAttr}><i class="fas fa-edit"></i></button>
-                            <button class="btn btn-sm btn-outline-danger delete-btn" ${disabledAttr}><i class="fas fa-trash"></i></button>
+                            <button class="btn btn-sm btn-outline-primary edit-btn" ${disabledAttr}>
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="btn btn-sm btn-outline-danger delete-btn" ${disabledAttr}>
+                                <i class="fas fa-trash"></i>
+                            </button>
                         </div>
                     </div>
                     <div class="card-text small">
-                        <p class="mb-1"><strong>Endereço:</strong> ${sanitize(imovel.endereco) || 'N/A'}</p>
+                        <p class="mb-1"><strong>Endereço:</strong> ${this.sanitize(imovel.endereco) || 'N/A'}</p>
                         <p class="mb-1"><strong>Valor:</strong> R$ ${imovel.valor_mercado ? imovel.valor_mercado.toLocaleString('pt-BR') : 'N/A'}</p>
                         <p class="mb-0"><strong>Status:</strong> ${statusAlugado}</p>
                     </div>
@@ -156,26 +322,19 @@ class ImoveisModule {
         `;
     }
 
-    renderImovelRow(imovel) {
-        const sanitize = (str) => str ? String(str).replace(/[<>&"']/g, c => ({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;',"'":'&#39;','/':'&#x2F;'})[c]) : '';
-        const dataIdAttribute = `data-id="${imovel.id}"`;
-        const statusAlugado = imovel.alugado ? '<span class="badge bg-danger">Alugado</span>' : '<span class="badge bg-success">Disponível</span>';
-        const isAdmin = window.authService && window.authService.isAdmin();
-        const disabledAttr = isAdmin ? '' : 'disabled';
-
-        return `
-            <tr ${dataIdAttribute}>
-                <td><strong>${sanitize(imovel.nome)}</strong><br><small class="text-muted">${sanitize(imovel.tipo_imovel) || 'Sem tipo'}</small></td>
-                <td>${sanitize(imovel.endereco)}</td>
-                <td>${imovel.area_total || '—'} m²</td>
-                <td>R$ ${imovel.valor_mercado ? imovel.valor_mercado.toLocaleString('pt-BR') : '—'}</td>
-                <td>${statusAlugado}</td>
-                <td class="text-center">
-                    <button class="btn btn-sm btn-outline-primary edit-btn me-2" ${disabledAttr}><i class="fas fa-edit"></i></button>
-                    <button class="btn btn-sm btn-outline-danger delete-btn" ${disabledAttr}><i class="fas fa-trash"></i></button>
-                </td>
-            </tr>
-        `;
+    /**
+     * Sanitiza strings para prevenir XSS
+     */
+    sanitize(str) {
+        if (!str) return '';
+        return String(str).replace(/[<>&"']/g, c => ({
+            '<': '&lt;',
+            '>': '&gt;',
+            '&': '&amp;',
+            '"': '&quot;',
+            "'": '&#39;',
+            '/': '&#x2F;'
+        })[c]);
     }
 
     showNewModal() {
@@ -191,9 +350,16 @@ class ImoveisModule {
             'Criando imóvel...',
             'Erro ao criar imóvel'
         );
+        
         if (result) {
             this.modalManager.hide('novo-imovel-modal');
             formElement.reset();
+            
+            // Invalidar cache de imoveis para forzar refresh
+            if (this.cacheService) {
+                this.cacheService.invalidate('imoveis');
+            }
+            
             this.loadImoveis();
             this.uiManager.showSuccessToast('Sucesso', 'Imóvel criado com sucesso.');
         }
@@ -231,6 +397,12 @@ class ImoveisModule {
 
         if (result) {
             this.modalManager.hide('edit-imovel-modal');
+            
+            // Invalidar cache de imoveis para forzar refresh
+            if (this.cacheService) {
+                this.cacheService.invalidate('imoveis');
+            }
+            
             this.loadImoveis();
             this.uiManager.showSuccessToast('Sucesso', 'Imóvel atualizado com sucesso.');
         }
@@ -240,7 +412,11 @@ class ImoveisModule {
         const imovel = this.imoveis.find(p => p.id === id);
         if (!imovel) return;
 
-        const confirmed = await this.uiManager.showConfirm('Excluir Imóvel', `Tem certeza que deseja excluir ${imovel.nome}?`, 'danger');
+        const confirmed = await this.uiManager.showConfirm(
+            'Excluir Imóvel', 
+            `Tem certeza que deseja excluir ${imovel.nome}?`, 
+            'danger'
+        );
         if (!confirmed) return;
 
         const response = await this.handleApiCall(
@@ -250,6 +426,11 @@ class ImoveisModule {
         );
 
         if (response) {
+            // Invalidar cache de imoveis para forzar refresh
+            if (this.cacheService) {
+                this.cacheService.invalidate('imoveis');
+            }
+            
             this.loadImoveis();
             this.uiManager.showSuccessToast('Sucesso', 'Imóvel excluído com sucesso.');
         }

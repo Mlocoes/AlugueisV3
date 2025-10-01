@@ -1,37 +1,55 @@
+/**
+ * Módulo de Proprietários - Refactorizado com GridComponent
+ * 
+ * Melhorias:
+ * - Uso de GridComponent para renderização
+ * - Cache inteligente
+ * - Código mais limpo e manutenível
+ * 
+ * @version 2.0.0
+ */
+
 class ProprietariosModule {
     constructor() {
         this.apiService = window.apiService;
         this.uiManager = window.uiManager;
+        this.cacheService = window.cacheService;
         this.modalManager = null;
+        
+        // Dados
         this.proprietarios = [];
         this.currentEditId = null;
+        
+        // UI
+        this.container = null;
+        this.grid = null;
         this.isMobile = window.deviceManager && window.deviceManager.deviceType === 'mobile';
     }
 
     load() {
+        // Identificar container
         this.container = this.isMobile
             ? document.getElementById('proprietarios-list-mobile')
-            : document.getElementById('proprietarios-table-body');
+            : document.getElementById('proprietarios-container');
 
-        // If container not found, wait a bit and try again (timing issue)
+        // Retry se não encontrar (timing issue)
         if (!this.container) {
-            console.log('[ProprietariosModule] Container not found, waiting 100ms and trying again...');
             setTimeout(() => {
                 this.container = this.isMobile
                     ? document.getElementById('proprietarios-list-mobile')
-                    : document.getElementById('proprietarios-table-body');
-                console.log('[ProprietariosModule] Container found after delay:', !!this.container);
+                    : document.getElementById('proprietarios-container');
                 
                 if (this.container) {
-                    this.modalManager = new ModalManager('proprietario-modal');
-                    this.bindPageEvents();
-                    this.bindContainerEvents();
-                    this.loadProprietarios();
+                    this.init();
                 }
             }, 100);
             return;
         }
         
+        this.init();
+    }
+
+    init() {
         this.modalManager = new ModalManager('proprietario-modal');
         this.bindPageEvents();
         this.bindContainerEvents();
@@ -39,18 +57,6 @@ class ProprietariosModule {
 
         const isAdmin = window.authService && window.authService.isAdmin();
         this.applyPermissions(isAdmin);
-    }
-
-    async handleApiCall(apiCall, loadingMessage, errorMessagePrefix) {
-        this.uiManager.showLoading(loadingMessage);
-        try {
-            return await apiCall();
-        } catch (error) {
-            this.uiManager.showError(`${errorMessagePrefix}. Please try again.`);
-            return null;
-        } finally {
-            this.uiManager.hideLoading();
-        }
     }
 
     bindPageEvents() {
@@ -73,99 +79,195 @@ class ProprietariosModule {
 
     bindContainerEvents() {
         if (!this.container) return;
+        
+        // Delegação de eventos para botões
         this.container.addEventListener('click', e => {
             const editButton = e.target.closest('.edit-btn');
             const deleteButton = e.target.closest('.delete-btn');
 
-            const itemElement = e.target.closest('[data-id]');
-            if (!itemElement) return;
-
-            const id = parseInt(itemElement.dataset.id, 10);
-
-            if (editButton) this.editProprietario(id);
-            if (deleteButton) this.deleteProprietario(id);
+            if (editButton) {
+                const id = parseInt(editButton.dataset.id || editButton.closest('[data-id]')?.dataset.id, 10);
+                if (id) this.editProprietario(id);
+            }
+            
+            if (deleteButton) {
+                const id = parseInt(deleteButton.dataset.id || deleteButton.closest('[data-id]')?.dataset.id, 10);
+                if (id) this.deleteProprietario(id);
+            }
         });
     }
 
     async loadProprietarios() {
-        const result = await this.handleApiCall(
-            () => this.apiService.getProprietarios(),
-            'Carregando proprietários...',
-            'Erro ao carregar proprietários'
-        );
-        if (result && Array.isArray(result)) {
-            this.proprietarios = result;
-            this.render();
-        } else {
+        try {
+            this.uiManager.showLoading('Carregando proprietários...');
+            
+            // Usar cache para proprietários
+            const result = this.cacheService 
+                ? await this.apiService.getProprietarios(true)
+                : await this.apiService.getProprietarios(false);
+            
+            if (result && Array.isArray(result)) {
+                this.proprietarios = result;
+                this.render();
+            } else {
+                this.proprietarios = [];
+                this.render();
+                this.uiManager.showError('Dados de proprietários inválidos recebidos do servidor.');
+            }
+        } catch (error) {
+            this.uiManager.showError('Erro ao carregar proprietários: ' + error.message);
             this.proprietarios = [];
             this.render();
-            this.uiManager.showError('Dados de proprietários inválidos recebidos do servidor.');
+        } finally {
+            this.uiManager.hideLoading();
         }
     }
 
     render() {
         if (!this.container) return;
+
         if (this.proprietarios.length === 0) {
-            this.container.innerHTML = this.isMobile
-                ? `<div class="text-center p-4">Nenhum proprietário encontrado.</div>`
-                : `<tr><td colspan="6" class="text-center">Nenhum proprietário encontrado.</td></tr>`;
+            this.container.innerHTML = '<div class="alert alert-info">Nenhum proprietário encontrado.</div>';
             return;
         }
 
         if (this.isMobile) {
-            this.container.innerHTML = this.proprietarios.map(prop => this.renderMobileCard(prop)).join('');
+            this.renderMobile();
         } else {
-            this.container.innerHTML = this.proprietarios.map(prop => this.renderProprietarioRow(prop)).join('');
+            this.renderDesktop();
         }
     }
 
-    renderMobileCard(prop) {
-        const sanitize = (str) => str ? String(str).replace(/[<>&"']/g, c => ({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;',"'":'&#39;','/':'&#x2F;'})[c]) : '';
-        const dataIdAttribute = `data-id="${prop.id}"`;
-        const fullName = `${prop.nome || ''} ${prop.sobrenome || ''}`.trim();
+    renderMobile() {
         const isAdmin = window.authService && window.authService.isAdmin();
         const disabledAttr = isAdmin ? '' : 'disabled';
 
-        return `
-            <div class="card mobile-card mb-2" ${dataIdAttribute}>
-                <div class="card-body p-3">
-                    <div class="d-flex justify-content-between align-items-start">
-                        <h5 class="card-title mb-1">${sanitize(fullName)}</h5>
-                        <div class="mobile-card-actions">
-                            <button class="btn btn-sm btn-outline-primary edit-btn" ${disabledAttr}><i class="fas fa-edit"></i></button>
-                            <button class="btn btn-sm btn-outline-danger delete-btn" ${disabledAttr}><i class="fas fa-trash"></i></button>
+        const cardsHtml = this.proprietarios.map(prop => {
+            const fullName = `${prop.nome || ''} ${prop.sobrenome || ''}`.trim();
+            
+            return `
+                <div class="card mobile-card mb-2" data-id="${prop.id}">
+                    <div class="card-body p-3">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <h5 class="card-title mb-1">${SecurityUtils.escapeHtml(fullName)}</h5>
+                            <div class="mobile-card-actions">
+                                <button class="btn btn-sm btn-outline-primary edit-btn" data-id="${prop.id}" ${disabledAttr}>
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="btn btn-sm btn-outline-danger delete-btn" data-id="${prop.id}" ${disabledAttr}>
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="card-text small">
+                            <p class="mb-1"><strong>Doc:</strong> ${SecurityUtils.escapeHtml(prop.documento) || 'N/A'}</p>
+                            <p class="mb-1"><strong>Tel:</strong> ${SecurityUtils.escapeHtml(prop.telefone) || 'N/A'}</p>
+                            <p class="mb-0"><strong>Email:</strong> ${SecurityUtils.escapeHtml(prop.email) || 'N/A'}</p>
                         </div>
                     </div>
-                    <div class="card-text small">
-                        <p class="mb-1"><strong>Doc:</strong> ${sanitize(prop.documento) || 'N/A'}</p>
-                        <p class="mb-1"><strong>Tel:</strong> ${sanitize(prop.telefone) || 'N/A'}</p>
-                        <p class="mb-0"><strong>Email:</strong> ${sanitize(prop.email) || 'N/A'}</p>
-                    </div>
                 </div>
-            </div>
-        `;
+            `;
+        }).join('');
+
+        this.container.innerHTML = cardsHtml;
     }
 
-    renderProprietarioRow(prop) {
-        const sanitize = (str) => str ? String(str).replace(/[<>&"'/]/g, c => ({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;',"'":'&#39;','/':'&#x2F;'})[c]) : '';
-        const dataIdAttribute = `data-id="${prop.id}"`;
-        const fullName = `${prop.nome || ''} ${prop.sobrenome || ''}`.trim();
-        const isAdmin = window.authService && window.authService.isAdmin();
-        const disabledAttr = isAdmin ? '' : 'disabled';
+    renderDesktop() {
+        const columns = this.buildColumns();
 
-        return `
-            <tr ${dataIdAttribute}>
-                <td>${sanitize(prop.id)}</td>
-                <td>${sanitize(fullName)}</td>
-                <td>${sanitize(prop.documento) || 'N/A'}</td>
-                <td>${sanitize(prop.telefone) || 'N/A'}</td>
-                <td>${sanitize(prop.email) || 'N/A'}</td>
-                <td class="text-center">
-                    <button class="btn btn-sm btn-outline-primary edit-btn me-2" ${disabledAttr}><i class="fas fa-edit"></i></button>
-                    <button class="btn btn-sm btn-outline-danger delete-btn" ${disabledAttr}><i class="fas fa-trash"></i></button>
-                </td>
-            </tr>
-        `;
+        // Configuração do GridComponent
+        const gridConfig = {
+            columns: columns,
+            data: this.proprietarios,
+            responsive: {
+                mobile: 'cards',
+                desktop: 'table'
+            },
+            search: {
+                enabled: true,
+                placeholder: 'Buscar proprietário...',
+                fields: ['nome', 'sobrenome', 'documento', 'email', 'telefone']
+            },
+            sort: {
+                enabled: true,
+                column: 'nome',
+                direction: 'asc'
+            },
+            pagination: {
+                enabled: true,
+                pageSize: 20
+            },
+            actions: [
+                {
+                    name: 'edit',
+                    icon: 'pencil',
+                    label: 'Editar',
+                    variant: 'outline-primary',
+                    adminOnly: true,
+                    onClick: (row) => this.editProprietario(row.id)
+                },
+                {
+                    name: 'delete',
+                    icon: 'trash',
+                    label: 'Excluir',
+                    variant: 'outline-danger',
+                    adminOnly: true,
+                    onClick: (row) => this.deleteProprietario(row.id)
+                }
+            ],
+            emptyMessage: 'Nenhum proprietário encontrado.'
+        };
+
+        // Destruir grid anterior
+        if (this.grid) {
+            this.grid.destroy();
+        }
+
+        // Criar novo grid
+        this.grid = new GridComponent('proprietarios-container', gridConfig);
+    }
+
+    buildColumns() {
+        return [
+            {
+                key: 'id',
+                label: 'ID',
+                width: '80px',
+                sortable: true,
+                type: 'number'
+            },
+            {
+                key: 'nome_completo',
+                label: 'Nome Completo',
+                sortable: true,
+                filterable: true,
+                formatter: (value, row) => {
+                    const fullName = `${row.nome || ''} ${row.sobrenome || ''}`.trim();
+                    return SecurityUtils.escapeHtml(fullName);
+                }
+            },
+            {
+                key: 'documento',
+                label: 'Documento',
+                sortable: true,
+                filterable: true,
+                formatter: (value) => SecurityUtils.escapeHtml(value) || 'N/A'
+            },
+            {
+                key: 'telefone',
+                label: 'Telefone',
+                sortable: true,
+                filterable: true,
+                formatter: (value) => SecurityUtils.escapeHtml(value) || 'N/A'
+            },
+            {
+                key: 'email',
+                label: 'Email',
+                sortable: true,
+                filterable: true,
+                formatter: (value) => SecurityUtils.escapeHtml(value) || 'N/A'
+            }
+        ];
     }
 
     showNewModal() {
@@ -177,16 +279,29 @@ class ProprietariosModule {
     }
 
     async handleCreate(data, formElement) {
-        const result = await this.handleApiCall(
-            () => this.apiService.createProprietario(data),
-            'Criando proprietário...',
-            'Erro ao criar proprietário'
-        );
-        if (result) {
-            this.modalManager.hide();
-            formElement.reset();
-            this.loadProprietarios();
-            this.uiManager.showSuccessToast('Sucesso', 'Proprietário criado com sucesso.');
+        try {
+            this.uiManager.showLoading('Criando proprietário...');
+            
+            const result = await this.apiService.createProprietario(data);
+            
+            if (result && result.success) {
+                this.modalManager.hide();
+                formElement.reset();
+                
+                // Invalidar cache e recarregar
+                if (this.cacheService) {
+                    this.cacheService.invalidate('proprietarios');
+                }
+                
+                await this.loadProprietarios();
+                this.uiManager.showSuccessToast('Sucesso', 'Proprietário criado com sucesso.');
+            } else {
+                this.uiManager.showError('Erro ao criar proprietário.');
+            }
+        } catch (error) {
+            this.uiManager.showError('Erro ao criar proprietário: ' + error.message);
+        } finally {
+            this.uiManager.hideLoading();
         }
     }
 
@@ -201,6 +316,7 @@ class ProprietariosModule {
         const form = document.getElementById('form-proprietario');
         if (!form) return;
 
+        // Preencher formulário
         Object.keys(proprietario).forEach(key => {
             const input = form.querySelector(`[name="${key}"]`);
             if (input) {
@@ -215,16 +331,28 @@ class ProprietariosModule {
     async handleUpdate(data) {
         if (!this.currentEditId) return;
 
-        const result = await this.handleApiCall(
-            () => this.apiService.updateProprietario(this.currentEditId, data),
-            'Atualizando proprietário...',
-            'Erro ao atualizar proprietário'
-        );
-
-        if (result) {
-            this.modalManager.hide();
-            this.loadProprietarios();
-            this.uiManager.showSuccessToast('Sucesso', 'Proprietário atualizado com sucesso.');
+        try {
+            this.uiManager.showLoading('Atualizando proprietário...');
+            
+            const result = await this.apiService.updateProprietario(this.currentEditId, data);
+            
+            if (result && result.success) {
+                this.modalManager.hide();
+                
+                // Invalidar cache e recarregar
+                if (this.cacheService) {
+                    this.cacheService.invalidate('proprietarios');
+                }
+                
+                await this.loadProprietarios();
+                this.uiManager.showSuccessToast('Sucesso', 'Proprietário atualizado com sucesso.');
+            } else {
+                this.uiManager.showError('Erro ao atualizar proprietário.');
+            }
+        } catch (error) {
+            this.uiManager.showError('Erro ao atualizar proprietário: ' + error.message);
+        } finally {
+            this.uiManager.hideLoading();
         }
     }
 
@@ -232,18 +360,32 @@ class ProprietariosModule {
         const proprietario = this.proprietarios.find(p => p.id === id);
         if (!proprietario) return;
 
-        const confirmed = await this.uiManager.showConfirm('Excluir Proprietário', `Tem certeza que deseja excluir ${proprietario.nome}?`, 'danger');
+        const confirmed = await this.uiManager.showConfirm(
+            'Excluir Proprietário', 
+            `Tem certeza que deseja excluir ${proprietario.nome}?`, 
+            'danger'
+        );
+        
         if (!confirmed) return;
 
-        const response = await this.handleApiCall(
-            () => this.apiService.deleteProprietario(id),
-            'Excluindo proprietário...',
-            'Erro ao excluir proprietário'
-        );
-
-        if (response) {
-            this.loadProprietarios();
-            this.uiManager.showSuccessToast('Sucesso', 'Proprietário excluído com sucesso.');
+        try {
+            this.uiManager.showLoading('Excluindo proprietário...');
+            
+            const response = await this.apiService.deleteProprietario(id);
+            
+            if (response) {
+                // Invalidar cache e recarregar
+                if (this.cacheService) {
+                    this.cacheService.invalidate('proprietarios');
+                }
+                
+                await this.loadProprietarios();
+                this.uiManager.showSuccessToast('Sucesso', 'Proprietário excluído com sucesso.');
+            }
+        } catch (error) {
+            this.uiManager.showError('Erro ao excluir proprietário: ' + error.message);
+        } finally {
+            this.uiManager.hideLoading();
         }
     }
 
@@ -252,8 +394,11 @@ class ProprietariosModule {
         if (btnNovo) {
             btnNovo.style.display = isAdmin ? 'block' : 'none';
         }
+        
+        // GridComponent já aplica permissões adminOnly automaticamente
         this.render();
     }
 }
 
+// Exportar instância global
 window.proprietariosModule = new ProprietariosModule();
