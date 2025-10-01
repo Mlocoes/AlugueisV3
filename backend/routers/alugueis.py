@@ -12,6 +12,7 @@ from .auth import verify_token_flexible
 import calendar
 # Assuming CalculoService is in this path
 from services.calculo_service import CalculoService
+from services.aluguel_service import AluguelService
 
 router = APIRouter(prefix="/api/alugueis", tags=["alugueis"])
 
@@ -153,7 +154,7 @@ async def obter_totais_por_imovel(
     db: Session = Depends(get_db),
     current_user: Usuario = Depends(verify_token_flexible)
 ):
-    """Obter totais de aluguéis por imóvel para o último mês ou período especificado"""
+    """Obter totais de aluguéis por imóvel - OPTIMIZED"""
     try:
         # Se não se especifica ano/mês, obter o último período disponível
         if not ano or not mes:
@@ -166,39 +167,19 @@ async def obter_totais_por_imovel(
             ).first()
             
             if not ultimo_periodo:
-                return []
+                return {"success": True, "data": {
+                    'periodo': {'ano': None, 'mes': None},
+                    'totais': [],
+                    'total_imoveis': 0
+                }}
             
             if not ano:
                 ano = ultimo_periodo.ano
             if not mes:
                 mes = ultimo_periodo.mes
         
-        # Obter totais agrupados por imóvel para o período especificado
-        resultado = db.query(
-            AluguelSimples.imovel_id,
-            func.sum(AluguelSimples.valor_liquido_proprietario).label('total_valor'),
-            func.count(AluguelSimples.id).label('quantidade_proprietarios')
-        ).filter(
-            AluguelSimples.ano == ano,
-            AluguelSimples.mes == mes
-        ).group_by(
-            AluguelSimples.imovel_id
-        ).order_by(
-            desc('total_valor')
-        ).all()
-        
-        # Formatar resposta
-        totais = []
-        for row in resultado:
-            imovel = db.query(Imovel).filter(Imovel.id == row.imovel_id).first()
-            totais.append({
-                'imovel_id': row.imovel_id,
-                'nome_imovel': imovel.nome if imovel else None,
-                'total_valor': float(row.total_valor),
-                'quantidade_proprietarios': int(row.quantidade_proprietarios),
-                'ano': ano,
-                'mes': mes
-            })
+        # Usar AluguelService para obter totais com eager loading
+        totais = AluguelService.get_totais_por_imovel(db=db, ano=ano, mes=mes)
         
         return {"success": True, "data": {
             'periodo': {'ano': ano, 'mes': mes},
@@ -207,6 +188,7 @@ async def obter_totais_por_imovel(
         }}
         
     except Exception as e:
+        print(f"❌ Erro ao obter totais por imóvel: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Erro ao obter totais por imóvel: {str(e)}")
 
 @router.get("/totais-por-mes/")
@@ -215,47 +197,17 @@ async def obter_totais_por_mes(
     db: Session = Depends(get_db),
     current_user: Usuario = Depends(verify_token_flexible)
 ):
-    """Obter totais de aluguéis agrupados por mês para o gráfico de tendências"""
+    """Obter totais de aluguéis agrupados por mês - OPTIMIZED"""
     try:
-        # Obter todos os períodos disponíveis ordenados por data
-        resultado = db.query(
-            AluguelSimples.ano,
-            AluguelSimples.mes,
-            func.sum(AluguelSimples.valor_liquido_proprietario).label('total_mes'),
-            func.count(AluguelSimples.id).label('quantidade_alugueis')
-        ).group_by(
-            AluguelSimples.ano,
-            AluguelSimples.mes
-        ).order_by(
-            desc(AluguelSimples.ano),
-            desc(AluguelSimples.mes)
-        ).limit(limite_meses).all()
+        resultado = AluguelService.get_totais_mensais(
+            db=db,
+            limite_meses=limite_meses
+        )
         
-        if not resultado:
-            return {"success": True, "data": {
-                'totais_mensais': [],
-                'total_periodos': 0
-            }}
-        
-        # Formatar resposta e inverter ordem para mostrar cronologicamente
-        totais_mensais = []
-        for row in reversed(resultado):
-            periodo_label = formatar_periodo_label(row.ano, row.mes)
-            
-            totais_mensais.append({
-                'ano': row.ano,
-                'mes': row.mes,
-                'periodo': periodo_label,
-                'total_valor': float(row.total_mes),
-                'quantidade_alugueis': int(row.quantidade_alugueis)
-            })
-        
-        return {"success": True, "data": {
-            'totais_mensais': totais_mensais,
-            'total_periodos': len(totais_mensais)
-        }}
+        return {"success": True, "data": resultado}
         
     except Exception as e:
+        print(f"❌ Erro ao obter totais por mês: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Erro ao obter totais por mês: {str(e)}")
 
 @router.get("/distribuicao-matriz/")
@@ -267,137 +219,21 @@ async def obter_distribuicao_matriz(
     db: Session = Depends(get_db),
     current_user: Usuario = Depends(verify_token_flexible)
 ):
-    """Obter distribuição de aluguéis em formato matriz (proprietários vs imóveis) com agregação segundo filtros"""
+    """Obter distribuição de aluguéis em formato matriz (proprietários vs imóveis) - OPTIMIZED"""
     try:
-        print(f"🔍 Distribuição matriz solicitada - Ano: {ano}, Mês: {mes}, Proprietário: {proprietario_id}, Agregação: {agregacao}")
-
-        # Determinar quais filtros aplicar segundo o tipo de agregação
-        if agregacao == "completo":
-            # Sem filtros de ano/mês - todos os dados
-            print("📊 Agregação completa: somando todos os períodos disponíveis")
-            ano_filtro = None
-            mes_filtro = None
-        elif agregacao == "ano_completo" and ano:
-            # Só filtrar por ano - somar todos os meses do ano
-            print(f"📊 Agregação anual: somando todos os meses do ano {ano}")
-            ano_filtro = ano
-            mes_filtro = None
-        else:
-            # Mês específico ou valor por padrão
-            if not ano or not mes:
-                ultimo_periodo = db.query(
-                    AluguelSimples.ano,
-                    AluguelSimples.mes
-                ).order_by(
-                    desc(AluguelSimples.ano),
-                    desc(AluguelSimples.mes)
-                ).first()
-
-                if not ultimo_periodo:
-                    return {
-                        'periodo': {'ano': None, 'mes': None, 'tipo_agregacao': agregacao},
-                        'proprietarios': [],
-                        'imoveis': [],
-                        'matriz': []
-                    }
-
-                if not ano:
-                    ano = ultimo_periodo.ano
-                if not mes:
-                    mes = ultimo_periodo.mes
-
-            print(f"📊 Mês específico: {mes}/{ano}")
-            ano_filtro = ano
-            mes_filtro = mes
-
-        # Obter todos os aluguéis segundo o tipo de agregação
-        query = db.query(AluguelSimples)
-
-        # Aplicar filtros de período segundo agregação
-        if ano_filtro and mes_filtro:
-            # Mês específico
-            query = query.filter(
-                AluguelSimples.ano == ano_filtro,
-                AluguelSimples.mes == mes_filtro
-            )
-            periodo_texto = f"{mes_filtro}/{ano_filtro}"
-        elif ano_filtro:
-            # Ano completo
-            query = query.filter(AluguelSimples.ano == ano_filtro)
-            periodo_texto = f"Ano {ano_filtro}"
-        else:
-            # Sem filtros de período - todos os dados
-            periodo_texto = "Todos os períodos"
-
-        # Aplicar filtro de proprietário se especificado
-        if proprietario_id:
-            query = query.filter(AluguelSimples.proprietario_id == proprietario_id)
-            print(f"📊 Filtro de proprietário aplicado: {proprietario_id}")
-
-        alugueis = query.all()
-        print(f"📊 Aluguéis encontrados para {periodo_texto}: {len(alugueis)}")
-
-        if not alugueis:
-            return {"success": True, "data": {
-                'periodo': {'ano': ano_filtro, 'mes': mes_filtro, 'tipo_agregacao': agregacao, 'descricao': periodo_texto},
-                'proprietarios': [],
-                'imoveis': [],
-                'matriz': []
-            }}
-
-        # Obter listas únicas de proprietários e imóveis
-        proprietarios = sorted(list(set(alq.proprietario_id for alq in alugueis)))
-        imoveis = sorted(list(set(alq.imovel_id for alq in alugueis)))
-
-        # Criar matriz de distribuição com somatória
-        matriz = []
-        for proprietario_id in proprietarios:
-            proprietario = db.query(Proprietario).filter(Proprietario.id == proprietario_id).first()
-            fila = {
-                'proprietario_id': proprietario_id,
-                'nome_proprietario': proprietario.nome if proprietario else None,
-                'valores': {},
-                'total': 0
-            }
-            alugueis_proprietario = [alq for alq in alugueis if alq.proprietario_id == proprietario_id]
-            for imovel_id in imoveis:
-                imovel = db.query(Imovel).filter(Imovel.id == imovel_id).first()
-                alugueis_imovel = [alq for alq in alugueis_proprietario if alq.imovel_id == imovel_id]
-                valor_total = sum(float(alq.valor_liquido_proprietario) for alq in alugueis_imovel)
-                fila['valores'][imovel.nome if imovel else str(imovel_id)] = valor_total
-                fila['total'] += valor_total
-            matriz.append(fila)
-
-        # Informação adicional sobre a agregação
-        total_registros = len(alugueis)
-        periodos_unicos = list(set((alq.ano, alq.mes) for alq in alugueis))
-
-        print(f"📊 Matriz gerada: {len(proprietarios)} proprietários, {len(imoveis)} imóveis")
-        print(f"📊 Total registros processados: {total_registros} de {len(periodos_unicos)} período(s)")
-
-        return {"success": True, "data": {
-            'periodo': {
-                'ano': ano_filtro,
-                'mes': mes_filtro,
-                'tipo_agregacao': agregacao,
-                'descricao': periodo_texto,
-                'total_registros': total_registros,
-                'periodos_incluidos': len(periodos_unicos)
-            },
-            'proprietarios': [
-                {'proprietario_id': pid, 'nome': db.query(Proprietario).filter(Proprietario.id == pid).first().nome if db.query(Proprietario).filter(Proprietario.id == pid).first() else None}
-                for pid in proprietarios
-            ],
-            'imoveis': [
-                {'imovel_id': iid, 'nome': db.query(Imovel).filter(Imovel.id == iid).first().nome if db.query(Imovel).filter(Imovel.id == iid).first() else None}
-                for iid in imoveis
-            ],
-            'matriz': matriz,
-            'total_proprietarios': len(proprietarios),
-            'total_imoveis': len(imoveis)
-        }}
-
+        resultado = AluguelService.get_distribuicao_matriz(
+            db=db,
+            ano=ano,
+            mes=mes,
+            proprietario_id=proprietario_id,
+            agregacao=agregacao
+        )
+        
+        return {"success": True, "data": resultado}
+        
     except Exception as e:
+        print(f"❌ Erro ao obter distribuição matriz: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Erro ao obter distribuição matriz: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Erro ao obter distribuição matriz: {str(e)}")
 
 @router.get("/aluguel/{aluguel_id}")

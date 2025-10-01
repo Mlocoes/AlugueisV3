@@ -114,6 +114,121 @@ class AluguelService:
         }
     
     @staticmethod
+    def get_totais_por_imovel(
+        db: Session,
+        ano: int,
+        mes: int
+    ) -> List[Dict[str, Any]]:
+        """
+        Retorna totais de alugueis agrupados por imóvel para um período
+        Otimizado com joinedload para evitar N+1 queries
+        
+        Args:
+            db: Sessão do banco de dados
+            ano: Ano para filtrar
+            mes: Mês para filtrar
+        
+        Returns:
+            Lista de dicionários com totais por imóvel
+        """
+        from backend.models_final import AluguelSimples
+        
+        # Query otimizada com joinedload
+        resultado = db.query(
+            AluguelSimples.imovel_id,
+            func.sum(AluguelSimples.valor_liquido_proprietario).label('total_valor'),
+            func.count(AluguelSimples.id).label('quantidade_proprietarios')
+        ).filter(
+            AluguelSimples.ano == ano,
+            AluguelSimples.mes == mes
+        ).group_by(
+            AluguelSimples.imovel_id
+        ).order_by(
+            func.sum(AluguelSimples.valor_liquido_proprietario).desc()
+        ).all()
+        
+        # Buscar nomes de imóveis em uma única query
+        imovel_ids = [row.imovel_id for row in resultado]
+        imoveis_dict = {}
+        if imovel_ids:
+            imoveis = db.query(Imovel).filter(Imovel.id.in_(imovel_ids)).all()
+            imoveis_dict = {imovel.id: imovel.nome for imovel in imoveis}
+        
+        # Formatar resposta
+        totais = []
+        for row in resultado:
+            totais.append({
+                'imovel_id': row.imovel_id,
+                'nome_imovel': imoveis_dict.get(row.imovel_id, None),
+                'total_valor': float(row.total_valor),
+                'quantidade_proprietarios': int(row.quantidade_proprietarios),
+                'ano': ano,
+                'mes': mes
+            })
+        
+        return totais
+    
+    @staticmethod
+    def get_totais_mensais(
+        db: Session,
+        limite_meses: int = 12
+    ) -> Dict[str, Any]:
+        """
+        Retorna totais de alugueis agrupados por mês
+        
+        Args:
+            db: Sessão do banco de dados
+            limite_meses: Número máximo de meses a retornar
+        
+        Returns:
+            Dicionário com totais mensais
+        """
+        from backend.models_final import AluguelSimples
+        import calendar
+        
+        # Obter todos os períodos disponíveis ordenados por data
+        resultado = db.query(
+            AluguelSimples.ano,
+            AluguelSimples.mes,
+            func.sum(AluguelSimples.valor_liquido_proprietario).label('total_mes'),
+            func.count(AluguelSimples.id).label('quantidade_alugueis')
+        ).group_by(
+            AluguelSimples.ano,
+            AluguelSimples.mes
+        ).order_by(
+            AluguelSimples.ano.desc(),
+            AluguelSimples.mes.desc()
+        ).limit(limite_meses).all()
+        
+        if not resultado:
+            return {
+                'totais_mensais': [],
+                'total_periodos': 0
+            }
+        
+        # Formatar resposta e inverter ordem para mostrar cronologicamente
+        totais_mensais = []
+        for row in reversed(resultado):
+            try:
+                nome_mes = calendar.month_name[row.mes] if row.mes and 1 <= row.mes <= 12 else str(row.mes)
+                periodo_label = f"{nome_mes} {row.ano}"
+            except:
+                periodo_label = f"{row.mes}/{row.ano}"
+            
+            totais_mensais.append({
+                'ano': row.ano,
+                'mes': row.mes,
+                'periodo': periodo_label,
+                'total_valor': float(row.total_mes),
+                'quantidade_alugueis': int(row.quantidade_alugueis)
+            })
+        
+        return {
+            'totais_mensais': totais_mensais,
+            'total_periodos': len(totais_mensais)
+        }
+    
+    @staticmethod
     def get_alugueis_por_imovel(
         db: Session,
         imovel_id: int,
