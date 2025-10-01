@@ -173,106 +173,32 @@ class ProprietariosModule {
     }
 
     renderDesktop() {
-        const columns = this.buildColumns();
+        const isAdmin = window.authService && window.authService.isAdmin();
+        const disabledAttr = isAdmin ? '' : 'disabled';
 
-        // Configuração do GridComponent
-        const gridConfig = {
-            columns: columns,
-            data: this.proprietarios,
-            responsive: {
-                mobile: 'cards',
-                desktop: 'table'
-            },
-            search: {
-                enabled: true,
-                placeholder: 'Buscar proprietário...',
-                fields: ['nome', 'sobrenome', 'documento', 'email', 'telefone']
-            },
-            sort: {
-                enabled: true,
-                column: 'nome',
-                direction: 'asc'
-            },
-            pagination: {
-                enabled: true,
-                pageSize: 20
-            },
-            actions: [
-                {
-                    name: 'edit',
-                    icon: 'pencil',
-                    label: 'Editar',
-                    variant: 'outline-primary',
-                    adminOnly: true,
-                    onClick: (row) => this.editProprietario(row.id)
-                },
-                {
-                    name: 'delete',
-                    icon: 'trash',
-                    label: 'Excluir',
-                    variant: 'outline-danger',
-                    adminOnly: true,
-                    onClick: (row) => this.deleteProprietario(row.id)
-                }
-            ],
-            emptyMessage: 'Nenhum proprietário encontrado.'
-        };
+        const rowsHtml = this.proprietarios.map(prop => {
+            const fullName = `${prop.nome || ''} ${prop.sobrenome || ''}`.trim();
+            
+            return `
+                <tr data-id="${prop.id}">
+                    <td>${prop.id}</td>
+                    <td>${SecurityUtils.escapeHtml(fullName)}</td>
+                    <td>${SecurityUtils.escapeHtml(prop.documento) || 'N/A'}</td>
+                    <td>${SecurityUtils.escapeHtml(prop.telefone) || 'N/A'}</td>
+                    <td>${SecurityUtils.escapeHtml(prop.email) || 'N/A'}</td>
+                    <td class="text-center">
+                        <button class="btn btn-sm btn-outline-primary edit-btn me-1" data-id="${prop.id}" ${disabledAttr} title="Editar">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="btn btn-sm btn-outline-danger delete-btn" data-id="${prop.id}" ${disabledAttr} title="Excluir">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                </tr>
+            `;
+        }).join('');
 
-        // Destruir grid anterior
-        if (this.grid) {
-            this.grid.destroy();
-        }
-
-        // Criar novo grid com o ID correto do tbody
-        this.grid = new GridComponent('proprietarios-table-body', gridConfig);
-        
-        // Renderizar o grid
-        if (this.grid && typeof this.grid.render === 'function') {
-            this.grid.render();
-        }
-    }
-
-    buildColumns() {
-        return [
-            {
-                key: 'id',
-                label: 'ID',
-                width: '80px',
-                sortable: true,
-                type: 'number'
-            },
-            {
-                key: 'nome_completo',
-                label: 'Nome Completo',
-                sortable: true,
-                filterable: true,
-                formatter: (value, row) => {
-                    const fullName = `${row.nome || ''} ${row.sobrenome || ''}`.trim();
-                    return SecurityUtils.escapeHtml(fullName);
-                }
-            },
-            {
-                key: 'documento',
-                label: 'Documento',
-                sortable: true,
-                filterable: true,
-                formatter: (value) => SecurityUtils.escapeHtml(value) || 'N/A'
-            },
-            {
-                key: 'telefone',
-                label: 'Telefone',
-                sortable: true,
-                filterable: true,
-                formatter: (value) => SecurityUtils.escapeHtml(value) || 'N/A'
-            },
-            {
-                key: 'email',
-                label: 'Email',
-                sortable: true,
-                filterable: true,
-                formatter: (value) => SecurityUtils.escapeHtml(value) || 'N/A'
-            }
-        ];
+        this.container.innerHTML = rowsHtml;
     }
 
     showNewModal() {

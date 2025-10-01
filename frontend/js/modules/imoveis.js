@@ -151,136 +151,55 @@ class ImoveisModule {
     }
 
     /**
-     * Renderización DESKTOP con GridComponent
+     * Renderización DESKTOP - Simples e direto no tbody
      */
     renderDesktop() {
         const isAdmin = window.authService && window.authService.isAdmin();
-        
-        // Preparar datos para GridComponent
-        const tableData = this.buildTableData();
-        const columns = this.buildColumns();
-        
-        // Configurar acciones de fila
-        const rowActions = isAdmin ? [
-            {
-                icon: 'fas fa-edit',
-                label: 'Editar',
-                class: 'btn-outline-primary',
-                callback: (row) => this.editImovel(row.id)
-            },
-            {
-                icon: 'fas fa-trash',
-                label: 'Excluir',
-                class: 'btn-outline-danger',
-                callback: (row) => this.deleteImovel(row.id)
-            }
-        ] : [];
+        const disabledAttr = isAdmin ? '' : 'disabled';
 
-        // Configuración del GridComponent
-        const gridConfig = {
-            columns: columns,
-            data: tableData,
-            sortable: true,
-            searchable: true,
-            searchPlaceholder: 'Buscar por nome, endereço, tipo...',
-            pagination: true,
-            itemsPerPage: 20,
-            itemsPerPageOptions: [10, 20, 50, 100],
-            emptyMessage: 'Nenhum imóvel encontrado',
-            rowActions: rowActions,
-            responsive: {
-                enabled: true,
-                breakpoint: 768
-            },
-            classes: {
-                table: 'table table-hover',
-                headerCell: 'table-header-cell',
-                bodyCell: 'table-body-cell'
-            }
-        };
+        const rowsHtml = this.imoveis.map(imovel => {
+            const alugadoIcon = imovel.alugado 
+                ? '<i class="fas fa-check-circle text-success" title="Alugado"></i>' 
+                : '<i class="fas fa-times-circle text-danger" title="Disponível"></i>';
+            
+            const dataCadastro = imovel.data_cadastro 
+                ? new Date(imovel.data_cadastro).toLocaleDateString('pt-BR') 
+                : 'N/A';
 
-        // Destruir grid anterior e criar novo
-        const containerId = 'imoveis-table-body';
-        if (this.gridComponent && typeof this.gridComponent.destroy === 'function') {
-            this.gridComponent.destroy();
-        }
-        
-        this.gridComponent = new GridComponent(containerId, gridConfig);
-        
-        // Renderizar o grid
-        if (this.gridComponent && typeof this.gridComponent.render === 'function') {
-            this.gridComponent.render();
-        }
-    }
+            return `
+                <tr data-id="${imovel.id}">
+                    <td>
+                        <strong>${SecurityUtils.escapeHtml(imovel.nome) || 'N/A'}</strong><br>
+                        <small class="text-muted">${SecurityUtils.escapeHtml(imovel.tipo_imovel) || 'Sem tipo'}</small>
+                    </td>
+                    <td>${SecurityUtils.escapeHtml(imovel.endereco) || 'N/A'}</td>
+                    <td>
+                        ${imovel.area_total ? imovel.area_total + ' m²' : 'N/A'}<br>
+                        <small class="text-muted">${imovel.area_construida ? imovel.area_construida + ' m²' : 'N/A'}</small>
+                    </td>
+                    <td>
+                        ${imovel.valor_cadastral ? 'R$ ' + parseFloat(imovel.valor_cadastral).toLocaleString('pt-BR', {minimumFractionDigits: 2}) : 'N/A'}<br>
+                        <small class="text-muted">${imovel.valor_mercado ? 'R$ ' + parseFloat(imovel.valor_mercado).toLocaleString('pt-BR', {minimumFractionDigits: 2}) : 'N/A'}</small>
+                    </td>
+                    <td>
+                        ${imovel.valor_iptu ? 'R$ ' + parseFloat(imovel.valor_iptu).toLocaleString('pt-BR', {minimumFractionDigits: 2}) : 'N/A'}<br>
+                        <small class="text-muted">${imovel.valor_condominio ? 'R$ ' + parseFloat(imovel.valor_condominio).toLocaleString('pt-BR', {minimumFractionDigits: 2}) : 'N/A'}</small>
+                    </td>
+                    <td class="text-center">${alugadoIcon}</td>
+                    <td>${dataCadastro}</td>
+                    <td class="text-center">
+                        <button class="btn btn-sm btn-outline-primary edit-btn me-1" data-id="${imovel.id}" ${disabledAttr} title="Editar">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="btn btn-sm btn-outline-danger delete-btn" data-id="${imovel.id}" ${disabledAttr} title="Excluir">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                </tr>
+            `;
+        }).join('');
 
-    /**
-     * Transforma datos de API a formato de tabla
-     */
-    buildTableData() {
-        return this.imoveis.map(imovel => ({
-            id: imovel.id,
-            nome: imovel.nome || '',
-            tipo_imovel: imovel.tipo_imovel || 'Sem tipo',
-            endereco: imovel.endereco || '—',
-            area_total: imovel.area_total || '—',
-            valor_mercado: imovel.valor_mercado || 0,
-            valor_mercado_formatted: imovel.valor_mercado 
-                ? `R$ ${imovel.valor_mercado.toLocaleString('pt-BR')}` 
-                : '—',
-            alugado: imovel.alugado || false,
-            status_badge: imovel.alugado 
-                ? '<span class="badge bg-danger">Alugado</span>' 
-                : '<span class="badge bg-success">Disponível</span>'
-        }));
-    }
-
-    /**
-     * Define columnas para GridComponent
-     */
-    buildColumns() {
-        return [
-            {
-                key: 'nome',
-                label: 'Nome / Tipo',
-                sortable: true,
-                searchable: true,
-                render: (value, row) => `
-                    <strong>${this.sanitize(row.nome)}</strong>
-                    <br>
-                    <small class="text-muted">${this.sanitize(row.tipo_imovel)}</small>
-                `
-            },
-            {
-                key: 'endereco',
-                label: 'Endereço',
-                sortable: true,
-                searchable: true,
-                render: (value, row) => this.sanitize(value)
-            },
-            {
-                key: 'area_total',
-                label: 'Área (m²)',
-                sortable: true,
-                align: 'center',
-                render: (value, row) => {
-                    return value === '—' ? '—' : `${value} m²`;
-                }
-            },
-            {
-                key: 'valor_mercado',
-                label: 'Valor',
-                sortable: true,
-                align: 'right',
-                render: (value, row) => row.valor_mercado_formatted
-            },
-            {
-                key: 'alugado',
-                label: 'Status',
-                sortable: true,
-                align: 'center',
-                render: (value, row) => row.status_badge
-            }
-        ];
+        this.container.innerHTML = rowsHtml;
     }
 
     /**
