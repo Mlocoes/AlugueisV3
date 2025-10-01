@@ -77,13 +77,13 @@ def collect_user_input():
 
     # Database
     config["POSTGRES_DB"] = Prompt.ask(
-        "🗃️ Nome do banco de dados", default="alugueisv2_db"
+        "🗃️ Nome do banco de dados", default="alugueisv3_db"
     )
     config["POSTGRES_USER"] = Prompt.ask(
-        "🧑‍💻 Usuário do banco de dados", default="alugueisv2_usuario"
+        "🧑‍💻 Usuário do banco de dados", default="alugueisv3_usuario"
     )
     config["POSTGRES_PASSWORD"] = Prompt.ask(
-        "🔑 Senha do banco de dados", password=True, default="alugueisv2_senha"
+        "🔑 Senha do banco de dados", password=True, default="alugueisv3_senha"
     )
     console.print()
 
@@ -149,7 +149,7 @@ CSRF_SECRET_KEY={csrf_secret_key}
 DEBUG=true
 CORS_ALLOW_ORIGINS={cors_origin_string}
 CORS_ALLOW_CREDENTIALS=true
-DATABASE_URL=postgresql+psycopg2://{config['POSTGRES_USER']}:{config['POSTGRES_PASSWORD']}@alugueisV2_postgres:5432/{config['POSTGRES_DB']}
+DATABASE_URL=postgresql+psycopg2://{config['POSTGRES_USER']}:{config['POSTGRES_PASSWORD']}@alugueis_postgres:5432/{config['POSTGRES_DB']}
 """.strip()
 
     # Conteúdo do .env principal
@@ -159,7 +159,7 @@ POSTGRES_USER={config['POSTGRES_USER']}
 POSTGRES_PASSWORD={config['POSTGRES_PASSWORD']}
 ADMIN_USER={config['ADMIN_USER']}
 ADMIN_PASS={config['ADMIN_PASS']}
-DATABASE_URL=postgresql://{config['POSTGRES_USER']}:{config['POSTGRES_PASSWORD']}@alugueisV2_postgres:5432/{config['POSTGRES_DB']}
+DATABASE_URL=postgresql://{config['POSTGRES_USER']}:{config['POSTGRES_PASSWORD']}@alugueis_postgres:5432/{config['POSTGRES_DB']}
 SECRET_KEY={secret_key}
 CSRF_SECRET_KEY={csrf_secret_key}
 CORS_ALLOW_CREDENTIALS=true
@@ -246,7 +246,7 @@ def wait_for_postgres(config):
         for _ in range(60):  # Tenta por até 120 segundos
             try:
                 # O nome do container é definido no docker-compose.yml
-                container_name = "alugueisV2_postgres"
+                container_name = "alugueis_postgres"
                 result = run_command(
                     ['docker', 'inspect', '-f', '{{.State.Health.Status}}', container_name],
                     capture_output=True, text=True, check=True
@@ -263,7 +263,7 @@ def wait_for_postgres(config):
             time.sleep(2)
 
     console.print("[bold red]❌ O container do PostgreSQL não ficou saudável a tempo.[/bold red]")
-    console.print("Verifique os logs do container com: [bold]docker compose logs alugueisV2_postgres[/bold]")
+    console.print("Verifique os logs do container com: [bold]docker compose logs alugueis_postgres[/bold]")
     exit(1)
 
 
@@ -279,7 +279,7 @@ def initialize_database(config):
 
         # Gerar hash usando comando direto
         import os
-        hash_cmd = f"docker exec alugueisV2_backend python -c \"from passlib.context import CryptContext; pwd_context = CryptContext(schemes=['bcrypt'], deprecated='auto'); print(pwd_context.hash('{config['ADMIN_PASS']}'))\""
+        hash_cmd = f"docker exec alugueis_backend python -c \"from passlib.context import CryptContext; pwd_context = CryptContext(schemes=['bcrypt'], deprecated='auto'); print(pwd_context.hash('{config['ADMIN_PASS']}'))\""
         result = os.popen(hash_cmd).read().strip()
         hashed_password = result
         
@@ -298,7 +298,7 @@ def initialize_database(config):
         # Usar subprocess com lista para evitar problemas de escaping
         psql_command = [
             "docker", "exec", "-e", f"PGPASSWORD={config['POSTGRES_PASSWORD']}", 
-            "alugueisV2_postgres", "psql", "-U", config['POSTGRES_USER'], 
+            "alugueis_postgres", "psql", "-U", config['POSTGRES_USER'], 
             "-d", config['POSTGRES_DB'], "-c", sql_command
         ]
         
@@ -362,7 +362,7 @@ def display_header():
     """Displays the welcome header for the installation script."""
     console.print(
         Panel(
-            Text("Bem-vindo ao Instalador do Sistema de Aluguéis", justify="center", style="bold green"),
+            Text("Bem-vindo ao Instalador do AlugueisV3 v2.0.0", justify="center", style="bold green"),
             border_style="green",
             padding=(1, 1),
         )
