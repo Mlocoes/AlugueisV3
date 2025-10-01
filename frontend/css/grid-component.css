@@ -1,0 +1,264 @@
+/**
+ * GridComponent Styles
+ * Estilos para el componente universal de tablas
+ */
+
+/* ===== Toolbar ===== */
+.grid-toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.grid-search {
+    flex: 1;
+    min-width: 200px;
+    max-width: 400px;
+}
+
+.grid-search-input {
+    width: 100%;
+}
+
+.grid-info {
+    color: #6c757d;
+    font-size: 0.875rem;
+}
+
+/* ===== Table ===== */
+.grid-table {
+    margin-bottom: 0;
+}
+
+.grid-table th.sortable {
+    cursor: pointer;
+    user-select: none;
+    position: relative;
+    padding-right: 1.5rem;
+}
+
+.grid-table th.sortable:hover {
+    background-color: #f8f9fa;
+}
+
+.grid-table th.sortable.active {
+    background-color: #e9ecef;
+}
+
+.grid-table th .sort-icon {
+    position: absolute;
+    right: 0.5rem;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 0.75rem;
+    opacity: 0.5;
+}
+
+.grid-table th.sortable.active .sort-icon {
+    opacity: 1;
+}
+
+.grid-table tbody tr.selected {
+    background-color: #cfe2ff;
+}
+
+.grid-table tbody tr.group-header {
+    background-color: #f8f9fa;
+    font-weight: 600;
+}
+
+.grid-table tbody tr.group-header td {
+    padding: 0.75rem;
+}
+
+/* ===== Loading & Empty States ===== */
+.grid-loading,
+.grid-empty {
+    text-align: center;
+    padding: 3rem 1rem;
+    color: #6c757d;
+    font-size: 1.1rem;
+}
+
+.grid-loading {
+    animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+}
+
+/* ===== Mobile Cards ===== */
+.grid-mobile-cards {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.grid-card {
+    background: white;
+    border: 1px solid #dee2e6;
+    border-radius: 0.375rem;
+    overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    transition: box-shadow 0.2s;
+}
+
+.grid-card:hover {
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.15);
+}
+
+.grid-card .card-header {
+    background-color: #f8f9fa;
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid #dee2e6;
+    font-size: 1rem;
+}
+
+.grid-card .card-body {
+    padding: 1rem;
+}
+
+.grid-card .card-field {
+    display: flex;
+    justify-content: space-between;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.grid-card .card-field:last-child {
+    border-bottom: none;
+}
+
+.grid-card .field-label {
+    font-weight: 600;
+    color: #495057;
+    flex: 0 0 40%;
+}
+
+.grid-card .field-value {
+    flex: 1;
+    text-align: right;
+    color: #212529;
+}
+
+.grid-card .card-actions {
+    padding: 0.75rem 1rem;
+    background-color: #f8f9fa;
+    border-top: 1px solid #dee2e6;
+    display: flex;
+    gap: 0.5rem;
+    justify-content: flex-end;
+}
+
+/* ===== Action Buttons ===== */
+.grid-action-btn {
+    margin: 0 0.25rem;
+}
+
+.grid-action-btn i {
+    font-size: 0.875rem;
+}
+
+/* ===== Pagination ===== */
+.grid-pagination {
+    display: flex;
+    justify-content: center;
+    margin-top: 1.5rem;
+}
+
+.grid-pagination .pagination {
+    margin-bottom: 0;
+}
+
+/* ===== Responsive Adjustments ===== */
+@media (max-width: 767px) {
+    .grid-toolbar {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .grid-search {
+        max-width: 100%;
+    }
+    
+    .grid-info {
+        text-align: center;
+    }
+    
+    .table-responsive {
+        font-size: 0.875rem;
+    }
+    
+    .grid-action-btn {
+        padding: 0.25rem 0.5rem;
+        font-size: 0.75rem;
+    }
+}
+
+/* ===== Dark Mode Support ===== */
+@media (prefers-color-scheme: dark) {
+    .grid-card {
+        background: #212529;
+        border-color: #495057;
+    }
+    
+    .grid-card .card-header {
+        background-color: #343a40;
+        border-bottom-color: #495057;
+    }
+    
+    .grid-card .field-label {
+        color: #adb5bd;
+    }
+    
+    .grid-card .field-value {
+        color: #f8f9fa;
+    }
+    
+    .grid-card .card-actions {
+        background-color: #343a40;
+        border-top-color: #495057;
+    }
+    
+    .grid-table th.sortable:hover {
+        background-color: #343a40;
+    }
+    
+    .grid-table th.sortable.active {
+        background-color: #495057;
+    }
+}
+
+/* ===== Accessibility ===== */
+.grid-action-btn:focus {
+    outline: 2px solid #0d6efd;
+    outline-offset: 2px;
+}
+
+.grid-table th.sortable:focus {
+    outline: 2px solid #0d6efd;
+    outline-offset: -2px;
+}
+
+/* Ensure text contrast */
+.grid-table tbody tr.selected {
+    color: #000;
+}
+
+/* ===== Print Styles ===== */
+@media print {
+    .grid-toolbar,
+    .grid-pagination,
+    .grid-action-btn {
+        display: none !important;
+    }
+    
+    .table-responsive {
+        overflow: visible !important;
+    }
+}
