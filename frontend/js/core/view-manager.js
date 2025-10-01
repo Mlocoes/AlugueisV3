@@ -1001,7 +1001,7 @@ class ViewManager {
                                 <h5 class="modal-title" id="editImovelModalLabel"><i class="fas fa-building me-2"></i>Editar Imóvel</h5>
                                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                             </div>
-                            <form id="edit-imovel-form">
+                            <form id="form-edit-imovel">
                                 <div class="modal-body p-1" style="font-size: 0.80rem; max-height: 70vh; overflow-y: auto;">
                                     <div class="mb-1"><label class="form-label">Nome</label><input type="text" class="form-control" name="nome" required style="font-size:0.85em;"></div>
                                     <div class="mb-3"><label class="form-label">Endereço</label><input type="text" class="form-control" name="endereco" required style="font-size:0.85em;"></div>
