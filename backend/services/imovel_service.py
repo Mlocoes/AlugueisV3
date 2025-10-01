@@ -93,6 +93,27 @@ class ImovelService:
             )
 
     @staticmethod
+    def _limpar_dados(dados: Dict) -> Dict:
+        """
+        Limpa dados do formulário convertendo strings vazias em None.
+        
+        Args:
+            dados: Dicionário com dados do formulário
+            
+        Returns:
+            Dicionário com dados limpos
+        """
+        dados_limpos = {}
+        for key, value in dados.items():
+            # Converter strings vazias em None
+            if value == '' or value is None:
+                dados_limpos[key] = None
+            # Manter outros valores como estão
+            else:
+                dados_limpos[key] = value
+        return dados_limpos
+
+    @staticmethod
     def criar(db: Session, dados: Dict) -> Imovel:
         """
         Cria um novo imóvel.
@@ -108,6 +129,9 @@ class ImovelService:
             HTTPException: Se houver erro na validação ou criação
         """
         try:
+            # Limpar dados (converter strings vazias em None)
+            dados = ImovelService._limpar_dados(dados)
+            
             # Validar dados
             ImovelService.validar_dados(dados)
             
@@ -151,6 +175,9 @@ class ImovelService:
             HTTPException: Se imóvel não for encontrado ou houver erro
         """
         try:
+            # Limpar dados (converter strings vazias em None)
+            dados = ImovelService._limpar_dados(dados)
+            
             # Buscar imóvel
             imovel = ImovelService.buscar_por_id(db, imovel_id)
             
