@@ -59,13 +59,22 @@ class ParticipacoesModule {
     bindContainerEvents() {
         if (!this.container) return;
         
-        // Delegação de eventos para botões de nova versão
+        // Delegação de eventos para botões
         this.container.addEventListener('click', e => {
             const novaVersaoButton = e.target.closest('.nova-versao-btn');
+            const editParticipacaoButton = e.target.closest('.edit-participacao-btn');
+            
             if (novaVersaoButton) {
                 const imovelId = novaVersaoButton.dataset.imovelId;
                 if (imovelId) {
                     this.novaVersao(imovelId);
+                }
+            }
+            
+            if (editParticipacaoButton) {
+                const imovelId = editParticipacaoButton.dataset.imovelId;
+                if (imovelId) {
+                    this.editParticipacao(imovelId);
                 }
             }
         });
@@ -313,6 +322,167 @@ class ParticipacoesModule {
         if (tableContainer) {
             tableContainer.style.display = 'block';
         }
+    }
+
+    async editParticipacao(imovelId) {
+        if (!window.authService.isAdmin()) {
+            this.uiManager.showError('Apenas administradores podem editar participações.');
+            return;
+        }
+
+        const imovel = this.imoveis.find(i => i.id == imovelId);
+        if (!imovel) return;
+
+        // Determinar versão target
+        const targetVersaoId = (this.selectedData === 'ativo' || this.selectedData === null) 
+            ? null 
+            : this.selectedData;
+
+        // Obter participações atuais para esta versão
+        const participacoesAtuais = this.proprietarios.map(prop => {
+            const part = this.participacoes.find(p => 
+                p.imovel_id == imovelId && 
+                p.proprietario_id === prop.id &&
+                (p.versao_id || null) === targetVersaoId
+            );
+            
+            const porcentagem = part 
+                ? (part.porcentagem < 1 ? part.porcentagem * 100 : part.porcentagem) 
+                : 0;
+            
+            return { 
+                proprietario: prop, 
+                porcentagem,
+                participacao_id: part ? part.id : null
+            };
+        });
+
+        // Criar e mostrar modal de edição
+        const modalId = 'edit-participacao-modal';
+        this.createEditModal(modalId, imovel, participacoesAtuais, targetVersaoId);
+        
+        const modal = new bootstrap.Modal(document.getElementById(modalId));
+        modal.show();
+    }
+
+    createEditModal(modalId, imovel, participacoes, versaoId) {
+        // Remover modal anterior se existir
+        let modalElement = document.getElementById(modalId);
+        if (modalElement) modalElement.remove();
+
+        // Criar inputs
+        const inputsHtml = participacoes.map(p => `
+            <div class="mb-2">
+                <label for="edit-prop-${p.proprietario.id}" class="form-label">
+                    ${SecurityUtils.escapeHtml(p.proprietario.nome)}
+                </label>
+                <input 
+                    type="number" 
+                    class="form-control" 
+                    id="edit-prop-${p.proprietario.id}" 
+                    value="${p.porcentagem.toFixed(2)}" 
+                    step="0.01" 
+                    min="0" 
+                    max="100"
+                >
+            </div>
+        `).join('');
+
+        // HTML do modal
+        const modalHtml = `
+            <div class="modal fade" id="${modalId}" tabindex="-1">
+                <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content">
+                        <div class="modal-header bg-primary text-white">
+                            <h5 class="modal-title">Editar Participações - ${SecurityUtils.escapeHtml(imovel.nome)}</h5>
+                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body">
+                            ${inputsHtml}
+                            <div class="mt-3 fw-bold">
+                                Total: <span id="edit-total-percent">100.00</span>%
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                            <button type="button" class="btn btn-primary" id="save-edit-participacao">Salvar</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        document.body.insertAdjacentHTML('beforeend', modalHtml);
+
+        // Elementos do modal
+        const modalInstance = document.getElementById(modalId);
+        const totalEl = modalInstance.querySelector('#edit-total-percent');
+
+        // Função para atualizar total
+        const updateTotal = () => {
+            let total = 0;
+            participacoes.forEach(p => {
+                const input = modalInstance.querySelector(`#edit-prop-${p.proprietario.id}`);
+                total += parseFloat(input.value) || 0;
+            });
+            totalEl.textContent = total.toFixed(2);
+            totalEl.style.color = Math.abs(100 - total) < 0.01 ? 'green' : 'red';
+        };
+
+        // Event listeners para inputs
+        modalInstance.querySelectorAll('input[type="number"]').forEach(input => {
+            input.addEventListener('input', updateTotal);
+        });
+
+        // Event listener para salvar
+        document.getElementById('save-edit-participacao').addEventListener('click', async () => {
+            const updatedParticipacoes = participacoes.map(p => {
+                const input = modalInstance.querySelector(`#edit-prop-${p.proprietario.id}`);
+                return {
+                    imovel_id: imovel.id,
+                    proprietario_id: p.proprietario.id,
+                    porcentagem: parseFloat(input.value) || 0,
+                    versao_id: versaoId
+                };
+            });
+
+            // Validar total
+            const total = updatedParticipacoes.reduce((sum, p) => sum + p.porcentagem, 0);
+            if (Math.abs(100 - total) > 0.01) {
+                this.uiManager.showError("A soma das porcentagens deve ser 100.");
+                return;
+            }
+
+            try {
+                this.uiManager.showLoading('Salvando participações...');
+                
+                // Usar o mesmo endpoint de nova versão (cria uma nova versão com os dados atualizados)
+                await this.apiService.createNovaVersaoParticipacoes({ 
+                    participacoes: updatedParticipacoes 
+                });
+                
+                // Invalidar cache
+                if (this.cacheService) {
+                    this.cacheService.invalidate('participacoes');
+                    this.cacheService.invalidate('participacoes_datas');
+                }
+                
+                this.uiManager.hideLoading();
+                this.uiManager.showSuccessToast('Sucesso', 'Participações atualizadas.');
+                
+                // Fechar modal
+                bootstrap.Modal.getInstance(modalInstance).hide();
+                
+                // Recarregar datas para mostrar nova versão
+                await this.loadDatas();
+            } catch (error) {
+                this.uiManager.showError('Erro ao salvar: ' + error.message);
+                this.uiManager.hideLoading();
+            }
+        });
+
+        // Atualizar total inicial
+        updateTotal();
     }
 
     async novaVersao(imovelId) {
