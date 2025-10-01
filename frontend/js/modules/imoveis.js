@@ -91,22 +91,27 @@ class ImoveisModule {
     bindContainerEvents() {
         if (!this.container) return;
         
-        // Event delegation for mobile cards
-        if (this.isMobile) {
-            this.container.addEventListener('click', e => {
-                const editButton = e.target.closest('.edit-btn');
-                const deleteButton = e.target.closest('.delete-btn');
+        // Event delegation for both mobile and desktop
+        this.container.addEventListener('click', e => {
+            const editButton = e.target.closest('.edit-btn');
+            const deleteButton = e.target.closest('.delete-btn');
 
-                const itemElement = e.target.closest('[data-id]');
-                if (!itemElement) return;
+            if (!editButton && !deleteButton) return;
 
-                const id = parseInt(itemElement.dataset.id, 10);
+            // Get ID from button's data-id attribute (desktop) or parent element (mobile)
+            let id;
+            if (editButton) {
+                id = editButton.dataset.id || e.target.closest('[data-id]')?.dataset.id;
+            } else if (deleteButton) {
+                id = deleteButton.dataset.id || e.target.closest('[data-id]')?.dataset.id;
+            }
 
-                if (editButton) this.editImovel(id);
-                if (deleteButton) this.deleteImovel(id);
-            });
-        }
-        // Desktop: GridComponent handles click events via row actions
+            if (!id) return;
+            id = parseInt(id, 10);
+
+            if (editButton) this.editImovel(id);
+            if (deleteButton) this.deleteImovel(id);
+        });
     }
 
     /**
