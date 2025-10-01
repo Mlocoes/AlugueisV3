@@ -1,0 +1,821 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Aluguéis - Unificado</title>
+
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+
+    <!-- PWA Meta Tags -->
+    <meta name="theme-color" content="#007bff">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="Sistema Aluguéis">
+    
+    <!-- Forçar no-cache para desenvolvimento -->
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    
+    <!-- PWA Icons -->
+    <link rel="apple-touch-icon" sizes="180x180" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏠</text></svg>">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏠</text></svg>">
+
+    <!-- Custom CSS Unificado -->
+    <link href="css/responsive.css" rel="stylesheet">
+    <link href="css/animations.css" rel="stylesheet">
+    <link href="css/mobile.css" rel="stylesheet">
+
+    <!-- Chart.js para gráficos -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <!-- Loading Screen -->
+    <div id="loading-screen" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 9999; color: white;">
+        <div class="loading-spinner" style="width: 50px; height: 50px; border: 3px solid rgba(255, 255, 255, 0.3); border-top: 3px solid #fff; border-radius: 50%;"></div>
+        <h3 style="margin-top: 1rem;">🏠 Sistema de Aluguéis</h3>
+        <p>Carregando aplicação...</p>
+    </div>
+
+    <!-- Login Screen -->
+    <div id="login-screen" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); z-index: 9998;">
+        <div class="container d-flex justify-content-center align-items-center min-vh-100">
+            <div class="card shadow-lg" style="width: 100%; max-width: 400px;">
+                <div class="card-body p-4">
+                    <div class="text-center mb-4">
+                        <div style="font-size: 3rem;">🏠</div>
+                        <h4 class="mt-2">Sistema de Aluguéis</h4>
+                        <p class="text-muted">Faça login para continuar</p>
+                    </div>
+                    
+                    <div id="login-alert" class="alert alert-danger" style="display: none;" role="alert"></div>
+                    
+                    <form id="login-form">
+                        <div class="mb-3">
+                            <label for="login-usuario" class="form-label">Usuário</label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="fas fa-user"></i></span>
+                                <input type="text" class="form-control" id="login-usuario" name="usuario" required autocomplete="off">
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="login-senha" class="form-label">Senha</label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="fas fa-key"></i></span>
+                                <input type="password" class="form-control" id="login-senha" name="senha" required autocomplete="off">
+                            </div>
+                        </div>
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary" id="login-submit">
+                                <i class="fas fa-sign-in-alt me-2"></i>Entrar
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- App Container -->
+    <div id="app-container" class="app-container" style="display: none;">
+        <!-- Navigation Container (será poblado por JavaScript) -->
+        <div id="navigation-container"></div>
+
+        <!-- Main Content Area -->
+        <div class="main-content">
+            <!-- Header -->
+            <header class="main-header">
+                <div class="d-flex align-items-center">
+                    <button class="btn btn-link d-md-none me-2" id="menu-toggle">
+                        <i class="fas fa-bars"></i>
+                    </button>
+                    <h4 class="mb-0" id="page-title">Dashboard</h4>
+                </div>
+                <div class="d-flex align-items-center">
+                    <div class="user-info me-3" id="header-user-info">
+                        <small class="text-muted">
+                            <i class="fas fa-user me-1"></i>
+                            Carregando...
+                        </small>
+                    </div>
+                    <button class="btn btn-outline-secondary btn-sm" id="logout-btn">
+                        <i class="fas fa-sign-out-alt"></i>
+                        <span class="d-none d-md-inline ms-1">Sair</span>
+                    </button>
+                </div>
+            </header>
+
+            <!-- Main Body -->
+            <main class="main-body" id="main-content">
+                <!-- Conteúdo dinámico será cargado aquí -->
+                <div class="d-flex justify-content-center align-items-center" style="min-height: 400px;">
+                    <div class="text-center">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Carregando...</span>
+                        </div>
+                        <div class="mt-3">Inicializando aplicação...</div>
+                    </div>
+                </div>
+
+                <!-- Dashboard Section -->
+                <section id="dashboard-section" class="container-fluid mt-4" style="display: none;">
+                    <div class="row">
+                        <div class="col-lg-12 mb-4">
+                            <div class="card shadow-sm">
+                                <div class="card-header bg-primary text-white">
+                                    <h5 class="mb-0">Receitas dos Últimos 12 Meses</h5>
+                                </div>
+                                <div class="card-body">
+                                    <div style="height: 300px;">
+                                        <canvas id="ingresosChart"></canvas>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+                <!-- Fin Dashboard Section -->
+
+                <!-- Participações Section (removida para usar template dinâmico) -->
+            </main>
+        </div>
+    </div>
+
+    <!-- Modal de Login -->
+    <div class="modal fade" id="loginModal" tabindex="-1" aria-labelledby="loginModalLabel" aria-hidden="true"
+        data-bs-backdrop="static">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title" id="loginModalLabel">
+                        <i class="fas fa-lock me-2"></i>
+                        Login do Sistema
+                    </h5>
+                </div>
+                <div class="modal-body">
+                    <form id="loginForm" autocomplete="off">
+                        <div class="mb-3">
+                            <label for="usuario" class="form-label">Usuário</label>
+                            <div class="input-group">
+                                <span class="input-group-text">
+                                    <i class="fas fa-user"></i>
+                                </span>
+                                <input type="text" class="form-control" id="usuario" name="usuario" required
+                                    autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="senha" class="form-label">Senha</label>
+                            <div class="input-group">
+                                <span class="input-group-text">
+                                    <i class="fas fa-key"></i>
+                                </span>
+                                <input type="password" class="form-control" id="senha" name="senha" required
+                                    autocomplete="off">
+                            </div>
+                        </div>
+                        <div id="loginError" class="alert alert-danger d-none"></div>
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-sign-in-alt me-2"></i>
+                                Entrar
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modales (serão adicionados dinamicamente conforme necessário) -->
+        <div id="modals-container">
+            <!-- Modal Novo Imóvel -->
+            <div class="modal fade" id="novo-imovel-modal" tabindex="-1" aria-labelledby="novoImovelModalLabel" aria-hidden="true">
+                <div class="modal-dialog modal-lg">
+                    <div class="modal-content">
+                        <div class="modal-header bg-success text-white">
+                            <h5 class="modal-title" id="novoImovelModalLabel"><i class="fas fa-plus me-2"></i>Novo Imóvel</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <form id="form-novo-imovel">
+                                <div class="mb-3">
+                                    <label for="novo-imovel-nome" class="form-label">Nome do Imóvel *</label>
+                                    <input type="text" class="form-control" id="novo-imovel-nome" name="nome" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="novo-imovel-endereco" class="form-label">Endereço</label>
+                                    <input type="text" class="form-control" id="novo-imovel-endereco" name="endereco">
+                                </div>
+                                <div class="mb-3">
+                                    <label for="novo-imovel-tipo" class="form-label">Tipo</label>
+                                    <input type="text" class="form-control" id="novo-imovel-tipo" name="tipo">
+                                </div>
+                                <div class="mb-3">
+                                    <label for="novo-imovel-proprietario" class="form-label">Proprietário</label>
+                                    <select class="form-select" id="novo-imovel-proprietario" name="proprietario_id"></select>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                                    <button type="submit" class="btn btn-success">Salvar</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- Modal Editar Imóvel -->
+            <div class="modal fade" id="edit-imovel-modal" tabindex="-1" aria-labelledby="editImovelModalLabel" aria-hidden="true">
+                <div class="modal-dialog modal-lg">
+                    <div class="modal-content">
+                        <div class="modal-header bg-warning text-dark">
+                            <h5 class="modal-title" id="editImovelModalLabel"><i class="fas fa-edit me-2"></i>Editar Imóvel</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <form id="form-edit-imovel">
+                                <div class="mb-3">
+                                    <label for="edit-imovel-nome" class="form-label">Nome do Imóvel *</label>
+                                    <input type="text" class="form-control" id="edit-imovel-nome" name="nome" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="edit-imovel-endereco" class="form-label">Endereço</label>
+                                    <input type="text" class="form-control" id="edit-imovel-endereco" name="endereco">
+                                </div>
+                                <div class="mb-3">
+                                    <label for="edit-imovel-tipo" class="form-label">Tipo</label>
+                                    <input type="text" class="form-control" id="edit-imovel-tipo" name="tipo">
+                                </div>
+                                <div class="mb-3">
+                                    <label for="edit-imovel-proprietario" class="form-label">Proprietário</label>
+                                    <select class="form-select" id="edit-imovel-proprietario" name="proprietario_id"></select>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                                    <button type="submit" class="btn btn-warning">Salvar Alterações</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- Fin Modal Editar Imóvel -->
+            <!-- Fin Modal Novo Imóvel -->
+            <!-- Modal Alias -->
+            <div class="modal fade" id="modal-alias" tabindex="-1" aria-labelledby="modalAliasLabel" aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header bg-primary text-white">
+                            <h5 class="modal-title" id="modalAliasLabel"><i class="fas fa-edit me-2"></i>Editar Alias</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body p-2" style="font-size: 0.85rem; max-height: 60vh; overflow-y: auto;">
+                            <div id="alias-alerts"></div>
+                            <form id="form-alias">
+                                <div class="mb-3">
+                                    <label for="alias-nome" class="form-label">Nome do Alias</label>
+                                    <input type="text" class="form-control" id="alias-nome" name="alias-nome" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="alias-proprietarios" class="form-label">Proprietários</label>
+                                    <select multiple class="form-select" id="alias-proprietarios" name="alias-proprietarios"></select>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                                    <button type="submit" class="btn btn-primary" id="btn-salvar-alias">Salvar</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- Fin Modal Alias -->
+                <!-- Modal Transferencias -->
+                <div class="modal fade" id="modal-transferencias" tabindex="-1" aria-labelledby="modalTransferenciasLabel" aria-hidden="true">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header bg-primary text-white">
+                                <h5 class="modal-title" id="modalTransferenciasLabel"><i class="fas fa-exchange-alt me-2"></i>Editar Transferência</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                            </div>
+                            <div class="modal-body p-2" style="font-size: 0.85rem; max-height: 60vh; overflow-y: auto;">
+                                <div id="transferencia-alerts"></div>
+                                <form id="form-transferencias">
+                                    <div class="mb-1">
+                                        <label for="transferencia-alias" class="form-label">Selecionar Alias *</label>
+                                        <select class="form-select" id="transferencia-alias" name="alias_id" required style="font-size:0.85em;">
+                                            <option value="">Selecione um alias...</option>
+                                        </select>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="transferencia-nome" class="form-label">Nome da Transferência *</label>
+                                        <input type="text" class="form-control" id="transferencia-nome" name="nome_transferencia" placeholder="Digite o nome da transferência" required style="font-size:0.85em;">
+                                    </div>
+                                    <div class="row mb-3">
+                                        <div class="col-md-6">
+                                            <label for="transferencia-data-criacao" class="form-label">Data Criação *</label>
+                                            <input type="date" class="form-control" id="transferencia-data-criacao" name="data_criacao" required style="font-size:0.85em;">
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label for="transferencia-data-fim" class="form-label">Data Fim</label>
+                                            <input type="date" class="form-control" id="transferencia-data-fim" name="data_fim" style="font-size:0.85em;">
+                                        </div>
+                                    </div>
+                                    <div id="transferencia-proprietarios-container" style="display: none;">
+                                        <label class="form-label">Proprietários</label>
+                                        <table class="table table-sm table-bordered" style="font-size:0.80em;">
+                                            <thead><tr><th>Nome</th><th>Participação</th></tr></thead>
+                                            <tbody id="transferencia-proprietarios-table"></tbody>
+                                        </table>
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                                        <button type="submit" class="btn btn-primary" id="btn-salvar-transferencias">Salvar</button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- Fin Modal Transferencias -->
+
+                
+
+                                <!-- Modal Confirmar Exclusão Extras -->
+                                <div class="modal fade" id="modal-confirmar-exclusao-extras" tabindex="-1" aria-labelledby="modalConfirmarExclusaoExtrasLabel" aria-hidden="true">
+                                    <div class="modal-dialog">
+                                        <div class="modal-content">
+                                            <div class="modal-header bg-danger text-white">
+                                                <h5 class="modal-title" id="modalConfirmarExclusaoExtrasLabel"><i class="fas fa-trash me-2"></i>Confirmar Exclusão</h5>
+                                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                            </div>
+                                            <div class="modal-body">
+                                                <p class="mb-3" id="modal-confirmar-exclusao-extras-msg">Tem certeza que deseja excluir este item? Esta ação não pode ser desfeita.</p>
+                                            </div>
+                                            <div class="modal-footer">
+                                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                                                <button type="button" class="btn btn-danger" id="btn-confirmar-exclusao-extras"><i class="fas fa-trash me-1"></i> Excluir</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <!-- Fin Modal Confirmar Exclusão Extras -->
+
+                                <!-- Modal Confirmar Exclusão Genérico -->
+                                <div class="modal fade" id="modal-confirmar-exclusao" tabindex="-1" aria-labelledby="modalConfirmarExclusaoLabel" aria-hidden="true">
+                                    <div class="modal-dialog">
+                                        <div class="modal-content">
+                                            <div class="modal-header bg-danger text-white">
+                                                <h5 class="modal-title" id="modalConfirmarExclusaoLabel"><i class="fas fa-trash me-2"></i>Confirmar Exclusão</h5>
+                                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                            </div>
+                                            <div class="modal-body">
+                                                <p class="mb-3" id="modal-confirmar-exclusao-msg">Tem certeza que deseja excluir este item? Esta ação não pode ser desfeita.</p>
+                                            </div>
+                                            <div class="modal-footer">
+                                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                                                <button type="button" class="btn btn-danger" id="btn-confirmar-exclusao"><i class="fas fa-trash me-1"></i> Excluir</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <!-- Fin Modal Confirmar Exclusão Genérico -->
+                                <!-- Modal Confirmar Exclusão Imovel -->
+                                <div class="modal fade" id="modal-confirmar-exclusao-imovel" tabindex="-1" aria-labelledby="modalConfirmarExclusaoImovelLabel" aria-hidden="true">
+                                    <div class="modal-dialog">
+                                        <div class="modal-content">
+                                            <div class="modal-header bg-danger text-white">
+                                                <h5 class="modal-title" id="modalConfirmarExclusaoImovelLabel"><i class="fas fa-trash me-2"></i>Confirmar Exclusão de Imóvel</h5>
+                                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                            </div>
+                                            <div class="modal-body">
+                                                <p class="mb-3" id="modal-confirmar-exclusao-imovel-msg">Tem certeza que deseja excluir este imóvel? Esta ação não pode ser desfeita.</p>
+                                            </div>
+                                            <div class="modal-footer">
+                                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                                                <button type="button" class="btn btn-danger" id="btn-confirmar-exclusao-imovel"><i class="fas fa-trash me-1"></i> Excluir</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <!-- Fin Modal Confirmar Exclusão Imovel -->
+                                </div>
+
+    <!-- Scripts -->
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- DOMPurify for XSS Protection -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.6/purify.min.js"></script>
+
+    <!-- Core Scripts -->
+    <script src="js/utils/security.js?v=1758968683"></script>
+    <script src="js/core/config.js?v=1758968683"></script>
+    <script src="js/core/network-config.js?v=1758968683"></script>
+    <script src="js/core/device-manager.js?v=1758968683"></script>
+    <script src="js/core/navigator.js?v=1758968683"></script>
+    <script src="js/core/view-manager.js?v=1758968683"></script>
+    <script src="js/core/table-manager.js?v=1758968683"></script>
+    <script src="js/core/mobile-ui-manager.js?v=1758968683"></script>
+    
+    <!-- Services Scripts -->
+    <script src="js/apiService.js?v=1758968683"></script>
+    <script src="js/services/authService.js?v=1758968683"></script>
+    <script src="js/core/ui-manager.js?v=1758968683"></script>
+    <script src="js/core/modal-manager.js?v=1758968683"></script>
+    
+
+    <!-- Module Scripts: dashboard debe ir antes de app.js -->
+    <script src="js/modules/dashboard.js?v=1758968683"></script>
+
+    <!-- Main App Script -->
+    <script src="js/app.js?v=1758968683"></script>
+
+    <!-- Resto de módulos -->
+    <script src="js/modules/loginManager.js?v=1758968683"></script>
+    <script src="js/modules/proprietarios.js?v=1758968683"></script>
+    <script src="js/modules/imoveis.js?v=1758968683"></script>
+    <script src="js/modules/participacoes.js?v=1758968683"></script>
+    <script src="js/modules/alugueis.js?v=1758968683"></script>
+    <script src="js/modules/relatorios.js?v=1758968683"></script>
+    <script src="js/modules/extras.js?v=1758968683"></script>
+
+    <script src="js/modules/importacao.js?v=1758968683"></script>
+    <script src="js/modules/usuarioManager.js?v=1758968683"></script>
+
+    <!-- Inicialización automática de la app -->
+    <script>
+        // Aguardar que todos os scripts sejam carregados antes de inicializar
+        window.addEventListener('load', function() {
+            if (typeof window.initApp === 'function') {
+                window.initApp();
+                console.log('🚀 window.initApp() chamado automaticamente após carregamento completo');
+            } else {
+                console.error('❌ window.initApp não está disponível após carregamento completo');
+            }
+        });
+    </script>
+
+    <!-- Main App Script -->
+    <script>
+        /**
+         * Aplicación Principal Unificada
+         */
+        class UnifiedApp {
+            constructor() {
+                this.isInitialized = false;
+                this.isAuthenticated = false;
+                this.currentUser = null;
+            }
+
+            async init() {
+                if (this.isInitialized) return;
+
+                console.log('🚀 Inicializando aplicação unificada...');
+
+                try {
+                    // Limpar localStorage corrupto al inicio
+                    this.cleanupLocalStorage();
+
+                    // Para desenvolvimento: sempre começar com login (F5 sempre volta ao início)
+                    console.log('🔄 Sempre iniciando com tela de login (F5 = reset)');
+                    this.showLogin();
+
+                    // Configurar device manager
+                    if (window.deviceManager) {
+                        window.deviceManager.applyDeviceConfiguration();
+                        window.deviceManager.setupResponsiveListeners();
+                    }
+
+                    // Inicializar o Mobile UI Manager se existir
+                    if (window.mobileUIManager) {
+                        window.mobileUIManager.init();
+                    }
+
+                    this.setupEventListeners();
+                    this.isInitialized = true;
+
+                } catch (error) {
+                    console.error('❌ Error inicializando aplicación:', error);
+                    this.showError('Error al inicializar la aplicación');
+                }
+            }
+
+            cleanupLocalStorage() {
+                try {
+                    // Remove chaves antigas e potencialmente inseguras do localStorage
+                    localStorage.removeItem('token');
+                    localStorage.removeItem('userData');
+                    localStorage.removeItem('sistema_alquileres_token');
+                    localStorage.removeItem('sistema_alquileres_user');
+                    console.log('🧹 Limpeza de localStorage concluída.');
+                } catch (error) {
+                    console.warn('⚠️ Erro ao limpar o localStorage antigo:', error);
+                }
+            }
+
+            showLogin() {
+                document.getElementById('loading-screen').style.display = 'none';
+                document.getElementById('login-screen').style.display = 'block';
+                document.getElementById('app-container').style.display = 'none';
+            }
+
+            showApp() {
+                document.getElementById('loading-screen').style.display = 'none';
+                document.getElementById('login-screen').style.display = 'none';
+                document.getElementById('app-container').style.display = 'flex';
+
+                // Inicializar componentes de la aplicação
+                this.initializeAppComponents();
+            }
+
+            showError(message) {
+                document.getElementById('loading-screen').innerHTML = `
+                    <div class="text-center">
+                        <i class="fas fa-exclamation-triangle fa-3x text-warning mb-3"></i>
+                        <h4>Error</h4>
+                        <p>${SecurityUtils.escapeHtml(message)}</p>
+                        <button class="btn btn-light" onclick="location.reload()">
+                        <button class="btn btn-light" onclick="location.reload()">
+                            <i class="fas fa-refresh me-2"></i>Recargar
+                        </button>
+                    </div>
+                `;
+            }
+
+            async initializeAppComponents() {
+                try {
+                    // Inicializar todos os módulos
+                    this.initializeModules();
+
+                    // Inicializar navegador
+                    if (window.unifiedNavigator) {
+                        window.unifiedNavigator.init();
+                    }
+
+                    // Inicializar view manager
+                    if (window.viewManager) {
+                        window.viewManager.init();
+                    }
+
+                    // Actualizar información del usuario
+                    this.updateUserInfo();
+
+                    // Navegar a la vista inicial
+                    const initialView = window.unifiedNavigator ? 
+                        window.unifiedNavigator.getViewFromURL() : 'dashboard';
+                    
+                    if (window.unifiedNavigator) {
+                        window.unifiedNavigator.navigateTo(initialView);
+                    }
+
+                } catch (error) {
+                    console.error('❌ Error inicializando componentes:', error);
+                }
+            }
+
+            initializeModules() {
+                console.log('📦 Inicializando módulos...');
+
+                // Criar instâncias dos módulos
+                if (typeof ProprietariosModule !== 'undefined') {
+                    window.proprietariosModule = new ProprietariosModule();
+                    console.log('✅ Módulo Proprietarios criado');
+                }
+
+                if (typeof ParticipacoesModule !== 'undefined') {
+                    window.participacoesModule = new ParticipacoesModule();
+                    console.log('✅ Módulo Participacoes criado');
+                }
+
+                if (typeof ImportacaoModule !== 'undefined') {
+                    window.importacaoModule = new ImportacaoModule();
+                    console.log('✅ Módulo Importacao criado');
+                }
+
+                if (typeof AlugueisModule !== 'undefined') {
+                    window.alugueisModule = new AlugueisModule();
+                    console.log('✅ Módulo Alugueis criado');
+                }
+
+                if (typeof ExtrasManager !== 'undefined') {
+                    window.extrasModule = new ExtrasManager();
+                    console.log('✅ Módulo Extras criado');
+                    // Chamar o método load() do ExtrasModule para carregar dados iniciais
+                    window.extrasModule.load();
+                }
+
+                if (typeof RelatoriosModule !== 'undefined') {
+                    window.relatoriosModule = new RelatoriosModule();
+                    console.log('✅ Módulo Relatorios criado');
+                }
+
+                if (typeof window.usuarioManager !== 'undefined') {
+                    window.usuarioManager.init();
+                    console.log('✅ Gerenciador de usuário inicializado');
+                }
+
+                console.log('✅ Módulos inicializados');
+            }
+
+            setupEventListeners() {
+                // Login form
+                const loginForm = document.getElementById('login-form');
+                if (loginForm) {
+                    loginForm.addEventListener('submit', async (e) => {
+                        e.preventDefault();
+                        await this.handleLogin(e.target);
+                    });
+                }
+
+                // Logout button
+                const logoutBtn = document.getElementById('logout-btn');
+                if (logoutBtn) {
+                    logoutBtn.addEventListener('click', () => {
+                        this.handleLogout();
+                    });
+                }
+
+                // Menu toggle (mobile)
+                const menuToggle = document.getElementById('menu-toggle');
+                if (menuToggle) {
+                    menuToggle.addEventListener('click', () => {
+                        if (window.unifiedNavigator) {
+                            window.unifiedNavigator.toggleSidebar();
+                        }
+                    });
+                }
+            }
+
+            async handleLogin(form) {
+                const submitBtn = document.getElementById('login-submit');
+                const alertDiv = document.getElementById('login-alert');
+                
+                try {
+                    submitBtn.disabled = true;
+                    SecurityUtils.setSafeHTML(submitBtn, '<i class="fas fa-spinner fa-spin me-2"></i>Entrando...');
+                    alertDiv.style.display = 'none';
+
+                    const formData = new FormData(form);
+                    const credentials = {
+                        usuario: formData.get('usuario'),
+                        senha: formData.get('senha')
+                    };
+
+                    const authService = window.authService;
+                    if (!authService) {
+                        throw new Error('Serviço de autenticação não disponível');
+                    }
+
+                    const response = await authService.login(credentials.usuario, credentials.senha);
+                    
+                    if (response.success) {
+                        this.isAuthenticated = true;
+                        this.currentUser = {
+                            usuario: response.usuario,
+                            tipo: response.tipo
+                        };
+                        
+                        // Não é mais necessário salvar no localStorage
+                        console.log('Login bem-sucedido, o cookie foi definido pelo servidor.');
+
+                        this.showApp();
+                        // Aplicar permissões baseado no tipo de usuário
+                        this.applyUserPermissions();
+
+                        // Forçar a navegação para o dashboard após o login
+                        if (window.unifiedNavigator) {
+                            window.unifiedNavigator.navigateTo('dashboard');
+                        }
+                    } else {
+                        throw new Error(response.message || 'Credenciais inválidas');
+                    }
+
+                } catch (error) {
+                    console.error('❌ Erro no login:', error);
+                    alertDiv.textContent = error.message || 'Erro ao iniciar sessão';
+                    alertDiv.style.display = 'block';
+                } finally {
+                    submitBtn.disabled = false;
+                    SecurityUtils.setSafeHTML(submitBtn, '<i class="fas fa-sign-in-alt me-2"></i>Entrar');
+                }
+            }
+
+            async handleLogout() {
+                console.log('Iniciando processo de logout...');
+                const authService = window.authService;
+                if (authService) {
+                    await authService.logout();
+                }
+
+                this.isAuthenticated = false;
+                this.currentUser = null;
+
+                // Redirecionar para a tela de login
+                this.showLogin();
+                console.log('Logout concluído.');
+            }
+
+            updateUserInfo() {
+                if (!this.currentUser) return;
+
+                const userInfo = document.getElementById('header-user-info');
+                if (userInfo) {
+                    SecurityUtils.setSafeHTML(userInfo, `
+                        <small class="text-muted">
+                            <i class="fas fa-user me-1"></i>
+                            ${SecurityUtils.escapeHtml(this.currentUser.usuario)} (${SecurityUtils.escapeHtml(this.currentUser.tipo)})
+                        </small>
+                    `);
+                }
+
+                // Actualizar en navegador también
+                if (window.unifiedNavigator) {
+                    window.unifiedNavigator.updateUserInfo(this.currentUser);
+                }
+            }
+
+            /**
+             * Aplicar permissões baseado no tipo de usuário
+             */
+            applyUserPermissions() {
+                const isAdmin = this.currentUser && this.currentUser.tipo === 'administrador';
+                console.log(`🔒 Aplicando permissões para usuário ${isAdmin ? 'ADMIN' : 'USUÁRIO'}`);
+
+                // 1. Reconstruir a navegação com base nas novas permissões
+                if (window.unifiedNavigator) {
+                    window.unifiedNavigator.rebuildNavigation();
+                }
+
+                // 2. Aplicar permissões em todos os módulos
+                this.applyModulePermissions(isAdmin);
+
+                // 3. Configurar elementos específicos da interface
+                this.applyInterfacePermissions(isAdmin);
+            }
+
+            /**
+             * Aplicar permissões nos módulos
+             */
+            applyModulePermissions(isAdmin) {
+                // Proprietários
+                if (window.proprietariosModule && typeof window.proprietariosModule.applyPermissions === 'function') {
+                    window.proprietariosModule.applyPermissions(isAdmin);
+                }
+
+                // Imóveis
+                if (window.imoveisModule && typeof window.imoveisModule.applyPermissions === 'function') {
+                    window.imoveisModule.applyPermissions(isAdmin);
+                }
+
+                // Participações
+                if (window.participacoesModule && typeof window.participacoesModule.applyPermissions === 'function') {
+                    window.participacoesModule.applyPermissions(isAdmin);
+                }
+
+                // Aluguéis
+                if (window.alugueisModule && typeof window.alugueisModule.applyPermissions === 'function') {
+                    window.alugueisModule.applyPermissions(isAdmin);
+                }
+
+                // Relatórios - flag de transferências
+                if (window.relatoriosModule && typeof window.relatoriosModule.applyPermissions === 'function') {
+                    window.relatoriosModule.applyPermissions(isAdmin);
+                }
+
+                // Extras
+                if (window.extrasModule && typeof window.extrasModule.applyPermissions === 'function') {
+                    window.extrasModule.applyPermissions(isAdmin);
+                }
+            }
+
+            /**
+             * Aplicar permissões na interface geral
+             */
+            applyInterfacePermissions(isAdmin) {
+                // Adicionar classe CSS para identificar tipo de usuário
+                document.body.classList.toggle('user-admin', isAdmin);
+                document.body.classList.toggle('user-regular', !isAdmin);
+
+                // Configurar tooltips e mensagens para elementos desabilitados
+                const disabledElements = document.querySelectorAll('[disabled].admin-only');
+                disabledElements.forEach(element => {
+                    if (!element.hasAttribute('title')) {
+                        element.setAttribute('title', 'Apenas administradores podem usar esta função');
+                    }
+                });
+            }
+        }
+
+        // Inicializar aplicación cuando el DOM esté listo
+        document.addEventListener('DOMContentLoaded', () => {
+            window.unifiedApp = new UnifiedApp();
+            window.unifiedApp.init();
+        });
+    </script>
+</body>
+</html>
