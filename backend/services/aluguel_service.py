@@ -19,6 +19,7 @@ class AluguelService:
         db: Session,
         ano: Optional[int] = None,
         mes: Optional[int] = None,
+        proprietario_id: Optional[int] = None,
         agregacao: str = "mensal"
     ) -> List[Dict[str, Any]]:
         """
@@ -29,6 +30,7 @@ class AluguelService:
             db: Sessão do banco de dados
             ano: Ano para filtrar (opcional)
             mes: Mês para filtrar (opcional)
+            proprietario_id: ID do proprietário para filtrar (opcional)
             agregacao: Tipo de agregação ('mensal' ou 'ano_completo')
         
         Returns:
@@ -45,6 +47,12 @@ class AluguelService:
             query = query.filter(extract('year', AluguelSimples.data_referencia) == ano)
         if mes and agregacao == "mensal":
             query = query.filter(extract('month', AluguelSimples.data_referencia) == mes)
+        
+        # Filtro de proprietário (aplicado na query principal via join)
+        if proprietario_id:
+            query = query.join(AluguelSimples.participacoes).filter(
+                Participacao.proprietario_id == proprietario_id
+            )
         
         alugueis = query.all()
         
