@@ -41,6 +41,36 @@ class LoginManager {
         // Configurar event listeners
         this.setupEvents();
 
+        // Verificar se foi logout e limpar formulário
+        if (sessionStorage.getItem('logout_realizado') === 'true') {
+            console.log('🧹 Logout detectado, limpando formulário...');
+            sessionStorage.removeItem('logout_realizado');
+            
+            // Usar setTimeout para garantir que DOM está pronto
+            setTimeout(() => {
+                this.forceClearLoginForm();
+                // Forçar reset do formulário HTML
+                if (this.loginForm) {
+                    this.loginForm.reset();
+                }
+            }, 100);
+        }
+
+        // Verificar se foi login bem-sucedido e limpar formulário
+        if (sessionStorage.getItem('login_bem_sucedido') === 'true') {
+            console.log('🧹 Login bem-sucedido detectado, limpando formulário...');
+            sessionStorage.removeItem('login_bem_sucedido');
+            
+            // Usar setTimeout para garantir que DOM está pronto
+            setTimeout(() => {
+                this.forceClearLoginForm();
+                // Forçar reset do formulário HTML
+                if (this.loginForm) {
+                    this.loginForm.reset();
+                }
+            }, 100);
+        }
+
         // Limpar formulário imediatamente após inicialização
         // Isso previne que o navegador auto-complete com credenciais anteriores
         this.clearLoginForm();
@@ -98,7 +128,58 @@ class LoginManager {
                         usuarioField.focus();
                     }
                 });
+                
+                // Agregar listener que limpia cuando el modal se muestra
+                modalElement.addEventListener('show.bs.modal', () => {
+                    // Limpiar inmediatamente al abrir
+                    this.forceClearLoginForm();
+                });
             }
+        }
+
+        // Agregar observador para detectar cuando el navegador llena los campos
+        this.setupAutocompleteWatcher();
+    }
+
+    /**
+     * Configurar observador que detecta y limpia autocompletado del navegador
+     */
+    setupAutocompleteWatcher() {
+        const usuarioField = document.getElementById('usuario');
+        const senhaField = document.getElementById('senha');
+        
+        if (usuarioField && senhaField) {
+            // Usar MutationObserver para detectar cambios en value
+            const observer = new MutationObserver(() => {
+                // Si el modal no está visible y los campos tienen valor, limpiarlos
+                const modal = document.getElementById('loginModal');
+                if (modal && !modal.classList.contains('show')) {
+                    if (usuarioField.value || senhaField.value) {
+                        console.log('🧹 Detectado autocomplete del navegador, limpiando...');
+                        usuarioField.value = '';
+                        senhaField.value = '';
+                    }
+                }
+            });
+            
+            // Observar cambios en atributos de los campos
+            observer.observe(usuarioField, { attributes: true, attributeFilter: ['value'] });
+            observer.observe(senhaField, { attributes: true, attributeFilter: ['value'] });
+            
+            // También usar setInterval para revisar periódicamente
+            setInterval(() => {
+                const modal = document.getElementById('loginModal');
+                const isAuthenticated = window.authService && window.authService.isAuthenticated();
+                
+                // Si está autenticado y modal no visible, asegurar campos vacíos
+                if (isAuthenticated && modal && !modal.classList.contains('show')) {
+                    if (usuarioField.value || senhaField.value) {
+                        console.log('🧹 Limpieza periódica de campos...');
+                        usuarioField.value = '';
+                        senhaField.value = '';
+                    }
+                }
+            }, 1000); // Revisar cada segundo
         }
     }
 
@@ -157,13 +238,46 @@ class LoginManager {
 
         if (usuarioField) {
             usuarioField.value = '';
+            usuarioField.defaultValue = '';
         }
         if (senhaField) {
             senhaField.value = '';
+            senhaField.defaultValue = '';
         }
         if (errorDiv) {
             errorDiv.classList.add('d-none');
         }
+    }
+
+    /**
+     * Forzar limpieza agresiva del formulario (recrear campos)
+     */
+    forceClearLoginForm() {
+        const usuarioField = document.getElementById('usuario');
+        const senhaField = document.getElementById('senha');
+        const loginForm = document.getElementById('loginForm');
+        
+        // Resetear el formulario completo
+        if (loginForm) {
+            loginForm.reset();
+        }
+        
+        // Limpiar valores directamente
+        if (usuarioField) {
+            usuarioField.value = '';
+            usuarioField.defaultValue = '';
+            // Remover atributo value del HTML
+            usuarioField.removeAttribute('value');
+        }
+        
+        if (senhaField) {
+            senhaField.value = '';
+            senhaField.defaultValue = '';
+            senhaField.removeAttribute('value');
+        }
+        
+        // Llamar también a clearLoginForm normal
+        this.clearLoginForm();
     }
 
     /**
@@ -198,8 +312,14 @@ class LoginManager {
             const result = await window.authService.login(usuario, senha);
 
             if (result.success) {
-                this.hideLoginModal();
+                // Limpar formulário ANTES de esconder modal e recarregar
                 this.clearLoginForm();
+                
+                // Marcar no sessionStorage que é um login bem-sucedido
+                sessionStorage.setItem('login_bem_sucedido', 'true');
+                
+                this.hideLoginModal();
+                
                 // Recarregar página para atualizar estado de autenticação
                 window.location.reload();
             } else {
@@ -294,8 +414,11 @@ class LoginManager {
                 window.authService.clearStorage();
             }
 
-            // Limpar formulário
+            // Limpar formulário ANTES do reload
             this.clearLoginForm();
+
+            // Marcar no sessionStorage que é um logout
+            sessionStorage.setItem('logout_realizado', 'true');
 
             // Recarregar página para forçar novo login
             window.location.reload();

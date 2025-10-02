@@ -146,52 +146,6 @@
         </div>
     </div>
 
-    <!-- Modal de Login -->
-    <div class="modal fade" id="loginModal" tabindex="-1" aria-labelledby="loginModalLabel" aria-hidden="true"
-        data-bs-backdrop="static">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header bg-primary text-white">
-                    <h5 class="modal-title" id="loginModalLabel">
-                        <i class="fas fa-lock me-2"></i>
-                        Login do Sistema
-                    </h5>
-                </div>
-                <div class="modal-body">
-                    <form id="loginForm" autocomplete="off">
-                        <div class="mb-3">
-                            <label for="usuario" class="form-label">Usuário</label>
-                            <div class="input-group">
-                                <span class="input-group-text">
-                                    <i class="fas fa-user"></i>
-                                </span>
-                                <input type="text" class="form-control" id="usuario" name="usuario" required
-                                    autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
-                            </div>
-                        </div>
-                        <div class="mb-3">
-                            <label for="senha" class="form-label">Senha</label>
-                            <div class="input-group">
-                                <span class="input-group-text">
-                                    <i class="fas fa-key"></i>
-                                </span>
-                                <input type="password" class="form-control" id="senha" name="senha" required
-                                    autocomplete="new-password">
-                            </div>
-                        </div>
-                        <div id="loginError" class="alert alert-danger d-none"></div>
-                        <div class="d-grid">
-                            <button type="submit" class="btn btn-primary">
-                                <i class="fas fa-sign-in-alt me-2"></i>
-                                Entrar
-                            </button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </div>
-    </div>
-
     <!-- Modales (serão adicionados dinamicamente conforme necessário) -->
         <div id="modals-container">
             <!-- Modal Novo Imóvel -->
@@ -525,6 +479,100 @@
                 document.getElementById('loading-screen').style.display = 'none';
                 document.getElementById('login-screen').style.display = 'block';
                 document.getElementById('app-container').style.display = 'none';
+                
+                // Destruir y reconstruir formulário completamente
+                this.rebuildLoginForm();
+                
+                console.log('🧹 Formulário de login reconstruído ao mostrar tela de login');
+            }
+
+            rebuildLoginForm() {
+                // Buscar el contenedor del formulario de login (en login-screen, NO en el modal)
+                const loginCard = document.querySelector('#login-screen .card-body');
+                if (!loginCard) {
+                    console.warn('⚠️ Login card body não encontrado');
+                    return;
+                }
+                
+                // Guardar referencia al formulario actual
+                const oldForm = document.getElementById('login-form');
+                if (oldForm) {
+                    // Destruir formulário completamente
+                    oldForm.remove();
+                }
+                
+                // Crear nuevo formulário desde cero (con IDs correctos: login-form, login-usuario, login-senha)
+                const newFormHTML = `
+                    <div id="login-alert" class="alert alert-danger" style="display: none;" role="alert"></div>
+                    
+                    <form id="login-form">
+                        <!-- Campos señuelo invisibles -->
+                        <input type="text" name="fake_username" autocomplete="username" style="display:none;" tabindex="-1">
+                        <input type="password" name="fake_password" autocomplete="current-password" style="display:none;" tabindex="-1">
+                        
+                        <div class="mb-3">
+                            <label for="login-usuario" class="form-label">Usuário</label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="fas fa-user"></i></span>
+                                <input type="text" class="form-control" id="login-usuario" name="usuario" required 
+                                    autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="login-senha" class="form-label">Senha</label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="fas fa-key"></i></span>
+                                <input type="password" class="form-control" id="login-senha" name="senha" required 
+                                    autocomplete="off">
+                            </div>
+                        </div>
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary" id="login-submit">
+                                <i class="fas fa-sign-in-alt me-2"></i>Entrar
+                            </button>
+                        </div>
+                    </form>
+                `;
+                
+                // Encontrar el div de alert y el form, y reemplazarlos
+                const alertDiv = document.getElementById('login-alert');
+                if (alertDiv) {
+                    alertDiv.remove();
+                }
+                
+                // Insertar nuevo formulário
+                loginCard.insertAdjacentHTML('beforeend', newFormHTML);
+                
+                // Configurar evento de submit en el nuevo formulario
+                const newForm = document.getElementById('login-form');
+                if (newForm) {
+                    newForm.addEventListener('submit', (e) => {
+                        e.preventDefault();
+                        this.handleLogin(e.target);
+                    });
+                }
+                
+                // Limpiar campos después de que el navegador intente autocompletar
+                const forceClearFields = () => {
+                    const usuario = document.getElementById('login-usuario');
+                    const senha = document.getElementById('login-senha');
+                    if (usuario && usuario.value) {
+                        console.log('🧹 Limpiando campo usuario autocompletado por navegador');
+                        usuario.value = '';
+                    }
+                    if (senha && senha.value) {
+                        console.log('🧹 Limpiando campo senha autocompletado por navegador');
+                        senha.value = '';
+                    }
+                };
+                
+                // Limpiar en diferentes momentos
+                setTimeout(forceClearFields, 10);
+                setTimeout(forceClearFields, 50);
+                setTimeout(forceClearFields, 100);
+                setTimeout(forceClearFields, 200);
+                setTimeout(forceClearFields, 500);
+                setTimeout(forceClearFields, 1000);
             }
 
             showApp() {
@@ -683,7 +731,6 @@
                             tipo: response.tipo
                         };
                         
-                        // Não é mais necessário salvar no localStorage
                         console.log('Login bem-sucedido, o cookie foi definido pelo servidor.');
 
                         this.showApp();
@@ -718,7 +765,7 @@
                 this.isAuthenticated = false;
                 this.currentUser = null;
 
-                // Redirecionar para a tela de login
+                // Mostrar tela de login (que reconstruirá el formulario)
                 this.showLogin();
                 console.log('Logout concluído.');
             }
@@ -816,6 +863,26 @@
 
         // Inicializar aplicación cuando el DOM esté listo
         document.addEventListener('DOMContentLoaded', () => {
+            // Limpiar formulario de login inmediatamente al cargar la página
+            const loginForm = document.getElementById('loginForm');
+            const usuarioField = document.getElementById('usuario');
+            const senhaField = document.getElementById('senha');
+            
+            if (loginForm) {
+                loginForm.reset();
+            }
+            if (usuarioField) {
+                usuarioField.value = '';
+                usuarioField.setAttribute('value', '');
+            }
+            if (senhaField) {
+                senhaField.value = '';
+                senhaField.setAttribute('value', '');
+            }
+            
+            console.log('🧹 Formulário de login limpo no DOMContentLoaded');
+            
+            // Inicializar aplicación
             window.unifiedApp = new UnifiedApp();
             window.unifiedApp.init();
         });
