@@ -212,28 +212,97 @@ async def obter_totais_por_mes(
 
 @router.get("/distribuicao-matriz/")
 async def obter_distribuicao_matriz(
-    ano: Optional[int] = Query(None, description="Filtrar por ano (por padrão último ano com dados)"),
-    mes: Optional[int] = Query(None, ge=1, le=12, description="Filtrar por mês (por padrão último mês com dados)"),
+    ano: int = Query(..., description="Ano para filtrar"),
+    mes: int = Query(..., ge=1, le=12, description="Mês para filtrar"),
     proprietario_id: Optional[int] = Query(None, description="Filtrar por ID de proprietário específico"),
-    agregacao: Optional[str] = Query("mes_especifico", description="Tipo de agregação: 'mes_especifico', 'ano_completo', 'completo'"),
     db: Session = Depends(get_db),
     current_user: Usuario = Depends(verify_token_flexible)
 ):
-    """Obter distribuição de aluguéis em formato matriz (proprietários vs imóveis) - OPTIMIZED"""
+    """Obter distribuição de aluguéis em formato matriz para um mês específico"""
     try:
-        resultado = AluguelService.get_distribuicao_matriz(
-            db=db,
-            ano=ano,
-            mes=mes,
-            proprietario_id=proprietario_id,
-            agregacao=agregacao
+        print(f"🔍 Buscando distribuição matriz para {mes}/{ano}")
+        
+        # Obter todos os registros do mês/ano especificado
+        query = db.query(AluguelSimples).filter(
+            AluguelSimples.ano == ano,
+            AluguelSimples.mes == mes
         )
         
-        return {"success": True, "data": resultado}
+        if proprietario_id:
+            query = query.filter(AluguelSimples.proprietario_id == proprietario_id)
+        
+        alugueis = query.all()
+        
+        if not alugueis:
+            return {"success": True, "data": {"matriz": [], "proprietarios": [], "imoveis": []}}
+        
+        # Agrupar por proprietário e imóvel
+        distribuicao = {}
+        proprietarios_set = set()
+        imoveis_set = set()
+        
+        for aluguel in alugueis:
+            prop_id = aluguel.proprietario_id
+            imovel_id = aluguel.imovel_id
+            valor = aluguel.valor_liquido_proprietario or 0
+            
+            proprietarios_set.add(prop_id)
+            imoveis_set.add(imovel_id)
+            
+            if prop_id not in distribuicao:
+                distribuicao[prop_id] = {}
+            
+            distribuicao[prop_id][imovel_id] = valor
+        
+        # Obter dados de proprietários
+        proprietarios = []
+        for prop_id in proprietarios_set:
+            prop = db.query(Proprietario).filter(Proprietario.id == prop_id).first()
+            if prop:
+                proprietarios.append({
+                    "proprietario_id": prop_id,
+                    "nome": prop.nome
+                })
+        proprietarios.sort(key=lambda x: x['nome'])
+        
+        # Obter dados de imóveis
+        imoveis = []
+        for imovel_id in imoveis_set:
+            imovel = db.query(Imovel).filter(Imovel.id == imovel_id).first()
+            if imovel:
+                imoveis.append({
+                    "id": imovel_id,
+                    "nome": imovel.nome
+                })
+        imoveis.sort(key=lambda x: x['nome'])
+        
+        # Criar matriz
+        matriz = []
+        for prop in proprietarios:
+            prop_id = prop["proprietario_id"]
+            valores = {}
+            for imovel in imoveis:
+                imovel_id = imovel["id"]
+                valores[imovel["nome"]] = distribuicao.get(prop_id, {}).get(imovel_id, 0)
+            
+            matriz.append({
+                "proprietario_id": prop_id,
+                "nome": prop["nome"],
+                "valores": valores
+            })
+        
+        print(f"✅ Matriz criada: {len(matriz)} proprietários, {len(imoveis)} imóveis")
+        return {
+            "success": True,
+            "data": {
+                "matriz": matriz,
+                "proprietarios": proprietarios,
+                "imoveis": imoveis
+            }
+        }
         
     except Exception as e:
         print(f"❌ Erro ao obter distribuição matriz: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Erro ao obter distribuição matriz: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Erro ao obter distribuição matriz: {str(e)}")
 
 @router.get("/aluguel/{aluguel_id}")
