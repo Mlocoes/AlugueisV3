@@ -158,33 +158,56 @@ class RelatoriosModule {
     async getTransferenciasValue(proprietarioId, ano, mes) {
         const cacheKey = `transferencias_${ano}_${mes}`;
         if (this.transferenciasCache.has(cacheKey)) {
-            return this.transferenciasCache.get(cacheKey)[proprietarioId] || 0;
+            const cached = this.transferenciasCache.get(cacheKey)[proprietarioId] || 0;
+            console.log(`💰 Transferência (cache) - Proprietário ${proprietarioId}, ${mes}/${ano}: R$ ${cached}`);
+            return cached;
         }
 
-        // This part would ideally fetch data for the given period.
-        // For this revision, we assume a simplified logic where we fetch all and filter.
-        // In a real-world scenario, the API should support period-based queries.
         try {
+            console.log(`🔍 Buscando transferências do backend...`);
             const response = await this.apiService.get('/api/transferencias/relatorios');
-            const transferencias = response.success ? response.data : [];
+            const transferencias = response.success ? response.data : response;
+            console.log(`📦 Transferências recebidas:`, transferencias);
             
             const periodTransfers = {};
+            
+            // Data de consulta (primeiro dia do mês/ano consultado)
+            const dataConsulta = new Date(ano, mes - 1, 1);
+            console.log(`📅 Data de consulta: ${dataConsulta.toISOString()}`);
+            
             transferencias.forEach(t => {
-                const tDate = new Date(t.data_criacao);
-                if (tDate.getFullYear() == ano && (tDate.getMonth() + 1) == mes) {
+                // Verificar se a transferência está ATIVA no período consultado
+                const dataInicio = new Date(t.data_criacao);
+                const dataFim = new Date(t.data_fim);
+                
+                console.log(`   � Transferência: ${t.nome_transferencia}`);
+                console.log(`      Válida de ${dataInicio.toLocaleDateString()} até ${dataFim.toLocaleDateString()}`);
+                
+                // A transferência é aplicada se a data consultada está dentro do período de validade
+                if (dataConsulta >= dataInicio && dataConsulta <= dataFim) {
+                    console.log(`      ✅ Transferência ATIVA para ${mes}/${ano}!`);
                     try {
                         const participantes = JSON.parse(t.id_proprietarios);
+                        console.log(`      👥 Participantes:`, participantes);
                         participantes.forEach(p => {
                             periodTransfers[p.id] = (periodTransfers[p.id] || 0) + parseFloat(p.valor);
+                            console.log(`         💵 Proprietário ${p.id}: +${p.valor} = ${periodTransfers[p.id]}`);
                         });
-                    } catch (e) {}
+                    } catch (e) {
+                        console.error(`      ❌ Erro ao parsear participantes:`, e);
+                    }
+                } else {
+                    console.log(`      ⏭️  Transferência NÃO ativa para ${mes}/${ano}`);
                 }
             });
 
+            console.log(`💾 Cache de transferências para ${mes}/${ano}:`, periodTransfers);
             this.transferenciasCache.set(cacheKey, periodTransfers);
-            return periodTransfers[proprietarioId] || 0;
+            const valor = periodTransfers[proprietarioId] || 0;
+            console.log(`💰 Transferência final - Proprietário ${proprietarioId}: R$ ${valor}`);
+            return valor;
         } catch (error) {
-            console.error("Error fetching transferencias", error);
+            console.error("❌ Error fetching transferencias", error);
             return 0;
         }
     }
@@ -207,11 +230,17 @@ class RelatoriosModule {
         }
 
         const incluirTransferencias = this.transferenciasCheck && this.transferenciasCheck.checked;
+        console.log(`🎛️  Checkbox transferências: ${incluirTransferencias ? 'MARCADO' : 'DESMARCADO'}`);
         let cardsHtml = '';
         for (const item of this.currentData) {
             let somaAlugueis = parseFloat(item.soma_alugueis || 0);
+            console.log(`📊 Processando ${item.nome_proprietario} - ${item.mes}/${item.ano}`);
+            console.log(`   Soma original aluguéis: R$ ${somaAlugueis}`);
             if (incluirTransferencias) {
-                somaAlugueis += await this.getTransferenciasValue(item.proprietario_id, item.ano, item.mes);
+                const transferencia = await this.getTransferenciasValue(item.proprietario_id, item.ano, item.mes);
+                console.log(`   Valor transferência: R$ ${transferencia}`);
+                somaAlugueis += transferencia;
+                console.log(`   Soma FINAL aluguéis: R$ ${somaAlugueis}`);
             }
             const somaTaxas = parseFloat(item.soma_taxas || 0);
             const valorLiquido = somaAlugueis - somaTaxas;
@@ -241,11 +270,17 @@ class RelatoriosModule {
         }
 
         const incluirTransferencias = this.transferenciasCheck && this.transferenciasCheck.checked;
+        console.log(`🎛️  Checkbox transferências: ${incluirTransferencias ? 'MARCADO' : 'DESMARCADO'}`);
         let tableHtml = '';
         for (const [index, item] of this.currentData.entries()) {
             let somaAlugueis = parseFloat(item.soma_alugueis || 0);
+            console.log(`📊 Processando ${item.nome_proprietario} - ${item.mes}/${item.ano}`);
+            console.log(`   Soma original aluguéis: R$ ${somaAlugueis}`);
             if (incluirTransferencias) {
-                somaAlugueis += await this.getTransferenciasValue(item.proprietario_id, item.ano, item.mes);
+                const transferencia = await this.getTransferenciasValue(item.proprietario_id, item.ano, item.mes);
+                console.log(`   Valor transferência: R$ ${transferencia}`);
+                somaAlugueis += transferencia;
+                console.log(`   Soma FINAL aluguéis: R$ ${somaAlugueis}`);
             }
             const somaTaxas = parseFloat(item.soma_taxas || 0);
 
