@@ -154,6 +154,8 @@ class ParticipacoesModule {
         try {
             this.uiManager.showLoading('Carregando participações...');
             
+            console.log('🔍 loadParticipacoes - dataId:', dataId);
+            
             // Carregar participações + dados em cache
             const [participacoes, proprietarios, imoveis] = await Promise.all([
                 this.apiService.getParticipacoes(dataId),
@@ -164,6 +166,17 @@ class ParticipacoesModule {
             this.participacoes = participacoes || [];
             this.proprietarios = proprietarios || [];
             this.imoveis = imoveis || [];
+            
+            console.log('📊 Dados carregados:', {
+                participacoes: this.participacoes.length,
+                proprietarios: this.proprietarios.length,
+                imoveis: this.imoveis.length
+            });
+            
+            // Log das primeiras participações para debug
+            if (this.participacoes.length > 0) {
+                console.log('📋 Primeira participação:', this.participacoes[0]);
+            }
             
             this.render();
         } catch (error) {
@@ -206,6 +219,9 @@ class ParticipacoesModule {
                 return p.versao_id === targetVersaoId;
             }
         });
+        
+        console.log(`🔎 Filtro aplicado - targetVersaoId: ${targetVersaoId}`);
+        console.log(`📊 Total participações: ${this.participacoes.length}, Filtradas: ${participacoesFiltradas.length}`);
 
         // Renderizar cards
         const cardsHtml = this.imoveis.map(imovel => {
@@ -256,6 +272,13 @@ class ParticipacoesModule {
         const targetVersaoId = (this.selectedData === 'ativo' || this.selectedData === null) 
             ? null 
             : this.selectedData;
+        
+        console.log(`🖥️  renderDesktop - targetVersaoId: ${targetVersaoId}, selectedData: ${this.selectedData}`);
+        console.log(`📊 Total participações: ${this.participacoes.length}`);
+        
+        if (this.participacoes.length > 0) {
+            console.log('📋 Primeira participação:', this.participacoes[0]);
+        }
 
         if (this.proprietarios.length === 0 || this.imoveis.length === 0) {
             this.container.innerHTML = '<tr><td colspan="100" class="text-center">Nenhuma participação encontrada.</td></tr>';
@@ -289,11 +312,15 @@ class ParticipacoesModule {
 
             // Célula para cada proprietário
             this.proprietarios.forEach(prop => {
-                const part = this.participacoes.find(p =>
-                    p.imovel_id === imovel.id &&
-                    p.proprietario_id === prop.id &&
-                    (p.versao_id || null) === targetVersaoId
-                );
+                const part = this.participacoes.find(p => {
+                    const versaoMatch = targetVersaoId === null 
+                        ? (p.versao_id == null || p.versao_id === undefined)
+                        : p.versao_id === targetVersaoId;
+                    
+                    return p.imovel_id === imovel.id &&
+                           p.proprietario_id === prop.id &&
+                           versaoMatch;
+                });
 
                 const val = part 
                     ? (part.porcentagem < 1 ? part.porcentagem * 100 : part.porcentagem) 
