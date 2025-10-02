@@ -317,14 +317,37 @@ class ParticipacoesModule {
                         ? (p.versao_id == null || p.versao_id === undefined)
                         : p.versao_id === targetVersaoId;
                     
-                    return p.imovel_id === imovel.id &&
-                           p.proprietario_id === prop.id &&
-                           versaoMatch;
+                    const match = p.imovel_id === imovel.id &&
+                                  p.proprietario_id === prop.id &&
+                                  versaoMatch;
+                    
+                    // Log detalhado para primeira linha
+                    if (imovel.id === this.imoveis[0].id && prop.id === this.proprietarios[0].id) {
+                        console.log(`🔍 Buscando participação:`, {
+                            imovel: imovel.nome,
+                            proprietario: prop.nome,
+                            targetVersaoId,
+                            'p.versao_id': p.versao_id,
+                            versaoMatch,
+                            'p.imovel_id': p.imovel_id,
+                            'imovel.id': imovel.id,
+                            'p.proprietario_id': p.proprietario_id,
+                            'prop.id': prop.id,
+                            match
+                        });
+                    }
+                    
+                    return match;
                 });
 
                 const val = part 
                     ? (part.porcentagem < 1 ? part.porcentagem * 100 : part.porcentagem) 
                     : 0;
+                
+                // Log se encontrou participação
+                if (part && imovel.id === this.imoveis[0].id && prop.id === this.proprietarios[0].id) {
+                    console.log(`✅ Participação encontrada:`, part, `valor: ${val}%`);
+                }
                 
                 total += val;
                 const displayVal = val === 0 ? '-' : `${val.toFixed(2)}%`;
