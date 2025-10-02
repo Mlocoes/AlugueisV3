@@ -57,13 +57,8 @@ class SistemaAlugueisApp {
             // Configurar eventos globais
             this.setupGlobalEvents();
 
-            // Delegar gestión de autenticación y visibilidad a loginManager
-            if (window.loginManager && typeof window.loginManager.init === 'function') {
-                await window.loginManager.init();
-                console.log('🔒 Gestión de login y visibilidad delegada a loginManager');
-            } else {
-                console.warn('⚠️ LoginManager no disponible');
-            }
+            // Login/logout gerenciado por UnifiedApp em index.html (não por loginManager)
+            console.log('🔒 Autenticação gerenciada por UnifiedApp');
 
             console.log('✅ Sistema de Aluguéis inicializado corretamente');
 
