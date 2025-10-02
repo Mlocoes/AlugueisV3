@@ -41,6 +41,10 @@ class LoginManager {
         // Configurar event listeners
         this.setupEvents();
 
+        // Limpar formulário imediatamente após inicialização
+        // Isso previne que o navegador auto-complete com credenciais anteriores
+        this.clearLoginForm();
+
         // Não verificar autenticação aqui - deixar para o UnifiedApp
         console.log('LoginManager inicializado - aguardando chamadas externas');
     }
