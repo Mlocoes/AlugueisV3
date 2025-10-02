@@ -385,8 +385,7 @@ class ParticipacoesModule {
         const participacoesAtuais = this.proprietarios.map(prop => {
             const part = this.participacoes.find(p => 
                 p.imovel_id == imovelId && 
-                p.proprietario_id === prop.id &&
-                (p.versao_id || null) === targetVersaoId
+                p.proprietario_id === prop.id
             );
             
             const porcentagem = part 
@@ -510,15 +509,10 @@ class ParticipacoesModule {
                             allParticipacoes.push(edited);
                         }
                     } else {
-                        // Para otros imóveis, buscar la participação actual
-                        const targetVersaoId = (this.selectedData === 'ativo' || this.selectedData === null) 
-                            ? null 
-                            : this.selectedData;
-
+                        // Para outros imóveis, buscar a participação atual
                         const part = this.participacoes.find(p => 
                             p.imovel_id === im.id && 
-                            p.proprietario_id === prop.id &&
-                            (p.versao_id || null) === targetVersaoId
+                            p.proprietario_id === prop.id
                         );
                         
                         const porcentagem = part 
