@@ -269,11 +269,11 @@ class ParticipacoesModule {
         const isAdmin = window.authService && window.authService.isAdmin();
         
         // Determinar versão target
-        const targetVersaoId = (this.selectedData === 'ativo' || this.selectedData === null) 
-            ? null 
-            : this.selectedData;
+        // Se selectedData é "ativo" ou null, queremos participações com versao_id null
+        // Caso contrário, selectedData pode ser data_registro (string ISO) ou versao_id
+        const isAtivo = (this.selectedData === 'ativo' || this.selectedData === null);
         
-        console.log(`🖥️  renderDesktop - targetVersaoId: ${targetVersaoId}, selectedData: ${this.selectedData}`);
+        console.log(`🖥️  renderDesktop - selectedData: ${this.selectedData}, isAtivo: ${isAtivo}`);
         console.log(`📊 Total participações: ${this.participacoes.length}`);
         
         if (this.participacoes.length > 0) {
@@ -312,39 +312,18 @@ class ParticipacoesModule {
 
             // Célula para cada proprietário
             this.proprietarios.forEach(prop => {
-                const part = this.participacoes.find(p => {
-                    const versaoMatch = targetVersaoId === null 
-                        ? (p.versao_id == null || p.versao_id === undefined)
-                        : p.versao_id === targetVersaoId;
-                    
-                    const match = p.imovel_id === imovel.id &&
-                                  p.proprietario_id === prop.id &&
-                                  versaoMatch;
-                    
-                    // Log detalhado para primeira linha
-                    if (imovel.id === this.imoveis[0].id && prop.id === this.proprietarios[0].id) {
-                        console.log(`🔍 Buscando participação:`, {
-                            imovel: imovel.nome,
-                            proprietario: prop.nome,
-                            targetVersaoId,
-                            'p.versao_id': p.versao_id,
-                            versaoMatch,
-                            'p.imovel_id': p.imovel_id,
-                            'imovel.id': imovel.id,
-                            'p.proprietario_id': p.proprietario_id,
-                            'prop.id': prop.id,
-                            match
-                        });
-                    }
-                    
-                    return match;
-                });
+                // Para participações ativas (versao_id = null), simplesmente pegamos todas
+                // As participações já foram filtradas no backend pelo data_registro
+                const part = this.participacoes.find(p => 
+                    p.imovel_id === imovel.id &&
+                    p.proprietario_id === prop.id
+                );
 
                 const val = part 
                     ? (part.porcentagem < 1 ? part.porcentagem * 100 : part.porcentagem) 
                     : 0;
                 
-                // Log se encontrou participação
+                // Log se encontrou participação na primeira linha
                 if (part && imovel.id === this.imoveis[0].id && prop.id === this.proprietarios[0].id) {
                     console.log(`✅ Participação encontrada:`, part, `valor: ${val}%`);
                 }
