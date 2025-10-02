@@ -31,10 +31,13 @@ class ParticipacoesModule {
     }
 
     async load() {
+        console.log('🔄 ParticipacoesModule.load() - Iniciando carga...');
+        
         // Re-avaliar tipo de dispositivo
         this.isMobile = window.deviceManager && window.deviceManager.deviceType === 'mobile';
+        console.log(`📱 Tipo de dispositivo: ${this.isMobile ? 'MOBILE' : 'DESKTOP'}`);
         
-        // Identificar container - usar tbody para desktop
+        // Sempre re-buscar elementos DOM (podem ter sido recriados ao mudar de tela)
         const getContainer = () => this.isMobile
             ? document.getElementById('participacoes-list-mobile')
             : document.getElementById('participacoes-matrix-body');
@@ -42,26 +45,29 @@ class ParticipacoesModule {
         this.container = getContainer();
 
         // Retry múltiplas vezes se não encontrar (timing issue)
+        // Aumentado para 10 tentativas com delay maior
         if (!this.container) {
-            console.log('[ParticipacoesModule] Container not found, retrying...');
-            for (let i = 0; i < 5; i++) {
-                await new Promise(resolve => setTimeout(resolve, 200));
+            console.log('⏳ ParticipacoesModule: Container não encontrado, tentando novamente...');
+            for (let i = 0; i < 10; i++) {
+                await new Promise(resolve => setTimeout(resolve, 300));
                 this.container = getContainer();
                 if (this.container) {
-                    console.log(`[ParticipacoesModule] Container found after ${i + 1} retries`);
+                    console.log(`✅ Container encontrado após ${i + 1} tentativa(s)`);
                     break;
                 }
             }
         }
 
         if (!this.container) {
-            console.warn("ParticipacoesModule: Container not found after retries. View might not be active.");
+            console.warn('⚠️ ParticipacoesModule: Container não encontrado após tentativas. View pode não estar ativa ainda.');
             return;
         }
 
-        console.log('[ParticipacoesModule] Container found, initializing...');
+        console.log('✅ ParticipacoesModule: Container encontrado, inicializando...');
         this.bindContainerEvents();
         await this.loadDatas();
+        
+        console.log('✅ ParticipacoesModule.load() - Carga completa!');
     }
 
     bindContainerEvents() {
