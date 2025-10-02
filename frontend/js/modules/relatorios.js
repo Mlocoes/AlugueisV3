@@ -8,38 +8,81 @@ class RelatoriosModule {
     }
 
     async load() {
-        if (!this.initialized) {
-            this.init();
-        }
-        await this.loadInitialData();
-    }
-
-    init() {
-        if (this.initialized) return;
-
-        this.container = this.isMobile
+        console.log('🔄 RelatoriosModule.load() - Iniciando carga...');
+        
+        // Re-avaliar tipo de dispositivo
+        this.isMobile = window.deviceManager && window.deviceManager.deviceType === 'mobile';
+        console.log(`📱 Tipo de dispositivo: ${this.isMobile ? 'MOBILE' : 'DESKTOP'}`);
+        
+        // Sempre re-buscar elementos DOM (podem ter sido recriados ao mudar de tela)
+        const getContainer = () => this.isMobile
             ? document.getElementById('relatorios-list-mobile')
             : document.getElementById('relatorios-table-body');
 
+        this.container = getContainer();
+
+        // Retry múltiplas vezes se não encontrar (timing issue)
         if (!this.container) {
-            console.warn('RelatoriosModule: Container not found. View might not be active.');
+            console.log('⏳ RelatoriosModule: Container não encontrado, tentando novamente...');
+            for (let i = 0; i < 5; i++) {
+                await new Promise(resolve => setTimeout(resolve, 200));
+                this.container = getContainer();
+                if (this.container) {
+                    console.log(`✅ Container encontrado após ${i + 1} tentativa(s)`);
+                    break;
+                }
+            }
+        }
+
+        if (!this.container) {
+            console.error('❌ RelatoriosModule: Container não encontrado após tentativas. View pode não estar ativa.');
             return;
         }
 
+        // Re-buscar todos os elementos DOM
         const suffix = this.isMobile ? '-mobile' : '';
         this.anoSelect = document.getElementById(`relatorios-ano-select${suffix}`);
         this.mesSelect = document.getElementById(`relatorios-mes-select${suffix}`);
         this.proprietarioSelect = document.getElementById(`relatorios-proprietario-select${suffix}`);
         this.transferenciasCheck = document.getElementById(`relatorios-transferencias-check${suffix}`);
 
+        console.log('🎯 Elementos encontrados:', {
+            container: !!this.container,
+            anoSelect: !!this.anoSelect,
+            mesSelect: !!this.mesSelect,
+            proprietarioSelect: !!this.proprietarioSelect,
+            transferenciasCheck: !!this.transferenciasCheck
+        });
+
+        // Setup event listeners (sempre reconfigurar)
         this.setupEventListeners();
-        this.initialized = true;
+
+        // Carregar dados
+        await this.loadInitialData();
+        
+        console.log('✅ RelatoriosModule.load() - Carga completa!');
     }
 
     setupEventListeners() {
+        console.log('🎧 Configurando event listeners...');
+        
+        // Remover listeners antigos para evitar duplicados
+        // Usando named function para poder remover depois
+        if (!this._changeHandler) {
+            this._changeHandler = () => this.loadRelatoriosData();
+        }
+        
         [this.anoSelect, this.mesSelect, this.proprietarioSelect, this.transferenciasCheck].forEach(el => {
-            if (el) el.addEventListener('change', () => this.loadRelatoriosData());
+            if (el) {
+                // Remover listener antigo (se existir)
+                el.removeEventListener('change', this._changeHandler);
+                // Adicionar novo listener
+                el.addEventListener('change', this._changeHandler);
+                console.log(`   ✅ Listener adicionado: ${el.id}`);
+            }
         });
+        
+        console.log('✅ Event listeners configurados');
     }
 
     async loadInitialData() {
