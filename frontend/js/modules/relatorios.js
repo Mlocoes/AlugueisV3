@@ -5,6 +5,7 @@ class RelatoriosModule {
         this.currentData = [];
         this.transferenciasCache = new Map();
         this.isMobile = window.deviceManager && window.deviceManager.deviceType === 'mobile';
+        this.initialLoadDone = false; // Flag para controlar primeira carga
     }
 
     async load() {
@@ -348,13 +349,14 @@ class RelatoriosModule {
         console.log(`🔐 Aplicando permissões - Usuário é admin: ${isAdmin}`);
         
         if (this.transferenciasCheck) {
-            // IMPORTANTE: Marcar checkbox por padrão (sempre ativado)
-            if (!this.transferenciasCheck.checked) {
-                console.log('✅ Marcando checkbox de transferências por padrão');
+            // IMPORTANTE: Marcar checkbox por padrão APENAS na primeira carga
+            if (!this.initialLoadDone) {
+                console.log('✅ Primeira carga: marcando checkbox de transferências por padrão');
                 this.transferenciasCheck.checked = true;
+                this.initialLoadDone = true;
             }
             
-            // Desabilitar checkbox para não-admin (mas deixar marcado)
+            // Desabilitar checkbox para não-admin (mas manter estado atual)
             this.transferenciasCheck.disabled = !isAdmin;
             
             // Adicionar tooltip explicativo
