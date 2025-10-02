@@ -270,6 +270,7 @@ class Participacao(Base):
             'uuid': str(self.uuid) if self.uuid else None,
             'porcentagem': float(self.porcentagem) if self.porcentagem else 0.00,
             'data_registro': self.data_registro.isoformat() if self.data_registro else None,
+            'versao_id': None,  # Participações ativas não têm versao_id
             'imovel_id': self.imovel_id,
             'proprietario_id': self.proprietario_id
         }
