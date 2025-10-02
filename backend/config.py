@@ -2,6 +2,9 @@
 Configuração da aplicação FastAPI - Sistema de Gestão de Aluguéis V2
 """
 import os
+import tempfile
+import atexit
+import shutil
 from dotenv import load_dotenv
 load_dotenv()
 from sqlalchemy import create_engine
@@ -89,10 +92,13 @@ if not SECRET_KEY:
 # DEBUG é falso por padrão. Para habilitar, defina a variável de ambiente DEBUG="true"
 DEBUG = os.getenv("DEBUG", "false").lower() == "true"
 
-# Configurações de upload
-UPLOAD_DIR = "/tmp/uploads"
-STORAGE_DIR = "/tmp/storage"
+# Configurações de upload seguras com tempfile
+UPLOAD_DIR = tempfile.mkdtemp(prefix="alugueis_uploads_")
+STORAGE_DIR = tempfile.mkdtemp(prefix="alugueis_storage_")
 
-# Criar diretórios se não existirem
-os.makedirs(UPLOAD_DIR, exist_ok=True)
-os.makedirs(STORAGE_DIR, exist_ok=True)
+def cleanup_temp_dirs():
+    """Remove os diretórios temporários criados."""
+    shutil.rmtree(UPLOAD_DIR, ignore_errors=True)
+    shutil.rmtree(STORAGE_DIR, ignore_errors=True)
+
+atexit.register(cleanup_temp_dirs)
