@@ -290,7 +290,7 @@ class AlugueisModule {
 
         // Inicializar totais
         this.proprietarios.forEach(prop => {
-            totaisPorProprietario[prop.id] = 0;
+            totaisPorProprietario[prop.proprietario_id] = 0;
         });
 
         // Linhas de imóveis
@@ -300,15 +300,12 @@ class AlugueisModule {
 
             // Célula para cada proprietário
             this.proprietarios.forEach(prop => {
-                // Procurar o aluguel na matriz
-                const aluguel = this.matriz.find(a => 
-                    a.imovel_id === imovel.id && 
-                    a.proprietario_id === prop.id
-                );
-
-                const valor = aluguel ? parseFloat(aluguel.valor_liquido_proprietario || 0) : 0;
+                // Procurar o aluguel na matriz usando a nova estrutura
+                const linha = this.matriz.find(m => m.proprietario_id === prop.proprietario_id);
+                const valor = linha && linha.valores ? parseFloat(linha.valores[imovel.nome] || 0) : 0;
+                
                 totalImovel += valor;
-                totaisPorProprietario[prop.id] += valor;
+                totaisPorProprietario[prop.proprietario_id] += valor;
 
                 const displayVal = valor > 0 
                     ? `R$ ${valor.toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2})}` 
@@ -330,7 +327,7 @@ class AlugueisModule {
         // Linha de totais
         let totalRowHtml = '<td><strong>Total por Proprietário</strong></td>';
         this.proprietarios.forEach(prop => {
-            const total = totaisPorProprietario[prop.id];
+            const total = totaisPorProprietario[prop.proprietario_id];
             const totalFormatado = total > 0
                 ? `R$ ${total.toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`
                 : '-';
