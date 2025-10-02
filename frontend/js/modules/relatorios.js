@@ -22,10 +22,11 @@ class RelatoriosModule {
         this.container = getContainer();
 
         // Retry múltiplas vezes se não encontrar (timing issue)
+        // Aumentado para 10 tentativas com delay maior
         if (!this.container) {
             console.log('⏳ RelatoriosModule: Container não encontrado, tentando novamente...');
-            for (let i = 0; i < 5; i++) {
-                await new Promise(resolve => setTimeout(resolve, 200));
+            for (let i = 0; i < 10; i++) {
+                await new Promise(resolve => setTimeout(resolve, 300));
                 this.container = getContainer();
                 if (this.container) {
                     console.log(`✅ Container encontrado após ${i + 1} tentativa(s)`);
@@ -35,7 +36,8 @@ class RelatoriosModule {
         }
 
         if (!this.container) {
-            console.error('❌ RelatoriosModule: Container não encontrado após tentativas. View pode não estar ativa.');
+            console.warn('⚠️ RelatoriosModule: Container não encontrado após tentativas. View pode não estar ativa ainda.');
+            // Não retornar erro, apenas avisar - o container pode ser encontrado depois
             return;
         }
 
