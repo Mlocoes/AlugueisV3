@@ -346,19 +346,21 @@ class RelatoriosModule {
         console.log(`🔐 Aplicando permissões - Usuário é admin: ${isAdmin}`);
         
         if (this.transferenciasCheck) {
-            // Desabilitar checkbox para não-admin
-            this.transferenciasCheck.disabled = !isAdmin;
-            
-            // IMPORTANTE: Desmarcar checkbox se usuário não for admin
-            if (!isAdmin && this.transferenciasCheck.checked) {
-                console.log('⚠️  Usuário não-admin detectado - desmarcando checkbox de transferências');
-                this.transferenciasCheck.checked = false;
+            // IMPORTANTE: Marcar checkbox por padrão (sempre ativado)
+            if (!this.transferenciasCheck.checked) {
+                console.log('✅ Marcando checkbox de transferências por padrão');
+                this.transferenciasCheck.checked = true;
             }
+            
+            // Desabilitar checkbox para não-admin (mas deixar marcado)
+            this.transferenciasCheck.disabled = !isAdmin;
             
             // Adicionar tooltip explicativo
             const formCheckElement = this.transferenciasCheck.closest('.form-check');
             if (formCheckElement) {
-                formCheckElement.title = isAdmin ? '' : 'Apenas administradores podem alterar esta opção.';
+                formCheckElement.title = isAdmin 
+                    ? 'Clique para incluir/excluir transferências' 
+                    : 'Transferências sempre incluídas. Apenas administradores podem alterar.';
             }
             
             console.log(`✅ Checkbox de transferências - disabled: ${this.transferenciasCheck.disabled}, checked: ${this.transferenciasCheck.checked}`);
