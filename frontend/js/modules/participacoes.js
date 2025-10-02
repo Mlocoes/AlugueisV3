@@ -498,15 +498,22 @@ class ParticipacoesModule {
             // Construir lista completa: UMA participação por cada combinación imóvel × proprietário
             const allParticipacoes = [];
 
+            console.log('[EditParticipacao] =================================');
+            console.log('[EditParticipacao] this.participacoes contém:', this.participacoes.length, 'registros');
+            console.log('[EditParticipacao] Esperamos:', this.imoveis.length * this.proprietarios.length, 'registros');
+            console.log('[EditParticipacao] Primeira participação:', this.participacoes[0]);
+            
             // Para CADA imóvel
             this.imoveis.forEach(im => {
                 // Para CADA proprietário
                 this.proprietarios.forEach(prop => {
                     if (im.id === imovel.id) {
-                        // Usar los datos editados para el imóvel actual
+                        // Usar los datos editados para el imóvel atual
                         const edited = updatedForImovel.find(p => p.proprietario_id === prop.id);
                         if (edited) {
                             allParticipacoes.push(edited);
+                        } else {
+                            console.error(`[EditParticipacao] ERRO: Não encontrei dados editados para proprietário ${prop.id}`);
                         }
                     } else {
                         // Para outros imóveis, buscar a participação atual
@@ -514,6 +521,10 @@ class ParticipacoesModule {
                             p.imovel_id === im.id && 
                             p.proprietario_id === prop.id
                         );
+                        
+                        if (!part) {
+                            console.warn(`[EditParticipacao] AVISO: Não encontrei participação para imóvel ${im.id} (${im.nome}) × proprietário ${prop.id} (${prop.nome})`);
+                        }
                         
                         const porcentagem = part 
                             ? (part.porcentagem < 1 ? part.porcentagem * 100 : part.porcentagem)
@@ -527,7 +538,8 @@ class ParticipacoesModule {
                     }
                 });
             });
-
+            
+            console.log('[EditParticipacao] =================================');
             console.log('[EditParticipacao] Total de participações a enviar:', allParticipacoes.length);
             console.log('[EditParticipacao] Total de imóveis:', this.imoveis.length);
             console.log('[EditParticipacao] Total de proprietários:', this.proprietarios.length);
