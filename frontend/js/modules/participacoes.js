@@ -118,8 +118,8 @@ class ParticipacoesModule {
             
             // Carregar participações
             if (this.selectedData) {
-                const dataToLoad = this.isMobile ? null : this.selectedData;
-                await this.loadParticipacoes(dataToLoad);
+                // Mobile e desktop usam this.selectedData (versão mais recente)
+                await this.loadParticipacoes(this.selectedData);
             }
         } catch (error) {
             this.uiManager.showAlert('Erro ao carregar conjuntos: ' + error.message, 'error');
