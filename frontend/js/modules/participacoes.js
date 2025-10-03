@@ -31,11 +31,9 @@ class ParticipacoesModule {
     }
 
     async load() {
-        console.log('🔄 ParticipacoesModule.load() - Iniciando carga...');
         
         // Re-avaliar tipo de dispositivo
         this.isMobile = window.deviceManager && window.deviceManager.deviceType === 'mobile';
-        console.log(`📱 Tipo de dispositivo: ${this.isMobile ? 'MOBILE' : 'DESKTOP'}`);
         
         // Sempre re-buscar elementos DOM (podem ter sido recriados ao mudar de tela)
         const getContainer = () => this.isMobile
@@ -47,27 +45,22 @@ class ParticipacoesModule {
         // Retry múltiplas vezes se não encontrar (timing issue)
         // Aumentado para 10 tentativas com delay maior
         if (!this.container) {
-            console.log('⏳ ParticipacoesModule: Container não encontrado, tentando novamente...');
             for (let i = 0; i < 10; i++) {
                 await new Promise(resolve => setTimeout(resolve, 300));
                 this.container = getContainer();
                 if (this.container) {
-                    console.log(`✅ Container encontrado após ${i + 1} tentativa(s)`);
                     break;
                 }
             }
         }
 
         if (!this.container) {
-            console.warn('⚠️ ParticipacoesModule: Container não encontrado após tentativas. View pode não estar ativa ainda.');
             return;
         }
 
-        console.log('✅ ParticipacoesModule: Container encontrado, inicializando...');
         this.bindContainerEvents();
         await this.loadDatas();
         
-        console.log('✅ ParticipacoesModule.load() - Carga completa!');
     }
 
     bindContainerEvents() {
@@ -105,7 +98,6 @@ class ParticipacoesModule {
 
             // Se não há dados, pode ser cache desatualizado - forçar reload sem cache
             if (this.datas.length === 0) {
-                console.log('⚠️ Nenhuma data encontrada, tentando sem cache...');
                 const datasNoCache = await this.apiService.getDatasParticipacoes(false);
                 this.datas = (datasNoCache && Array.isArray(datasNoCache)) ? datasNoCache : [];
             }
@@ -167,7 +159,6 @@ class ParticipacoesModule {
         try {
             this.uiManager.showLoading('Carregando participações...');
             
-            console.log('🔍 loadParticipacoes - dataId:', dataId);
             
             // Carregar participações + dados em cache
             const [participacoes, proprietarios, imoveis] = await Promise.all([
@@ -180,15 +171,9 @@ class ParticipacoesModule {
             this.proprietarios = proprietarios || [];
             this.imoveis = imoveis || [];
             
-            console.log('📊 Dados carregados:', {
-                participacoes: this.participacoes.length,
-                proprietarios: this.proprietarios.length,
-                imoveis: this.imoveis.length
-            });
             
             // Log das primeiras participações para debug
             if (this.participacoes.length > 0) {
-                console.log('📋 Primeira participação:', this.participacoes[0]);
             }
             
             this.render();
@@ -233,8 +218,6 @@ class ParticipacoesModule {
             }
         });
         
-        console.log(`🔎 Filtro aplicado - targetVersaoId: ${targetVersaoId}`);
-        console.log(`📊 Total participações: ${this.participacoes.length}, Filtradas: ${participacoesFiltradas.length}`);
 
         // Renderizar cards
         const cardsHtml = this.imoveis.map(imovel => {
@@ -286,11 +269,8 @@ class ParticipacoesModule {
         // Caso contrário, selectedData pode ser data_registro (string ISO) ou versao_id
         const isAtivo = (this.selectedData === 'ativo' || this.selectedData === null);
         
-        console.log(`🖥️  renderDesktop - selectedData: ${this.selectedData}, isAtivo: ${isAtivo}`);
-        console.log(`📊 Total participações: ${this.participacoes.length}`);
         
         if (this.participacoes.length > 0) {
-            console.log('📋 Primeira participação:', this.participacoes[0]);
         }
 
         if (this.proprietarios.length === 0 || this.imoveis.length === 0) {
@@ -338,7 +318,6 @@ class ParticipacoesModule {
                 
                 // Log se encontrou participação na primeira linha
                 if (part && imovel.id === this.imoveis[0].id && prop.id === this.proprietarios[0].id) {
-                    console.log(`✅ Participação encontrada:`, part, `valor: ${val}%`);
                 }
                 
                 total += val;
@@ -512,13 +491,8 @@ class ParticipacoesModule {
 
                 // CRÍTICO: Usar as participações que JÁ FORAM BUSCADAS ao abrir o modal
                 // NÃO buscar novamente - usar todasParticipacoesDaVersao passado como parâmetro
-                console.log('🔍 [DEBUG] todasParticipacoesDaVersao:', todasParticipacoesDaVersao);
-                console.log('🔍 [DEBUG] todasParticipacoesDaVersao.length:', todasParticipacoesDaVersao.length);
-                console.log('🔍 [DEBUG] this.imoveis.length:', this.imoveis.length);
-                console.log('🔍 [DEBUG] this.proprietarios.length:', this.proprietarios.length);
                 
                 const expectedTotal = this.imoveis.length * this.proprietarios.length;
-                console.log('🔍 [DEBUG] expectedTotal:', expectedTotal);
                 
                 // Construir lista completa: UMA participação por cada combinação imóvel × proprietário
                 const allParticipacoes = [];
@@ -533,7 +507,6 @@ class ParticipacoesModule {
                             if (edited) {
                                 allParticipacoes.push(edited);
                             } else {
-                                console.error(`[EditParticipacao] ERRO: Não encontrei dados editados para proprietário ${prop.id}`);
                                 // Adicionar com 0 para não quebrar
                                 allParticipacoes.push({
                                     imovel_id: im.id,
@@ -561,19 +534,14 @@ class ParticipacoesModule {
                     });
                 });
                 
-                console.log('🔍 [DEBUG] allParticipacoes.length:', allParticipacoes.length);
-                console.log('🔍 [DEBUG] allParticipacoes sample:', allParticipacoes.slice(0, 3));
                 
                 // Validar que tenhamos o número correto
                 if (allParticipacoes.length !== expectedTotal) {
                     this.uiManager.hideLoading();
-                    console.error('❌ [DEBUG] ERRO: Tamanho incorreto!');
-                    console.error('❌ [DEBUG] Esperado:', expectedTotal, 'Recebido:', allParticipacoes.length);
                     this.uiManager.showError(`Erro: Número incorreto de participações (${allParticipacoes.length} em vez de ${expectedTotal})`);
                     return;
                 }
 
-                console.log('✅ [DEBUG] Validação OK! Enviando', allParticipacoes.length, 'participações');
                 
                 this.uiManager.showLoading('Salvando participações...');
                 
@@ -709,7 +677,6 @@ class ParticipacoesModule {
         // Event listener para salvar
         document.getElementById('save-nova-versao').addEventListener('click', async () => {
             // 1️⃣ Buscar TODAS as participações da versão atual
-            console.log('🔍 [DEBUG novaVersao] Buscando TODAS as participações da versão atual...');
             const todasParticipacoesDaVersao = await this.apiService.getParticipacoes(this.selectedData);
             
             if (!todasParticipacoesDaVersao || todasParticipacoesDaVersao.length === 0) {
@@ -717,7 +684,6 @@ class ParticipacoesModule {
                 return;
             }
             
-            console.log(`🔍 [DEBUG novaVersao] Total de participações da versão: ${todasParticipacoesDaVersao.length}`);
             
             // 2️⃣ Construir participações editadas do imóvel atual
             const participacoesEditadasImovel = participacoes.map(p => {
@@ -769,8 +735,6 @@ class ParticipacoesModule {
                 }
             });
             
-            console.log(`🔍 [DEBUG novaVersao] Matriz completa: ${newParticipacoes.length} participações`);
-            console.log(`🔍 [DEBUG novaVersao] Editadas: ${participacoesEditadasImovel.length}, Não editadas: ${newParticipacoes.length - participacoesEditadasImovel.length}`);
 
             try {
                 this.uiManager.showLoading('Salvando nova versão...');

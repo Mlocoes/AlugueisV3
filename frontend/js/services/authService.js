@@ -7,7 +7,6 @@ class AuthService {
         this.usuario = null;
         this.tipo = null;
         this.token = null;  // Add token property
-        console.log('🔐 AuthService inicializado para autenticação baseada em cookie.');
         
         // Tentar restaurar sessão do cookie quando a página carrega
         this.restoreSession();
@@ -32,11 +31,6 @@ class AuthService {
                 this.usuario = data.usuario;
                 this.tipo = data.tipo_usuario;
                 this.token = data.access_token;  // Armazenar o token
-
-                console.log('🔐 Login bem-sucedido. Sessão do usuário estabelecida:', {
-                    usuario: this.usuario,
-                    tipo: this.tipo
-                });
 
                 // Iniciar validação periódica da sessão (se não já estiver rodando)
                 if (!this.sessionCheckInterval) {
@@ -69,7 +63,6 @@ class AuthService {
         // Parar validação periódica da sessão
         this.stopSessionValidation();
         
-        console.log('🧹 Sessão do usuário limpa na memória.');
     }
 
     /**
@@ -79,9 +72,7 @@ class AuthService {
         try {
             localStorage.removeItem('sistema_alquileres_token');
             localStorage.removeItem('sistema_alquileres_user');
-            console.log('🧹 Storage local limpo.');
         } catch (error) {
-            console.warn('Erro ao limpar localStorage:', error);
         }
     }
 
@@ -89,7 +80,6 @@ class AuthService {
      * Realizar logout. Chama o endpoint do backend para limpar o cookie.
      */
     async logout() {
-        console.log('🚪 Fazendo logout...');
         try {
             // Chamar o backend para limpar o cookie HttpOnly
             await window.apiService.post('/api/auth/logout');
@@ -98,7 +88,6 @@ class AuthService {
         } finally {
             // Sempre limpar a sessão local
             this.clearSession();
-            console.log('✅ Logout realizado com sucesso.');
         }
         return { success: true };
     }
@@ -144,29 +133,24 @@ class AuthService {
      */
     async validateSession() {
         try {
-            console.log('🔍 Validando sessão com o servidor...');
             const response = await window.apiService.get('/api/auth/verify');
             
             if (response.success && response.data.valid) {
                 // Sincronizar dados do usuário caso tenham mudado
                 this.usuario = response.data.usuario;
                 this.tipo = response.data.tipo_usuario;
-                console.log('✅ Sessão válida. Usuário:', this.usuario);
                 return true;
             } else {
-                console.log('❌ Sessão inválida ou expirada.');
                 this.clearSession();
                 return false;
             }
         } catch (error) {
             // Verificar se é erro 401 (não autorizado) - caso normal quando não há sessão
             if (error.message.includes('status: 401')) {
-                console.log('🔒 Nenhuma sessão ativa encontrada (401 Unauthorized) - usuário precisa fazer login.');
                 this.clearSession();
                 return false;
             }
             
-            console.warn('⚠️ Erro ao validar a sessão, provavelmente problema de rede.', error);
             this.clearSession();
             return false;
         }
@@ -177,19 +161,15 @@ class AuthService {
      */
     async restoreSession() {
         try {
-            console.log('🔄 Tentando restaurar sessão do cookie...');
             
             // Verificar se há uma sessão válida no backend (usando cookie)
             const isValid = await this.validateSession();
             if (isValid) {
-                console.log('✅ Sessão restaurada com sucesso do cookie');
                 // Iniciar validação periódica
                 this.startSessionValidation();
             } else {
-                console.log('❌ Nenhuma sessão válida encontrada no cookie');
             }
         } catch (error) {
-            console.warn('Erro ao restaurar sessão:', error);
         }
     }
 
@@ -199,11 +179,9 @@ class AuthService {
     startSessionValidation() {
         // Verificar a cada 2 minutos se a sessão ainda é válida (mais frequente)
         this.sessionCheckInterval = setInterval(async () => {
-            console.log('🔄 Verificação periódica da sessão...');
             if (this.usuario && this.token) {
                 // Primeiro verificar se o token local está expirado
                 if (this.isTokenExpired()) {
-                    console.warn('⚠️ Token expirado detectado na validação periódica. Forçando recarga.');
                     this.clearSession();
                     setTimeout(() => {
                         window.location.reload();
@@ -215,15 +193,12 @@ class AuthService {
                 try {
                     const isValid = await this.validateSession();
                     if (!isValid) {
-                        console.warn('⚠️ Sessão inválida detectada na validação periódica. Forçando recarga.');
                         setTimeout(() => {
                             window.location.reload();
                         }, 100);
                     } else {
-                        console.log('✅ Sessão válida confirmada pelo servidor');
                     }
                 } catch (error) {
-                    console.warn('⚠️ Erro na validação periódica da sessão:', error);
                     // Em caso de erro, assumir que a sessão pode estar expirada
                     this.clearSession();
                     setTimeout(() => {
@@ -300,7 +275,6 @@ class AuthService {
             const currentTime = Math.floor(Date.now() / 1000);
             return decodedPayload.exp < currentTime;
         } catch (error) {
-            console.warn('Erro ao verificar expiração do token:', error);
             return true; // Considerar expirado se não conseguir verificar
         }
     }

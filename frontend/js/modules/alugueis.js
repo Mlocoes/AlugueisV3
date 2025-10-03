@@ -34,11 +34,9 @@ class AlugueisModule {
     }
 
     async load() {
-        console.log('🔄 AlugueisModule.load() - Iniciando carga...');
         
         // Re-avaliar tipo de dispositivo
         this.isMobile = window.deviceManager && window.deviceManager.deviceType === 'mobile';
-        console.log(`📱 Tipo de dispositivo: ${this.isMobile ? 'MOBILE' : 'DESKTOP'}`);
         
         // Sempre re-buscar elementos DOM (podem ter sido recriados ao mudar de tela)
         const getContainer = () => this.isMobile
@@ -49,19 +47,16 @@ class AlugueisModule {
 
         // Retry múltiplas vezes se não encontrar (timing issue)
         if (!this.container) {
-            console.log('⏳ AlugueisModule: Container não encontrado, tentando novamente...');
             for (let i = 0; i < 10; i++) {
                 await new Promise(resolve => setTimeout(resolve, 300));
                 this.container = getContainer();
                 if (this.container) {
-                    console.log(`✅ Container encontrado após ${i + 1} tentativa(s)`);
                     break;
                 }
             }
         }
 
         if (!this.container) {
-            console.warn('⚠️ AlugueisModule: Container não encontrado após tentativas. View pode não estar ativa ainda.');
             return;
         }
 
@@ -69,12 +64,6 @@ class AlugueisModule {
         const suffix = this.isMobile ? '-mobile' : '';
         this.anoSelect = document.getElementById(`alugueis-ano-select${suffix}`);
         this.mesSelect = document.getElementById(`alugueis-mes-select${suffix}`);
-
-        console.log('🎯 Elementos encontrados:', {
-            container: !!this.container,
-            anoSelect: !!this.anoSelect,
-            mesSelect: !!this.mesSelect
-        });
 
         // Setup event listeners (sempre reconfigurar)
         if (!this.initialized) {
@@ -84,7 +73,6 @@ class AlugueisModule {
         
         await this.loadAnosDisponiveis();
         
-        console.log('✅ AlugueisModule.load() - Carga completa!');
     }
 
     async loadAnosDisponiveis() {

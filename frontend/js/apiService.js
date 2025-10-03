@@ -17,17 +17,14 @@ window.apiService = {
             hostname.startsWith('10.') ||
             hostname.startsWith('172.');
         
-        console.log('🌐 Detectando URL base - Hostname:', hostname, 'Port:', port, 'isLocalDevelopment:', isLocalDevelopment);
         
         if (isLocalDevelopment) {
             const url = 'http://localhost:8000';
-            console.log('✅ Usando URL localhost para desenvolvimento:', url);
             return url;
         }
         
         // Para produção, usar URL relativa (proxy)
         const url = '';
-        console.log('🏭 Usando URL relativa para produção:', url);
         return url;
     },
 
@@ -56,11 +53,9 @@ window.apiService = {
             const response = await this.get('/api/csrf-token');
             if (response && response.csrf_token) {
                 this.csrfToken = response.csrf_token;
-                console.log('🔒 CSRF token obtained');
                 return this.csrfToken;
             }
         } catch (error) {
-            console.warn('⚠️ Failed to get CSRF token:', error);
         }
         return null;
     },
@@ -168,7 +163,6 @@ window.apiService = {
     // Método principal para hacer peticiones
     async makeRequest(url, options) {
         try {
-            console.log('🌐 API Request:', options.method, url);
 
             // Usar Authorization header em vez de cookies
             const finalOptions = { ...options };
@@ -187,10 +181,8 @@ window.apiService = {
                 
                 // Para 401 em endpoints de auth durante inicialização, usar log em vez de error
                 if (response.status === 401 && url.includes('/api/auth/')) {
-                    console.log('🔍 Verificação de sessão inicial:', `No hay sesión activa (401)`);
                 } else if (response.status === 401) {
                     // Token expirado ou inválido, forçar recarga para pedir novas credenciais
-                    console.warn('⚠️ Token expirado ou inválido. Forçando recarga da página.');
                     if (window.authService) {
                         window.authService.clearSession(); // Limpa a sessão local
                     }
@@ -205,7 +197,6 @@ window.apiService = {
             }
 
             const responseData = await response.json();
-            console.log('✅ API Response:', response.status, responseData);
 
             // Manejo de respuestas exitosas
             if (response.status >= 200 && response.status < 300) {
@@ -380,18 +371,14 @@ window.apiService = {
         const fetchFn = async () => {
             try {
                 const response = await this.get('/api/alugueis/anos-disponiveis/');
-                console.log('🔍 Resposta COMPLETA do backend para anos:', response);
                 
                 // Verificar se a resposta tem a estrutura esperada
                 if (response && response.success && response.data) {
-                    console.log('✅ Estrutura de resposta válida:', response.data);
                     return response.data;
                 } else if (response && response.anos) {
                     // Fallback para resposta direta sem wrapper
-                    console.log('✅ Resposta direta sem wrapper:', response);
                     return response;
                 } else {
-                    console.warn('⚠️ Estrutura de resposta inesperada:', response);
                     return null;
                 }
             } catch (error) {
@@ -409,7 +396,6 @@ window.apiService = {
     async getMesesDisponiveisAlugueis(ano) {
         try {
             const response = await this.get(`/api/alugueis/meses/${ano}`);
-            console.log('🔍 Resposta COMPLETA do backend para meses:', response);
             
             // Manejar diferentes formatos de respuesta
             if (response && response.success && response.data) {
@@ -417,7 +403,6 @@ window.apiService = {
             } else if (response && response.meses) {
                 return response;
             } else {
-                console.warn('⚠️ Estrutura de resposta inesperada para meses:', response);
                 return null;
             }
         } catch (error) {
@@ -479,7 +464,6 @@ window.apiService = {
             const response = await this.get('/api/health');
             return response.success ? response.data : null;
         } catch (error) {
-            console.warn('Health check failed:', error);
             return null;
         }
     },
@@ -489,12 +473,9 @@ window.apiService = {
             const response = await this.get('/api/config');
             return response.success ? response.data : null;
         } catch (error) {
-            console.warn('Config retrieval failed:', error);
             return null;
         }
     }
 };
 
 // Log de inicialização
-console.log('🔗 ApiService inicializado con métodos:', Object.keys(window.apiService));
-console.log('🌐 Base URL configurada:', window.apiService.getBaseUrl());

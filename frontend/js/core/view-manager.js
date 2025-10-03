@@ -27,7 +27,6 @@ class ViewManager {
         this.registerViews();
         this.isInitialized = true;
         
-        console.log('📄 ViewManager inicializado');
     }
 
     /**
@@ -128,7 +127,6 @@ class ViewManager {
      * Mostrar una vista
      */
     async showView(viewId) {
-        console.log(`📄 Mostrando vista: ${viewId}`);
         
         const view = this.views.get(viewId);
         if (!view) {
@@ -140,7 +138,6 @@ class ViewManager {
 
         // Verificar permisos
         if (!this.checkViewPermission(view)) {
-            console.warn(`⚠️ Sin permisos para vista: ${viewId}`);
             // No navegar automáticamente a dashboard, solo mostrar advertencia
             return;
         }
@@ -182,7 +179,6 @@ class ViewManager {
             // Ocultar loading
             this.hideLoading();
             
-            console.log(`✅ Vista cargada: ${viewId}`);
 
             // Disparar evento de que a vista foi completamente mostrada
             window.dispatchEvent(new CustomEvent('view-shown', {
@@ -203,7 +199,6 @@ class ViewManager {
         view.isLoaded = true;
         
         // Aquí podrían cargarse componentes dinámicamente si fuera necesario
-        console.log(`📄 Vista ${view.id} cargada`);
     }
 
     /**
@@ -231,10 +226,8 @@ class ViewManager {
             const btnNovoAlias = document.getElementById('btn-novo-alias');
             if (btnNovoAlias) {
                 btnNovoAlias.addEventListener('click', async function() {
-                    console.log('[DEBUG] Botón Novo Alias clicado (view-manager.js)');
                     if (window.extrasModule && typeof window.extrasModule.loadProprietarios === 'function') {
                         await window.extrasModule.loadProprietarios();
-                        console.log('[DEBUG] loadProprietarios ejecutado antes de abrir el modal (view-manager.js)');
                         window.extrasModule.showAliasModal(null);
                     } else if (window.extrasModule && typeof window.extrasModule.showAliasModal === 'function') {
                         window.extrasModule.showAliasModal(null);
@@ -291,7 +284,6 @@ class ViewManager {
         if (view.id === 'extras') {
             if (window.extrasModule && typeof window.extrasModule.loadExtras === 'function') {
                 window.extrasModule.loadExtras();
-                console.log('[DEBUG] loadExtras ejecutado al cargar la vista extras');
             }
         }
     }
@@ -411,10 +403,8 @@ class ViewManager {
      * Inicializar módulos requeridos
      */
     async initializeRequiredModules(view) {
-        console.log('🔧 Inicializando módulos requeridos para vista:', view.id, view.requiredModules);
         
         if (!view.requiredModules) {
-            console.log('⚠️ Nenhum módulo requerido para esta vista');
             return;
         }
         
@@ -428,16 +418,10 @@ class ViewManager {
                 retries++;
             }
             try {
-                console.log(`🔧 Tentando inicializar módulo: ${moduleName}`);
-                console.log(` Instância do módulo encontrada:`, !!moduleInstance);
                 if (moduleInstance) {
-                    console.log(`🔧 Métodos disponíveis no módulo:`, Object.getOwnPropertyNames(Object.getPrototypeOf(moduleInstance)));
                     if (typeof moduleInstance.load === 'function') {
-                        console.log(`🔧 Chamando load() do módulo ${moduleName}...`);
                         await moduleInstance.load();
-                        console.log(`✅ Módulo ${moduleName} carregado com sucesso`);
                     } else {
-                        console.warn(`⚠️ Módulo ${moduleName} não tem método load()`);
                     }
                 } else {
                     console.error(`❌ Módulo ${moduleName} não encontrado em window.${moduleName}Module após ${retries} tentativas.`);
@@ -925,11 +909,6 @@ class ViewManager {
         return `
             <div class="imoveis-container">
                 <div class="d-flex justify-content-end mb-3">
-                    <button class="btn btn-primary admin-only" id="btn-novo-imovel" onclick="console.log('[TESTE] Botão clicado inline'); if(window.imoveisModule) window.imoveisModule.showNewModal();"><i class="fas fa-plus me-2"></i>Novo Imóvel</button>
-                </div>
-                <div class="card-responsive">
-                    <div class="card-body-responsive">
-                        <div class="table-responsive-custom" style="max-height: 70vh; min-height: 50vh; overflow-y: auto;">
                             <table class="table table-striped table-hover table-custom" id="imoveis-table" style="font-size: 0.8rem;">
                                 <thead class="table-dark">
                                     <tr>
@@ -1454,7 +1433,6 @@ class ViewManager {
                         </div>
                     </div>
                 </div>
-
 
             </div>
         `;

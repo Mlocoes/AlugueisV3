@@ -43,7 +43,6 @@ class LoginManager {
 
         // Verificar se foi logout e limpar formulário
         if (sessionStorage.getItem('logout_realizado') === 'true') {
-            console.log('🧹 Logout detectado, limpando formulário...');
             sessionStorage.removeItem('logout_realizado');
             
             // Usar setTimeout para garantir que DOM está pronto
@@ -58,7 +57,6 @@ class LoginManager {
 
         // Verificar se foi login bem-sucedido e limpar formulário
         if (sessionStorage.getItem('login_bem_sucedido') === 'true') {
-            console.log('🧹 Login bem-sucedido detectado, limpando formulário...');
             sessionStorage.removeItem('login_bem_sucedido');
             
             // Usar setTimeout para garantir que DOM está pronto
@@ -76,7 +74,6 @@ class LoginManager {
         this.clearLoginForm();
 
         // Não verificar autenticação aqui - deixar para o UnifiedApp
-        console.log('LoginManager inicializado - aguardando chamadas externas');
     }
 
     /**
@@ -155,7 +152,6 @@ class LoginManager {
                 const modal = document.getElementById('loginModal');
                 if (modal && !modal.classList.contains('show')) {
                     if (usuarioField.value || senhaField.value) {
-                        console.log('🧹 Detectado autocomplete del navegador, limpiando...');
                         usuarioField.value = '';
                         senhaField.value = '';
                     }
@@ -174,7 +170,6 @@ class LoginManager {
                 // Si está autenticado y modal no visible, asegurar campos vacíos
                 if (isAuthenticated && modal && !modal.classList.contains('show')) {
                     if (usuarioField.value || senhaField.value) {
-                        console.log('🧹 Limpieza periódica de campos...');
                         usuarioField.value = '';
                         senhaField.value = '';
                     }
@@ -190,7 +185,6 @@ class LoginManager {
         try {
             // Verificar se authService está disponível
             if (!window.authService) {
-                console.warn('AuthService não disponível, mostrando modal de login');
                 this.showLoginModal();
                 return;
             }
@@ -198,15 +192,12 @@ class LoginManager {
             // Verificar se há uma sessão válida
             const isValid = await window.authService.validateSession();
             if (isValid) {
-                console.log('Sessão válida encontrada');
                 return; // Não mostrar modal se já estiver autenticado
             }
         } catch (error) {
-            console.warn('Erro ao verificar sessão:', error);
         }
 
         // Se chegou aqui, não há sessão válida - mostrar modal de login
-        console.log('Nenhuma sessão válida - mostrando modal de login');
         this.showLoginModal();
     }    /**
      * Limpar todos os dados de autenticação
@@ -380,7 +371,6 @@ class LoginManager {
      * Habilitar funcionalidade da aplicação
      */
     enableApplication() {
-        console.log('🚀 Habilitando aplicação após login válido...');
 
         // Remover classe de desabilitado se existir
         document.body.classList.remove('app-disabled');
@@ -388,14 +378,11 @@ class LoginManager {
         // Inicializar aplicação principal se ainda não foi
         if (window.app) {
             if (!window.app.initialized) {
-                console.log('✅ Iniciando aplicação principal...');
                 window.app.init().then(() => {
-                    console.log('✅ APLICAÇÃO INICIADA EXITOSAMENTE');
                 }).catch(error => {
                     console.error('❌ ERRO AO INICIAR APLICAÇÃO:', error);
                 });
             } else {
-                console.log('ℹ️ Aplicação já foi inicializada');
             }
         } else {
             console.error('❌ window.app não está disponível');
@@ -407,7 +394,6 @@ class LoginManager {
      */
     logout() {
         if (confirm('Tem certeza que deseja sair?')) {
-            console.log('🚪 Realizando logout...');
 
             // Limpar dados de autenticação
             if (window.authService) {

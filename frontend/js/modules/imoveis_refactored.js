@@ -25,12 +25,10 @@ class ImoveisModule {
 
         // If container not found, wait a bit and try again (timing issue)
         if (!this.container) {
-            console.log('[ImoveisModule] Container not found, waiting 100ms and trying again...');
             setTimeout(() => {
                 this.container = this.isMobile
                     ? document.getElementById('imoveis-list-mobile')
                     : document.getElementById('imoveis-table-body');
-                console.log('[ImoveisModule] Container found after delay:', !!this.container);
                 
                 if (this.container) {
                     this.modalManager = new ModalManager('novo-imovel-modal', 'edit-imovel-modal');

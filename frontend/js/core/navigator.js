@@ -22,7 +22,6 @@ class UnifiedNavigator {
         this.setupEventListeners();
         this.isInitialized = true;
         
-        console.log(`📱 Navegación inicializada: ${this.navigationConfig.type}`);
     }
 
     /**
@@ -259,7 +258,6 @@ class UnifiedNavigator {
 
         // Cambio de dispositivo
         window.addEventListener('deviceChange', (e) => {
-            console.log('📱 Dispositivo cambió, reconfigurangi navegación...');
             this.navigationConfig = window.deviceManager.getNavigationConfig();
             this.setupNavigation();
         });
@@ -269,7 +267,6 @@ class UnifiedNavigator {
      * Navegar a una vista
      */
     navigateTo(view) {
-        console.log(`📱 Navegando a: ${view}`);
         
         // Actualizar estado actual
         this.currentView = view;
@@ -372,7 +369,6 @@ class UnifiedNavigator {
      * Força a reconstrução da navegação, útil após login.
      */
     rebuildNavigation() {
-        console.log('🔄 Reconstruindo a navegação com base nas permissões do usuário...');
         this.setupNavigation();
         // A vista ativa pode não existir mais para o novo tipo de usuário
         // então navegamos para o dashboard como um padrão seguro.
@@ -380,7 +376,6 @@ class UnifiedNavigator {
         const currentViewExists = items.some(item => item.id === this.currentView);
 
         if (!currentViewExists) {
-            console.log(`⚠️ A vista atual '${this.currentView}' não é permitida. Redirecionando para o dashboard.`);
             this.navigateTo('dashboard');
         } else {
             this.updateActiveStates(this.currentView);

@@ -48,7 +48,6 @@ class ParticipacoesModule {
         }
 
         if (!this.container) {
-            console.warn("ParticipacoesModule: Container not found. View might not be active.");
             return;
         }
 

@@ -89,7 +89,6 @@ function setSafeHTML(element, htmlString, data = {}) {
     element.innerHTML = cleanHtml;
 }
 
-
 // Exporta as funções para uso global.
 window.SecurityUtils = {
     escapeHtml,
@@ -97,5 +96,3 @@ window.SecurityUtils = {
     createSafeElement,
     setSafeHTML
 };
-
-console.log('🛡️ SecurityUtils com DOMPurify carregado.');

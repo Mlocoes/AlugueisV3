@@ -24,7 +24,6 @@ class UIManager {
     init() {
         this.createAlertContainer();
         this.setupEventListeners();
-        console.log('🎨 UIManager inicializado');
     }
 
     /**
@@ -75,13 +74,11 @@ class UIManager {
      * Mostrar pestaña específica
      */
     async showTab(tabName) {
-        console.log(`🔄 Cambiando a pestaña: ${tabName}`);
 
         // Lista de pestañas válidas
         const validTabs = ['dashboard', 'proprietarios', 'imoveis', 'participacoes', 'alugueis', 'relatorios', 'importar', 'extras'];
 
         if (!validTabs.includes(tabName)) {
-            console.warn(`❌ Pestaña inválida: ${tabName}`);
             return false;
         }
 
@@ -148,7 +145,6 @@ class UIManager {
                     break;
                 case 'dashboard':
                     // El dashboard no necesita inicialización especial, solo carga de datos
-                    console.log('📊 Dashboard listo - datos se cargan en loadTabData');
                     break;
                 case 'proprietarios':
                     if (window.proprietariosModule && typeof window.proprietariosModule.init === 'function') {
@@ -262,7 +258,6 @@ class UIManager {
             }
         });
 
-        console.log(`🔧 Botões admin-only atualizados. Admin: ${isAdmin}. Botões encontrados: ${adminOnlyButtons.length}`);
     }
 
     /**
@@ -280,14 +275,12 @@ class UIManager {
      */
     async loadTabData(tabName) {
         try {
-            console.log(`🔄 Cargando datos para pestaña: ${tabName}`);
 
             switch (tabName) {
                 case 'dashboard':
                     if (window.dashboardModule && typeof window.dashboardModule.load === 'function') {
                         await window.dashboardModule.load();
                     } else {
-                        console.warn('⚠️ DashboardModule no está disponible');
                     }
                     break;
                 case 'proprietarios':
@@ -324,7 +317,6 @@ class UIManager {
                     // Instanciar importacaoModule solo al cambiar a la pestaña 'importar'
                     if (!window.importacaoModule) {
                         window.importacaoModule = new window.ImportacaoModule();
-                        console.log('✅ ImportacaoModule registrado globalmente');
                     }
                     if (window.importacaoModule && typeof window.importacaoModule.load === 'function') {
                         await window.importacaoModule.load();
@@ -334,14 +326,12 @@ class UIManager {
                     // Instanciar extrasModule solo al cambiar a la pestaña 'extras'
                     if (!window.extrasModule && window.ExtrasManager) {
                         window.extrasModule = new window.ExtrasManager();
-                        console.log('✅ ExtrasModule registrado globalmente');
                     }
                     if (window.extrasModule && typeof window.extrasModule.load === 'function') {
                         await window.extrasModule.load();
                     }
                     break;
                 default:
-                    console.log(`ℹ️ No hay datos específicos para cargar en ${tabName}`);
             }
         } catch (error) {
             console.error(`❌ Error cargando datos de ${tabName}:`, error);
@@ -379,7 +369,6 @@ class UIManager {
             this.hideAlert(alertId);
         }, hideDelay);
 
-        console.log(`📢 Alert [${type}]: ${message}`);
     }
 
     /**
@@ -420,7 +409,6 @@ class UIManager {
             bsModal.show();
             return bsModal;
         }
-        console.warn(`❌ Modal no encontrado: ${modalId}`);
         return null;
     }
 
@@ -496,7 +484,6 @@ class UIManager {
     showLoading(message = 'Cargando...') {
         this.showLoader(true);
         if (message !== 'Cargando...') {
-            console.log(`⏳ ${message}`);
         }
     }
 
@@ -563,7 +550,6 @@ class UIManager {
             modalElement.addEventListener('hide.bs.modal', () => {
                 if (document.activeElement) document.activeElement.blur();
                 document.body.focus();
-                console.log(`🔧 Focus transferido antes del cierre del modal confirmação ${modalId}`);
             });
 
             // Event listeners
@@ -597,7 +583,6 @@ class UIManager {
      */
     checkImportPermission() {
         if (!window.authService || !window.authService.isAuthenticated()) {
-            console.warn('🚫 Usuário não autenticado - acesso negado à importação');
             return false;
         }
 
@@ -605,11 +590,9 @@ class UIManager {
         const isAdmin = userData && userData.tipo === 'administrador';
 
         if (!isAdmin) {
-            console.warn(`🚫 Usuário tipo "${userData?.tipo}" não é administrador - acesso negado à importação`);
             return false;
         }
 
-        console.log('✅ Usuário administrador - acesso permitido à importação');
         return true;
     }    /**
      * Mostrar alerta de acesso negado

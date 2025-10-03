@@ -165,24 +165,19 @@ class ImportacaoModule {
     _refreshModules(types) {
         if (!types || !Array.isArray(types)) return;
 
-        console.log('🔄 Módulos importados com sucesso:', types);
-        console.log('ℹ️ Cache invalidado. Os dados serão atualizados quando você navegar para a tela correspondente.');
         
         // Invalidar cache para forçar atualização quando o usuário navegar para a tela
         try {
             if (window.cacheService) {
                 types.forEach(tipo => {
                     window.cacheService.invalidate(tipo);
-                    console.log(`  ↳ Cache de "${tipo}" invalidado`);
                 });
             }
         } catch (error) {
-            console.warn('⚠️ Erro ao invalidar cache:', error);
         }
         
         // NÃO tentar atualizar módulos que não estão visíveis
         // Isso evita erros quando containers não existem no DOM
-        console.log('✅ Importação concluída. Navegue para a tela correspondente para ver os novos dados.');
     }
 
     applyPermissions(isAdmin) {

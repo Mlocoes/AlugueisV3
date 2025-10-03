@@ -28,7 +28,6 @@ class UsuarioManager {
      * Inicializar o gerenciador de usuários
      */
     init() {
-        console.log('[UsuarioManager] init() called');
         // if (this.initialized) return;  // Removido para permitir re-inicialização
 
         // Centralizar obtención de elementos - no fallar si no existen aún
@@ -37,21 +36,14 @@ class UsuarioManager {
         this.form = this.getFormWithId('form-cadastrar-usuario', 'modal-cadastrar-usuario');
         this.formAlterar = this.getFormWithId('form-alterar-usuario', 'modal-alterar-usuario');
 
-        console.log('[UsuarioManager] form (cadastrar):', this.form);
-        console.log('[UsuarioManager] formAlterar (alterar):', this.formAlterar);
-
         // No fallar si no se encuentran, se configurarán en setupEvents
         if (!this.form) {
-            console.log('[UsuarioManager] Formulario form-cadastrar-usuario no encontrado aún, se configurará en setupEvents');
         } else {
-            console.log('[UsuarioManager] Formulario form-cadastrar-usuario encontrado:', this.form);
             const salvarBtn = this.form.querySelector('button[type="submit"], .btn-success');
             if (!salvarBtn) {
                 console.error('[UsuarioManager] Botón Salvar NO encontrado dentro del formulario');
             } else {
-                console.log('[UsuarioManager] Botón Salvar encontrado:', salvarBtn);
                 if (salvarBtn.type !== 'submit') {
-                    console.warn('[UsuarioManager] Botón Salvar no es de tipo submit, se fuerza a submit');
                     salvarBtn.type = 'submit';
                 }
             }
@@ -95,7 +87,6 @@ class UsuarioManager {
      */
     setupEvents() {
         logToLocalStorage('[UsuarioManager] setupEvents chamado');
-        console.log('[UsuarioManager] setupEvents chamado');
 
         // Re-buscar elementos si no existen (para carga dinâmica)
         if (!this.form) {
@@ -124,12 +115,10 @@ class UsuarioManager {
 
                 // Proteção contra cliques múltiplos
                 if (submitButton && submitButton.disabled) {
-                    console.log('[UsuarioManager] Submissão ignorada, formulário já em processamento.');
                     return;
                 }
 
                 logToLocalStorage('[Usuario] form-cadastrar-usuario submit');
-                console.log('[Usuario] form-cadastrar-usuario submit');
                 
                 const formData = new FormData(this.form);
                 const userData = {
@@ -146,7 +135,6 @@ class UsuarioManager {
             this.formAlterar.addEventListener('submit', (e) => {
                 e.preventDefault();
                 logToLocalStorage('[Usuario] form-alterar-usuario submit');
-                console.log('[Usuario] form-alterar-usuario submit');
                 const formData = new FormData(this.formAlterar);
                 const userData = {
                     usuario: formData.get('usuario')?.trim() || '',
@@ -185,7 +173,6 @@ class UsuarioManager {
         form.onsubmit = null;
         form.addEventListener('submit', (e) => {
             if (logMsg) logToLocalStorage(logMsg);
-            if (logMsg) console.log(logMsg);
             e.preventDefault();
             handler(e);
         });
@@ -221,7 +208,6 @@ class UsuarioManager {
         modalEl.addEventListener('hide.bs.modal', () => {
             if (document.activeElement) document.activeElement.blur();
             document.body.focus();
-            console.log(`🔧 Focus transferido antes del cierre del modal ${modalId}`);
         });
         modalEl.addEventListener('hidden.bs.modal', () => {
             // Obtener el formulario directamente del modal
@@ -238,7 +224,6 @@ class UsuarioManager {
                 const sucessoDiv = document.getElementById('sucesso-cadastro-usuario');
                 if (errorDiv) errorDiv.classList.add('d-none');
                 if (sucessoDiv) sucessoDiv.classList.add('d-none');
-                console.log('🧹 Formulário de usuário limpo (directo desde modal)');
             } else if (limparFn) {
                 limparFn();
             }
@@ -263,7 +248,6 @@ class UsuarioManager {
                 button.addEventListener('click', () => {
                     if (document.activeElement) document.activeElement.blur();
                     document.body.focus();
-                    console.log(`🔧 PREEMPTIVE: Focus transferido antes del cierre por botón X en ${modalId}`);
                 });
             }
         });
@@ -274,7 +258,6 @@ class UsuarioManager {
      */
     async handleCadastroUsuario(userData, form) {
         logToLocalStorage('[Usuario] handleCadastroUsuario called');
-        console.log('[Usuario] handleCadastroUsuario called', userData, form);
         
         if (!form) {
             console.error("[UsuarioManager] Tentativa de submeter um formulário nulo.");
@@ -302,12 +285,10 @@ class UsuarioManager {
         try {
             // Esperar a que AppConfig esté inicializado si es necesario
             if (!window.AppConfig?.api?.baseUrl) {
-                console.log('⏳ AppConfig no inicializado, inicializando...');
                 await window.AppConfig?.initNetwork();
             }
 
             const baseUrl = window.AppConfig?.api?.baseUrl || '';
-            console.log('🔗 Usando baseUrl:', baseUrl);
 
             const authHeaderObj = window.authService?.getAuthHeaderObject();
 
@@ -343,7 +324,6 @@ class UsuarioManager {
                             modalInstance.hide();
                         }
                     } else {
-                        console.warn('[UsuarioManager] modal-cadastrar-usuario no encontrado en el DOM para fechar.');
                     }
                     
                     const backdrops = document.querySelectorAll('.modal-backdrop');
@@ -503,9 +483,7 @@ class UsuarioManager {
             inputs.forEach(input => {
                 input.classList.remove('is-valid', 'is-invalid');
             });
-            console.log('🧹 Formulário de usuário limpo');
         } else {
-            console.warn('[UsuarioManager] limparFormulario: this.form é null, nada a limpar');
         }
     }
 
@@ -519,14 +497,11 @@ class UsuarioManager {
         }
 
         try {
-            console.log('🔄 Carregando usuários...');
             const response = await window.apiService.getUsuarios();
-            console.log('📋 Resposta getUsuarios:', response);
 
             // O getUsuarios() retorna diretamente os dados (array) se success=true, ou null se falhou
             if (response && Array.isArray(response)) {
                 this.usuarios = response;
-                console.log('👥 Usuários carregados:', this.usuarios);
                 this.preencherSelectUsuarios();
             } else {
                 console.error('❌ Erro: resposta não é um array válido:', response);
@@ -579,7 +554,6 @@ class UsuarioManager {
                 formAlterar.style.display = 'none';
             }
         } else {
-            console.warn('[UsuarioManager] form-alterar-usuario no encontrado en el DOM');
         }
     }
 
@@ -838,13 +812,11 @@ class UsuarioManager {
                 input.classList.remove('is-valid', 'is-invalid');
             });
         } else {
-            console.warn('[UsuarioManager] limparFormularioAlterar: this.formAlterar é null, nada a limpar');
         }
     }
 
     async load() {
         logToLocalStorage('[UsuarioManager] load() chamado');
-        console.log('🔄 Carregando UsuarioManager...');
         try {
             // Siempre reinicializar eventos y referencias tras cada renderizado
             this.initialized = false;
@@ -853,7 +825,6 @@ class UsuarioManager {
             if (typeof this.carregarUsuarios === 'function') {
                 await this.carregarUsuarios();
             }
-            console.log('✅ UsuarioManager carregado com sucesso');
         } catch (error) {
             console.error('❌ Erro ao carregar UsuarioManager:', error);
         }

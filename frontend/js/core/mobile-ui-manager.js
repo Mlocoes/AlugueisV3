@@ -11,7 +11,6 @@ class MobileUIManager {
         if (!this.isMobile) {
             return;
         }
-        console.log("Mobile device detected, initializing Mobile UI Manager.");
     }
 
     /**

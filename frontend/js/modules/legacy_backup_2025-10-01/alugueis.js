@@ -27,7 +27,6 @@ class AlugueisModule {
             : document.getElementById('alugueis-matrix-body');
 
         if (!this.container) {
-            console.warn("Container for AlugueisModule not found.");
             return;
         }
 

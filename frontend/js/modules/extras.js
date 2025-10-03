@@ -26,8 +26,6 @@ class ExtrasManager {
         }
     }
     confirmarExclusao(tipo, id, nome) {
-        console.log('[DEBUG] Entrando en confirmarExclusao:', { tipo, id, nome });
-        console.log('🗑️ Iniciando confirmação de exclusão:', { tipo, id, nome });
         
         // Mostrar el modal de confirmación
         const modalEl = document.getElementById('modal-confirmar-exclusao-extras');
@@ -53,10 +51,8 @@ class ExtrasManager {
                 
                 // Crear nuevo listener com closure
                 this._exclusaoListener = async (e) => {
-                    console.log('[DEBUG] Click en btn-confirmar-exclusao-extras:', { tipo, id });
                     e.stopImmediatePropagation();
                     btnConfirmarExclusao.removeEventListener('click', this._exclusaoListener);
-                    console.log('🔥 Ejecutando exclusão:', { tipo, id });
                     try {
                         if (tipo === 'alias') {
                             await this.excluirAlias(id);
@@ -126,36 +122,25 @@ class ExtrasManager {
         const formTransferencias = document.getElementById('form-transferencias');
         const btnSalvarTransferencias = document.getElementById('btn-salvar-transferencias');
         
-        console.log('[DEBUG] Elementos encontrados - Form:', !!formTransferencias, 'Button:', !!btnSalvarTransferencias);
         
         if (formTransferencias && !formTransferencias.hasTransferenciasListener) {
-            console.log('[DEBUG] Configurando event listener para form-transferencias');
             formTransferencias.addEventListener('submit', (e) => {
-                console.log('[DEBUG] ===== EVENTO SUBMIT DISPARADO =====');
-                console.log('[DEBUG] Event submit disparado para form-transferencias');
                 e.preventDefault();
-                console.log('[DEBUG] Chamando salvarTransferencias...');
                 this.salvarTransferencias();
             });
             formTransferencias.hasTransferenciasListener = true;
-            console.log('[DEBUG] Event listener do form configurado com sucesso');
         }
         
         // Backup: event listener direto no botão
         if (btnSalvarTransferencias && !btnSalvarTransferencias.hasClickListener) {
-            console.log('[DEBUG] Configurando event listener direto no botão salvar');
             btnSalvarTransferencias.addEventListener('click', (e) => {
-                console.log('[DEBUG] ===== CLIQUE DIRETO NO BOTÃO SALVAR =====');
-                console.log('[DEBUG] Botão salvar clicado diretamente');
                 e.preventDefault();
                 this.salvarTransferencias();
             });
             btnSalvarTransferencias.hasClickListener = true;
-            console.log('[DEBUG] Event listener do botão configurado com sucesso');
         }
 
         document.addEventListener('DOMContentLoaded', () => {
-            console.log('[DEBUG] JS extras.js cargado y DOM listo');
         });
 
         // Evento para carregar proprietários do alias selecionado
@@ -167,7 +152,6 @@ class ExtrasManager {
         // REMOVIDO: Event listener pode estar causando conflitos
         // document.getElementById('modal-transferencias')?.addEventListener('hidden.bs.modal', () => {
         //     this.currentTransferencia = null;
-        //     console.log('🧹 Modal fechado - currentTransferencia limpo');
         // });
 
         // Event listeners para botões de cancelar para gerenciamento de foco
@@ -188,14 +172,12 @@ class ExtrasManager {
         // Reconfigurar handlers quando os modais forem exibidos (caso o DOM tenha mudado)
         document.addEventListener('shown.bs.modal', setupCancelButtonHandlers);
 
-        console.log('🎯 Eventos do módulo Extras configurados');
     }
 
     /**
      * Carregar módulo quando ativado
      */
     async load() {
-        console.log('🔄 Carregando módulo Extras...');
         
         if (!this.initialized) {
             this.setupEvents();
@@ -205,7 +187,6 @@ class ExtrasManager {
         // Verificar se o usuário é administrador antes de carregar dados
         const isAdmin = window.authService && window.authService.isAdmin();
         if (!isAdmin) {
-            console.log('⚠️ Usuário não-administrador tentou carregar módulo Extras - pulando carregamento de dados');
             return;
         }
 
@@ -226,15 +207,12 @@ class ExtrasManager {
         try {
             // Verificar se o usuário é administrador antes de fazer a chamada
             const isAdmin = window.authService && window.authService.isAdmin();
-            console.log('Usuário é admin:', isAdmin);
             const disabledAttr = isAdmin ? '' : 'disabled';
             if (!isAdmin) {
-                console.log('⚠️ Usuário não-administrador tentou carregar extras - pulando');
                 this.renderExtrasTable([]);
                 return;
             }
 
-            console.log(' Carregando extras...');
             
             const response = await this.apiService.get('/api/extras/?ativo=true');
             
@@ -243,7 +221,6 @@ class ExtrasManager {
                 // Refuerzo: recargar propietarios antes de renderizar la tabla
                 await this.loadProprietarios();
                 this.renderExtrasTable(this.allExtras);
-                console.log(`✅ ${response.data.length} extras carregados`);
             } else {
                 throw new Error('Resposta inválida do servidor');
             }
@@ -262,19 +239,12 @@ class ExtrasManager {
             // Verificar se o usuário é administrador antes de fazer a chamada
             const isAdmin = window.authService && window.authService.isAdmin();
             if (!isAdmin) {
-                console.log('⚠️ Usuário não-administrador tentou carregar proprietários - pulando');
                 return;
             }
 
-            console.log('📥 Carregando proprietários...');
             
             const response = await this.apiService.get('/api/extras/proprietarios/disponiveis');
-            console.log('API response for proprietarios:', response); // Add this line
-            
-            if (response && response.success && Array.isArray(response.data)) {
-                this.allProprietarios = response.data;
                 this.populateProprietariosSelects();
-                console.log(`✅ ${response.data.length} proprietários carregados`);
             } else {
                 throw new Error('Resposta inválida do servidor');
             }
@@ -362,27 +332,22 @@ class ExtrasManager {
             // Verificar se o usuário é administrador antes de fazer a chamada
             const isAdmin = window.authService && window.authService.isAdmin();
             if (!isAdmin) {
-                console.log('⚠️ Usuário não-administrador tentou carregar transferências - pulando');
                 this.renderTransferenciasTable([]);
                 return;
             }
 
-            console.log('📄 Carregando transferências...');
             
             const response = await this.apiService.get('/api/transferencias/');
             
             if (response && Array.isArray(response)) {
                 this.allTransferencias = response;
-                console.log('✅ Transferências carregadas:', this.allTransferencias.length);
                 
                 this.renderTransferenciasTable(this.allTransferencias);
             } else if (response && response.success && Array.isArray(response.data)) {
                 this.allTransferencias = response.data;
-                console.log('✅ Transferências carregadas:', this.allTransferencias.length);
                 
                 this.renderTransferenciasTable(this.allTransferencias);
             } else {
-                console.warn('⚠️ Resposta inválida da API de transferências:', response);
                 this.renderTransferenciasTable([]);
             }
 
@@ -436,18 +401,6 @@ class ExtrasManager {
                 <td class="text-center">${dataFimFormatada}</td>
                 <td class="text-center">
                     <div class="btn-group btn-group-sm">
-                        <button class="btn btn-outline-primary ${disabledClass}" onclick="console.log('Botão editar clicado para ID:', ${transferencia.id}); window.extrasManager.editarTransferencia(${transferencia.id})" ${disabledAttr} ${titleAttr}>
-                            <i class="fas fa-edit"></i>
-                        </button>
-                        <button class="btn btn-outline-danger ${disabledClass}"
-                                onclick="window.extrasManager.confirmarExclusao('transferencia', ${transferencia.id}, '${transferencia.nome_transferencia}')" 
-                                data-transferencia-id="${transferencia.id}"
-                                ${disabledAttr} ${deleteTitleAttr}>
-                            <i class="fas fa-trash"></i>
-                        </button>
-                    </div>
-                </td>
-            `;
             
             tbody.appendChild(row);
         });
@@ -549,7 +502,6 @@ class ExtrasManager {
                     option.selected = proprietarioIds.includes(parseInt(option.value));
                 });
             } catch (e) {
-                console.warn('Erro ao processar proprietários:', e);
             }
         }
     }
@@ -599,9 +551,7 @@ class ExtrasManager {
      */
     async carregarAliasParaTransferencia() {
         try {
-            console.log('[DEBUG] Ejecutando carregarAliasParaTransferencia');
             const response = await this.apiService.get('/api/extras/?ativo=true');
-            console.log('[DEBUG] Respuesta de API para alias:', response);
             const aliasSelect = document.getElementById('transferencia-alias');
             if (response && response.success && Array.isArray(response.data)) {
                 aliasSelect.innerHTML = '<option value="">Selecione um alias...</option>';
@@ -619,9 +569,7 @@ class ExtrasManager {
                         this.carregarProprietariosAlias(aliasSelect.value);
                     }
                 }
-                console.log('[DEBUG] Opciones de alias cargadas:', Array.from(aliasSelect.options).map(opt => ({value: opt.value, text: opt.textContent, proprietarios: opt.dataset.proprietarios})));
             } else {
-                console.warn('[DEBUG] No se recibieron alias válidos de la API');
             }
         } catch (error) {
             console.error('[DEBUG] Erro ao carregar aliases:', error);
@@ -633,7 +581,6 @@ class ExtrasManager {
      * Carregar proprietários do alias selecionado
      */
     async carregarProprietariosAlias(aliasId) {
-        console.log('🏠 carregarProprietariosAlias chamada com aliasId:', aliasId);
         const container = document.getElementById('transferencia-proprietarios-container');
         const tableBody = document.getElementById('transferencia-proprietarios-table');
     // ...
@@ -643,11 +590,8 @@ class ExtrasManager {
             return;
         }
         try {
-            console.log('🔍 Procurando proprietários para aliasId:', aliasId);
             const aliasSelect = document.getElementById('transferencia-alias');
             const selectedOption = aliasSelect.querySelector(`option[value="${aliasId}"]`);
-            console.log('📋 Selected option:', selectedOption);
-            console.log('📋 Dataset proprietarios:', selectedOption?.dataset?.proprietarios);
 
             if (selectedOption && selectedOption.dataset.proprietarios) {
                 const proprietarioIds = JSON.parse(selectedOption.dataset.proprietarios);
@@ -683,22 +627,11 @@ class ExtrasManager {
                             </td>
                         `;
                         tableBody.appendChild(row);
-                        console.log('➕ Linha adicionada para proprietário:', proprietario.nome);
                     } else {
-                        console.log('⚠️ Proprietário não encontrado:', id);
                     }
                 }
-                console.log('📊 Total de linhas na tabela:', tableBody.children.length);
-                console.log('👁️ Container visibility check:', {
-                    display: container.style.display,
-                    visibility: window.getComputedStyle(container).visibility,
-                    opacity: window.getComputedStyle(container).opacity,
-                    height: container.offsetHeight
-                });
                 container.style.display = proprietarioIds.length > 0 ? 'block' : 'none';
-                console.log('📦 Container display set to:', container.style.display);
             } else {
-                console.log('⚠️ Nenhum proprietário encontrado para este alias');
                 container.style.display = 'none';
             }
         } catch (error) {
@@ -734,8 +667,6 @@ class ExtrasManager {
                 this.showAlert('Selecione pelo menos um proprietário', 'danger', 'alias-alerts');
                 return;
             }
-
-            console.log('💾 Salvando alias:', aliasData);
 
             let response;
             if (this.currentExtra) {
@@ -776,30 +707,24 @@ class ExtrasManager {
      * Salvar transferências
      */
     async salvarTransferencias() {
-    console.log('[DEBUG] Entrando en salvarTransferencias');
     try {
-            console.log('[DEBUG] Iniciando coleta de dados do formulario');
             const aliasId = document.getElementById('transferencia-alias').value;
             const nomeTransferencia = document.getElementById('transferencia-nome').value.trim();
             const dataCriacao = document.getElementById('transferencia-data-criacao').value;
             const dataFim = document.getElementById('transferencia-data-fim').value;
             
-            console.log('[DEBUG] Dados coletados:', { aliasId, nomeTransferencia, dataCriacao, dataFim });
             
             if (!aliasId) {
-                console.log('[DEBUG] Validacao falhou: aliasId vazio');
                 this.showAlert('Selecione um alias', 'danger', 'transferencia-alerts');
                 return;
             }
 
             if (!nomeTransferencia) {
-                console.log('[DEBUG] Validacao falhou: nomeTransferencia vazio');
                 this.showAlert('Digite o nome da transferência', 'danger', 'transferencia-alerts');
                 return;
             }
 
             if (!dataCriacao) {
-                console.log('[DEBUG] Validacao falhou: dataCriacao vazia');
                 this.showAlert('Selecione a data de criação', 'danger', 'transferencia-alerts');
                 return;
             }
@@ -810,12 +735,10 @@ class ExtrasManager {
                 return;
             }
 
-            console.log('[DEBUG] Validacoes passaram, coletando proprietarios');
             
             // Coletar valores das transferências
             const proprietarios = [];
             const inputs = document.querySelectorAll('#transferencia-proprietarios-table input[type="number"]');
-            console.log('[DEBUG] Encontrados', inputs.length, 'inputs de proprietario');
             let hasValue = false;
 
             inputs.forEach(input => {
@@ -835,8 +758,6 @@ class ExtrasManager {
                 return;
             }
 
-            console.log('💾 Salvando transferência:', { aliasId, nomeTransferencia, dataCriacao, dataFim, proprietarios });
-
             // Calcular valor total da transferência (soma dos valores absolutos)
             const valorTotal = proprietarios.reduce((sum, p) => sum + Math.abs(p.valor), 0);
 
@@ -844,11 +765,6 @@ class ExtrasManager {
             const form = document.getElementById('form-transferencias');
             const transferenciaIdInput = form.querySelector('input[name="transferencia_id"]');
             const transferenciaId = transferenciaIdInput ? transferenciaIdInput.value : null;
-
-            console.log('🔍 Verificando modo de salvamento:', {
-                transferenciaId: transferenciaId,
-                modo: transferenciaId ? 'EDIÇÃO' : 'CRIAÇÃO'
-            });
 
             // Preparar dados para envio
             const transferenciaData = {
@@ -864,11 +780,9 @@ class ExtrasManager {
             
             if (transferenciaId) {
                 // Atualizar transferência existente
-                console.log('✏️ Fazendo PUT para editar transferência ID:', transferenciaId);
                 response = await this.apiService.put(`/api/transferencias/${transferenciaId}`, transferenciaData);
             } else {
                 // Criar nova transferência
-                console.log('➕ Fazendo POST para criar nova transferência');
                 response = await this.apiService.post('/api/transferencias/', transferenciaData);
             }
 
@@ -876,7 +790,6 @@ class ExtrasManager {
                 this.showSuccess(transferenciaId ? 
                     'Transferência atualizada com sucesso!' : 
                     'Transferência criada com sucesso!');
-                console.log('[DEBUG] Transferencia salva com sucesso, fechando modal');
                 // Resetar campo hidden
                 if (transferenciaIdInput) transferenciaIdInput.value = '';
                 // Fechar modal de forma segura para acessibilidade
@@ -942,7 +855,6 @@ class ExtrasManager {
         this.pendingOperations.add(operationId);
         
         try {
-            console.log('🗑️ Excluindo alias:', id);
 
             // Chamada de API sem bloquear a UI
             const response = await this.apiService.delete(`/api/extras/${id}`);
@@ -968,7 +880,6 @@ class ExtrasManager {
      */
     async showEstatisticas() {
         try {
-            console.log('📊 Carregando estatísticas...');
             
             const response = await this.apiService.get('/api/extras/estatisticas');
             
@@ -1017,7 +928,6 @@ class ExtrasManager {
      * Editar transferência
      */
     async editarTransferencia(id) {
-        console.log('🎯 editarTransferencia INÍCIO - id:', id, 'currentTransferencia antes:', this.currentTransferencia);
         // MOSTRAR MODAL IMEDIATAMENTE para feedback visual
         const modal = document.getElementById('modal-transferencias');
         if (!modal) {
@@ -1028,7 +938,6 @@ class ExtrasManager {
 
         try {
             // Buscar transferência específica da API
-            console.log('🔍 Buscando transferência ID:', id);
             const response = await this.apiService.get(`/api/transferencias/${id}`);
             
             if (!response || !response.success) {
@@ -1036,16 +945,10 @@ class ExtrasManager {
             }
             
             const transferencia = response.data || response;
-            console.log('📋 Transferência encontrada:', transferencia);
 
             try {
                 // DEFINIR currentTransferencia para que os valores sejam carregados
                 this.currentTransferencia = transferencia;
-                console.log('✅ currentTransferencia SETEADO:', this.currentTransferencia);
-                console.log('💰 Dados da transferência para valores:', {
-                    id_proprietarios: transferencia.id_proprietarios,
-                    transferenciaCompleta: transferencia
-                });
             } catch (error) {
                 console.error('❌ Erro ao setar currentTransferencia:', error);
             }
@@ -1086,12 +989,10 @@ class ExtrasManager {
 
             // CARREGAR PROPRIETÁRIOS PRIMEIRO se não estiverem carregados
             if (!this.allProprietarios || this.allProprietarios.length === 0) {
-                console.log('🔄 Carregando proprietários primeiro...');
                 await this.loadProprietarios();
             }
 
             // CARREGAR ALIASES E SELECIONAR O CORRETO
-            console.log('🔄 Carregando aliases...');
             await this.carregarAliasParaTransferencia();
             
             // Aguardar um pouco para os aliases serem carregados
@@ -1099,18 +1000,14 @@ class ExtrasManager {
                 const aliasSelect = document.getElementById('transferencia-alias');
                 if (aliasSelect && transferencia.alias_id) {
                     aliasSelect.value = transferencia.alias_id;
-                    console.log('✅ Alias selecionado:', transferencia.alias_id);
                     
                     // Carregar proprietários do alias selecionado
-                    console.log('🔄 Carregando proprietários do alias...');
                     if (typeof this.carregarProprietariosAlias === 'function') {
                         this.carregarProprietariosAlias(transferencia.alias_id);
-                        console.log('✅ Função carregarProprietariosAlias chamada');
                     } else {
                         console.error('❌ Função carregarProprietariosAlias não encontrada');
                     }
                 } else {
-                    console.warn('⚠️ Alias select não encontrado ou transferência sem alias_id');
                 }
             }, 200); // Aumentei para 200ms para dar mais tempo
 
@@ -1120,7 +1017,6 @@ class ExtrasManager {
                 keyboard: false
             });
             bsModal.show();
-            console.log('✅ Modal mostrado com sucesso');
 
         } catch (error) {
             console.error('❌ Erro ao buscar transferência:', error);
@@ -1132,11 +1028,8 @@ class ExtrasManager {
      * Excluir transferência
      */
     async excluirTransferencia(id) {
-    console.log('[DEBUG] allTransferencias:', this.allTransferencias);
-    console.log('[DEBUG] Entrando en excluirTransferencia:', id);
         try {
             // Executar a exclusão diretamente (modal já confirma)
-            console.log('[DEBUG] Llamando executeDeleteTransferencia com:', id);
             await this.executeDeleteTransferencia(id);
         } catch (error) {
             console.error('Erro ao excluir transferência:', error);
@@ -1157,8 +1050,6 @@ class ExtrasManager {
         this.pendingOperations.add(operationId);
         
         try {
-            console.log('🗑️ Excluindo transferência:', id);
-            console.log('[DEBUG] Llamando apiService.delete con:', `/api/transferencias/${id}`);
 
             // Chamada de API sem bloquear a UI
             const response = await this.apiService.delete(`/api/transferencias/${id}`);
@@ -1211,12 +1102,10 @@ document.addEventListener('DOMContentLoaded', function() {
     window.extrasManager.apiService = window.apiService;
     // Disponibilizar também como extrasModule para o gerenciador de UI
     window.extrasModule = window.extrasManager;
-    console.log('✅ ExtrasManager inicializado');
 });
 
 // Adicionar método applyPermissions à classe ExtrasManager
 ExtrasManager.prototype.applyPermissions = function(isAdmin) {
-    console.log(`🔒 Aplicando permissões no módulo Extras: ${isAdmin ? 'ADMIN' : 'USUÁRIO'}`);
 
     const btnNovoAlias = document.getElementById('btn-novo-alias');
     if (btnNovoAlias) {

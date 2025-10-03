@@ -27,16 +27,13 @@ const AppConfig = {
         // Para el entorno Docker con proxy NGINX, siempre usamos una URL base relativa.
         // NGINX se encarga de redirigir las llamadas /api/ al backend.
         this.api.baseUrl = '';
-        console.log('✅ Configuración de red unificada para modo proxy.');
 
         // Probar conectividad con el backend a través del proxy.
         try {
             // Usamos la URL relativa que el proxy NGINX interceptará.
             const response = await fetch('/api/health');
             if (response.ok) {
-                console.log('✅ Conectividad con backend confirmada vía proxy.');
             } else {
-                console.warn('⚠️ Backend responde pero con error:', response.status);
             }
         } catch (error) {
             console.error('❌ Error conectando con backend vía proxy:', error.message);
@@ -70,7 +67,6 @@ const AppConfig = {
     // Método para actualizar la URL base (para compatibilidade)
     updateBaseURL(newBaseURL) {
         this.api.baseUrl = newBaseURL;
-        console.log(`🔄 URL base actualizada: ${this.api.baseUrl}`);
     }
 };
 
@@ -81,5 +77,3 @@ window.AppConfig = AppConfig;
 document.addEventListener('DOMContentLoaded', async () => {
     await AppConfig.initNetwork();
 });
-
-console.log('🚀 AppConfig cargado - Inicialización automática habilitada');

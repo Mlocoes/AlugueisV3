@@ -25,12 +25,10 @@ class ImoveisModule {
 
         // If container not found, wait a bit and try again (timing issue)
         if (!this.container) {
-            console.log('[ImoveisModule] Container not found, waiting 100ms and trying again...');
             setTimeout(() => {
                 this.container = this.isMobile
                     ? document.getElementById('imoveis-list-mobile')
                     : document.getElementById('imoveis-table-body');
-                console.log('[ImoveisModule] Container found after delay:', !!this.container);
                 
                 if (this.container) {
                     this.modalManager = new ModalManager('novo-imovel-modal', 'edit-imovel-modal');
@@ -293,17 +291,14 @@ class ImoveisModule {
     }
 
     async editImovel(id) {
-        console.log('[ImoveisModule] editImovel called with id:', id);
         const imovel = this.imoveis.find(p => p.id === id);
         if (!imovel) {
             this.uiManager.showError('Imóvel não encontrado.');
             return;
         }
 
-        console.log('[ImoveisModule] Found imovel:', imovel);
         this.currentEditId = id;
         const form = document.getElementById('form-edit-imovel');
-        console.log('[ImoveisModule] Form found:', !!form);
         if (!form) {
             console.error('[ImoveisModule] Form form-edit-imovel not found!');
             return;
@@ -324,8 +319,6 @@ class ImoveisModule {
             }
         });
 
-        console.log('[ImoveisModule] About to show modal: edit-imovel-modal');
-        console.log('[ImoveisModule] ModalManager:', this.modalManager);
         this.modalManager.show('edit-imovel-modal');
     }
 

@@ -1,15 +1,12 @@
 
 class ModalManager {
     constructor(modalCadastroId, modalEdicaoId) {
-        console.log(`[ModalManager] new instance with IDs: cadastro=${modalCadastroId}, edicao=${modalEdicaoId}`);
         if (modalCadastroId) {
             const modalCadastroEl = document.getElementById(modalCadastroId);
             if (modalCadastroEl) {
                 this.modalCadastro = new bootstrap.Modal(modalCadastroEl);
                 this.modalCadastroTitleEl = modalCadastroEl.querySelector('.modal-title'); // Store title element
-                console.log(`[ModalManager] Modal de cadastro "${modalCadastroId}" encontrado e inicializado.`);
             } else {
-                console.warn(`[ModalManager] Modal com ID "${modalCadastroId}" não encontrado.`);
             }
         }
 
@@ -18,9 +15,7 @@ class ModalManager {
             if (modalEdicaoEl) {
                 this.modalEdicao = new bootstrap.Modal(modalEdicaoEl);
                 this.modalEdicaoTitleEl = modalEdicaoEl.querySelector('.modal-title'); // Store title element
-                console.log(`[ModalManager] Modal de edição "${modalEdicaoId}" encontrado e inicializado.`);
             } else {
-                console.warn(`[ModalManager] Modal com ID "${modalEdicaoId}" não encontrado.`);
             }
         }
     }
@@ -40,9 +35,7 @@ class ModalManager {
             if (modalEl) {
                 const modal = new bootstrap.Modal(modalEl);
                 modal.show();
-                console.log(`[ModalManager] Showing modal: ${modalId}`);
             } else {
-                console.warn(`[ModalManager] Modal ${modalId} not found`);
             }
         } else {
             // Default behavior: show cadastro modal
@@ -58,10 +51,8 @@ class ModalManager {
                 const modal = bootstrap.Modal.getInstance(modalEl);
                 if (modal) {
                     modal.hide();
-                    console.log(`[ModalManager] Hiding modal: ${modalId}`);
                 }
             } else {
-                console.warn(`[ModalManager] Modal ${modalId} not found`);
             }
         } else {
             // Default behavior: hide cadastro modal
@@ -78,10 +69,8 @@ class ModalManager {
 
     fecharModalCadastro() {
         if (this.modalCadastro) {
-            console.log('[ModalManager] fechando modal de cadastro... instancia encontrada:', this.modalCadastro);
             this.modalCadastro.hide();
         } else {
-            console.warn('[ModalManager] fecharModalCadastro chamado, mas instancia não existe');
         }
     }
 

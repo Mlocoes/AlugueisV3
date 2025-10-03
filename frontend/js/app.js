@@ -15,39 +15,31 @@ class SistemaAlugueisApp {
      */
     async init() {
         try {
-            console.log('🚀 Inicializando Sistema de Aluguéis V2.1.0...');
 
             // Esconder loading screen imediatamente
             const loadingScreen = document.getElementById('loading-screen');
             if (loadingScreen) {
                 loadingScreen.style.display = 'none';
-                console.log('✅ Loading screen escondido');
             }
 
             // Aguardar Bootstrap estar disponível
             await this.waitForBootstrap();
-            console.log('✅ Bootstrap carregado e disponível');
 
             // Configurar acessibilidade
             this.setupGlobalAccessibilityInterceptor();
-            console.log('✅ Sistema de accesibilidad simplificado iniciado');
 
             // Verificar dependências
             this.checkDependencies();
-            console.log('✅ Todas as dependências verificadas');
 
             // Verificar Chart.js
             if (typeof Chart !== 'undefined') {
-                console.log('📊 Chart.js versão:', Chart.version);
             }
 
             // Verificar conexão com o backend
                 // Inicializar view manager antes de cualquier navegación
                 if (window.viewManager && typeof window.viewManager.init === 'function') {
                     window.viewManager.init();
-                    console.log('✅ ViewManager inicializado antes de login/navegación');
                 } else {
-                    console.warn('⚠️ ViewManager no disponible para inicializar');
                 }
             await this.checkBackendConnection();
 
@@ -58,9 +50,6 @@ class SistemaAlugueisApp {
             this.setupGlobalEvents();
 
             // Login/logout gerenciado por UnifiedApp em index.html (não por loginManager)
-            console.log('🔒 Autenticação gerenciada por UnifiedApp');
-
-            console.log('✅ Sistema de Aluguéis inicializado corretamente');
 
         } catch (error) {
             console.error('❌ Erro inicializando a aplicação:', error);
@@ -89,7 +78,6 @@ class SistemaAlugueisApp {
      */
     setupGlobalAccessibilityInterceptor() {
         // Solución simple: solo loggear para debug
-        console.log('🔒 Sistema de accesibilidad simplificado iniciado');
     }
 
     /**
@@ -111,8 +99,6 @@ class SistemaAlugueisApp {
             return false;
         }
 
-        console.log('✅ Todas as dependências verificadas');
-        console.log('📊 Chart.js versão:', Chart.version);
         return true;
     }
 
@@ -121,13 +107,11 @@ class SistemaAlugueisApp {
      */
     async initializeNetwork() {
         try {
-            console.log('🌐 Inicializando configuração de rede...');
 
             // Esperar que AppConfig esteja disponível (máximo 2 segundos)
             let attempts = 0;
             const maxAttempts = 20;
             while (!window.AppConfig && attempts < maxAttempts) {
-                console.log(`⏳ Esperando AppConfig... tentativa ${attempts + 1}/${maxAttempts}`);
                 await new Promise(resolve => setTimeout(resolve, 100));
                 attempts++;
             }
@@ -138,12 +122,9 @@ class SistemaAlugueisApp {
             }
 
             // DESABILITADO: Usar detecção automática - sempre usar proxy nginx
-            console.log('🌐 Usando proxy nginx - configuração automática de URL desabilitada');
-            console.log(`� BaseURL atual: ${window.AppConfig.getBaseURL()}`);
             
             // Não modificar baseUrl - manter a configuração de proxy nginx
         } catch (error) {
-            console.warn('⚠️ Erro na configuração de rede, mantendo configuração de proxy:', error);
             // Não fazer fallback para IPs diretos - manter proxy nginx
         }
     }    /**
@@ -152,7 +133,6 @@ class SistemaAlugueisApp {
     async checkBackendConnection() {
         try {
             const health = await window.apiService.getHealth();
-            console.log('✅ Backend conectado:', health);
 
             // Atualizar indicador de conexão
             const indicator = document.querySelector('.navbar-text');
@@ -178,7 +158,6 @@ class SistemaAlugueisApp {
      * Inicializar módulos da aplicação
      */
     async initializeModules() {
-        console.log('📦 Inicializando módulos...');
 
         // Obtener CSRF token para proteção
         if (window.apiService && typeof window.apiService.getCsrfToken === 'function') {
@@ -189,26 +168,22 @@ class SistemaAlugueisApp {
         if (typeof window.DashboardModule !== 'undefined') {
             this.modules.dashboard = new window.DashboardModule();
             window.dashboardModule = this.modules.dashboard;
-            console.log('✅ Módulo Dashboard criado');
         }
 
         if (typeof ProprietariosModule !== 'undefined') {
             this.modules.proprietarios = new ProprietariosModule();
             window.proprietariosModule = this.modules.proprietarios;
             // window.proprietariosModule.load(); // Call load() method
-            console.log('✅ Módulo Proprietarios criado e carregado');
         }
 
         if (typeof ImoveisModule !== 'undefined') {
             this.modules.imoveis = new ImoveisModule();
             window.imoveisModule = this.modules.imoveis;
-            console.log('✅ Módulo Imoveis criado');
         }
 
         if (typeof ParticipacoesModule !== 'undefined') {
             this.modules.participacoes = new ParticipacoesModule();
             window.participacoesModule = this.modules.participacoes;
-            console.log('✅ Módulo Participacoes criado');
         }
 
         if (typeof ImportacaoModule !== 'undefined') {
@@ -219,12 +194,10 @@ class SistemaAlugueisApp {
         if (typeof AlugueisModule !== 'undefined') {
             this.modules.alugueis = new AlugueisModule();
             window.alugueisModule = this.modules.alugueis;
-            console.log('✅ Módulo Alugueis criado');
         }
 
         if (typeof window.usuarioManager !== 'undefined') {
             window.usuarioManager.init();
-            console.log('✅ Módulo UsuarioManager inicializado');
         }
 
         
@@ -234,7 +207,6 @@ class SistemaAlugueisApp {
             // Instanciação movida para UI Manager
         }
 
-        console.log('✅ Módulos inicializados:', Object.keys(this.modules));
     }
 
     /**
@@ -243,7 +215,6 @@ class SistemaAlugueisApp {
     setupGlobalEvents() {
         // Event listener para o documento
         document.addEventListener('DOMContentLoaded', () => {
-            console.log('📄 DOM completamente carregado');
         });
 
         // Event listener para erros globais
@@ -284,7 +255,6 @@ class SistemaAlugueisApp {
         // Event listener para visibilidade da página
         document.addEventListener('visibilitychange', () => {
             if (!document.hidden && this.initialized) {
-                console.log('👁️ Página visível - atualizando dados');
                 this.refreshCurrentTab();
             }
         });
@@ -298,7 +268,6 @@ class SistemaAlugueisApp {
      */
     setupModalAccessibility() {
         // Solución simple: dejar que Bootstrap maneje todo normalmente
-        console.log('✅ Sistema de modales simplificado iniciado');
     }
 
     /**
@@ -306,7 +275,6 @@ class SistemaAlugueisApp {
      */
     loadInitialTab() {
     // No cargar ninguna pestaña automáticamente, esperar login exitoso
-    console.log('⏸️ Carga de aba inicial bloqueada hasta login exitoso');
     }
 
     /**
@@ -429,6 +397,5 @@ window.debugApp = () => {
     if (window.app) {
         console.table(window.app.getSystemInfo());
     } else {
-        console.warn('❌ Aplicação não inicializada');
     }
 };

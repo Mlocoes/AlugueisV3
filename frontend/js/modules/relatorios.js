@@ -9,11 +9,9 @@ class RelatoriosModule {
     }
 
     async load() {
-        console.log('🔄 RelatoriosModule.load() - Iniciando carga...');
         
         // Re-avaliar tipo de dispositivo
         this.isMobile = window.deviceManager && window.deviceManager.deviceType === 'mobile';
-        console.log(`📱 Tipo de dispositivo: ${this.isMobile ? 'MOBILE' : 'DESKTOP'}`);
         
         // Sempre re-buscar elementos DOM (podem ter sido recriados ao mudar de tela)
         const getContainer = () => this.isMobile
@@ -25,19 +23,16 @@ class RelatoriosModule {
         // Retry múltiplas vezes se não encontrar (timing issue)
         // Aumentado para 10 tentativas com delay maior
         if (!this.container) {
-            console.log('⏳ RelatoriosModule: Container não encontrado, tentando novamente...');
             for (let i = 0; i < 10; i++) {
                 await new Promise(resolve => setTimeout(resolve, 300));
                 this.container = getContainer();
                 if (this.container) {
-                    console.log(`✅ Container encontrado após ${i + 1} tentativa(s)`);
                     break;
                 }
             }
         }
 
         if (!this.container) {
-            console.warn('⚠️ RelatoriosModule: Container não encontrado após tentativas. View pode não estar ativa ainda.');
             // Não retornar erro, apenas avisar - o container pode ser encontrado depois
             return;
         }
@@ -49,25 +44,15 @@ class RelatoriosModule {
         this.proprietarioSelect = document.getElementById(`relatorios-proprietario-select${suffix}`);
         this.transferenciasCheck = document.getElementById(`relatorios-transferencias-check${suffix}`);
 
-        console.log('🎯 Elementos encontrados:', {
-            container: !!this.container,
-            anoSelect: !!this.anoSelect,
-            mesSelect: !!this.mesSelect,
-            proprietarioSelect: !!this.proprietarioSelect,
-            transferenciasCheck: !!this.transferenciasCheck
-        });
-
         // Setup event listeners (sempre reconfigurar)
         this.setupEventListeners();
 
         // Carregar dados
         await this.loadInitialData();
         
-        console.log('✅ RelatoriosModule.load() - Carga completa!');
     }
 
     setupEventListeners() {
-        console.log('🎧 Configurando event listeners...');
         
         // Remover listeners antigos para evitar duplicados
         // Usando named function para poder remover depois
@@ -81,11 +66,9 @@ class RelatoriosModule {
                 el.removeEventListener('change', this._changeHandler);
                 // Adicionar novo listener
                 el.addEventListener('change', this._changeHandler);
-                console.log(`   ✅ Listener adicionado: ${el.id}`);
             }
         });
         
-        console.log('✅ Event listeners configurados');
     }
 
     async loadInitialData() {
@@ -205,52 +188,40 @@ class RelatoriosModule {
         const cacheKey = `transferencias_${ano}_${mes}`;
         if (this.transferenciasCache.has(cacheKey)) {
             const cached = this.transferenciasCache.get(cacheKey)[proprietarioId] || 0;
-            console.log(`💰 Transferência (cache) - Proprietário ${proprietarioId}, ${mes}/${ano}: R$ ${cached}`);
             return cached;
         }
 
         try {
-            console.log(`🔍 Buscando transferências do backend...`);
             const response = await this.apiService.get('/api/transferencias/relatorios');
             const transferencias = response.success ? response.data : response;
-            console.log(`📦 Transferências recebidas:`, transferencias);
             
             const periodTransfers = {};
             
             // Data de consulta (primeiro dia do mês/ano consultado)
             const dataConsulta = new Date(ano, mes - 1, 1);
-            console.log(`📅 Data de consulta: ${dataConsulta.toISOString()}`);
             
             transferencias.forEach(t => {
                 // Verificar se a transferência está ATIVA no período consultado
                 const dataInicio = new Date(t.data_criacao);
                 const dataFim = new Date(t.data_fim);
                 
-                console.log(`   � Transferência: ${t.nome_transferencia}`);
-                console.log(`      Válida de ${dataInicio.toLocaleDateString()} até ${dataFim.toLocaleDateString()}`);
                 
                 // A transferência é aplicada se a data consultada está dentro do período de validade
                 if (dataConsulta >= dataInicio && dataConsulta <= dataFim) {
-                    console.log(`      ✅ Transferência ATIVA para ${mes}/${ano}!`);
                     try {
                         const participantes = JSON.parse(t.id_proprietarios);
-                        console.log(`      👥 Participantes:`, participantes);
                         participantes.forEach(p => {
                             periodTransfers[p.id] = (periodTransfers[p.id] || 0) + parseFloat(p.valor);
-                            console.log(`         💵 Proprietário ${p.id}: +${p.valor} = ${periodTransfers[p.id]}`);
                         });
                     } catch (e) {
                         console.error(`      ❌ Erro ao parsear participantes:`, e);
                     }
                 } else {
-                    console.log(`      ⏭️  Transferência NÃO ativa para ${mes}/${ano}`);
                 }
             });
 
-            console.log(`💾 Cache de transferências para ${mes}/${ano}:`, periodTransfers);
             this.transferenciasCache.set(cacheKey, periodTransfers);
             const valor = periodTransfers[proprietarioId] || 0;
-            console.log(`💰 Transferência final - Proprietário ${proprietarioId}: R$ ${valor}`);
             return valor;
         } catch (error) {
             console.error("❌ Error fetching transferencias", error);
@@ -276,17 +247,12 @@ class RelatoriosModule {
         }
 
         const incluirTransferencias = this.transferenciasCheck && this.transferenciasCheck.checked;
-        console.log(`🎛️  Checkbox transferências: ${incluirTransferencias ? 'MARCADO' : 'DESMARCADO'}`);
         let cardsHtml = '';
         for (const item of this.currentData) {
             let somaAlugueis = parseFloat(item.soma_alugueis || 0);
-            console.log(`📊 Processando ${item.nome_proprietario} - ${item.mes}/${item.ano}`);
-            console.log(`   Soma original aluguéis: R$ ${somaAlugueis}`);
             if (incluirTransferencias) {
                 const transferencia = await this.getTransferenciasValue(item.proprietario_id, item.ano, item.mes);
-                console.log(`   Valor transferência: R$ ${transferencia}`);
                 somaAlugueis += transferencia;
-                console.log(`   Soma FINAL aluguéis: R$ ${somaAlugueis}`);
             }
             const somaTaxas = parseFloat(item.soma_taxas || 0);
             const valorLiquido = somaAlugueis - somaTaxas;
@@ -316,17 +282,12 @@ class RelatoriosModule {
         }
 
         const incluirTransferencias = this.transferenciasCheck && this.transferenciasCheck.checked;
-        console.log(`🎛️  Checkbox transferências: ${incluirTransferencias ? 'MARCADO' : 'DESMARCADO'}`);
         let tableHtml = '';
         for (const [index, item] of this.currentData.entries()) {
             let somaAlugueis = parseFloat(item.soma_alugueis || 0);
-            console.log(`📊 Processando ${item.nome_proprietario} - ${item.mes}/${item.ano}`);
-            console.log(`   Soma original aluguéis: R$ ${somaAlugueis}`);
             if (incluirTransferencias) {
                 const transferencia = await this.getTransferenciasValue(item.proprietario_id, item.ano, item.mes);
-                console.log(`   Valor transferência: R$ ${transferencia}`);
                 somaAlugueis += transferencia;
-                console.log(`   Soma FINAL aluguéis: R$ ${somaAlugueis}`);
             }
             const somaTaxas = parseFloat(item.soma_taxas || 0);
 
@@ -346,12 +307,10 @@ class RelatoriosModule {
 
     applyPermissions() {
         const isAdmin = window.authService && window.authService.isAdmin();
-        console.log(`🔐 Aplicando permissões - Usuário é admin: ${isAdmin}`);
         
         if (this.transferenciasCheck) {
             // IMPORTANTE: Marcar checkbox por padrão APENAS na primeira carga
             if (!this.initialLoadDone) {
-                console.log('✅ Primeira carga: marcando checkbox de transferências por padrão');
                 this.transferenciasCheck.checked = true;
                 this.initialLoadDone = true;
             }
@@ -367,7 +326,6 @@ class RelatoriosModule {
                     : 'Transferências sempre incluídas. Apenas administradores podem alterar.';
             }
             
-            console.log(`✅ Checkbox de transferências - disabled: ${this.transferenciasCheck.disabled}, checked: ${this.transferenciasCheck.checked}`);
         }
     }
 }

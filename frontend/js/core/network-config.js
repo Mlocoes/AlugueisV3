@@ -23,17 +23,14 @@ class NetworkConfig {
                 const ip = await method();
                 if (ip && await this.testConnection(ip)) {
                     this.serverIP = ip;
-                    console.log(`🌐 Servidor detectado en: ${ip}`);
                     return ip;
                 }
             } catch (error) {
-                console.warn(`⚠️ Método de detección falhou:`, error.message);
             }
         }
 
         // Fallback para IP local
         this.serverIP = '192.168.0.7';
-        console.log(`🏠 Usando fallback IP local: ${this.serverIP}`);
         return this.serverIP;
     }
 

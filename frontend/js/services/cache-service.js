@@ -88,11 +88,6 @@ class CacheService {
 
         // Log de inicialização
         if (this.config.enableLogging) {
-            console.log('✅ CacheService inicializado', {
-                stores: Object.keys(this.stores).length,
-                persistence: this.config.enablePersistence,
-                autoCleanup: this.config.autoCleanup
-            });
         }
     }
 
@@ -108,7 +103,6 @@ class CacheService {
         const store = this.stores[key];
 
         if (!store) {
-            console.warn(`CacheService: Store "${key}" não existe. Buscando dados diretamente.`);
             return await fetchFn();
         }
 
@@ -122,9 +116,6 @@ class CacheService {
             store.misses++;
             
             if (this.config.enableLogging) {
-                console.log(`🔄 CacheService: Buscando dados para "${key}"`, {
-                    reason: forceRefresh ? 'force-refresh' : isExpired ? 'expired' : 'no-data'
-                });
             }
 
             try {
@@ -141,14 +132,12 @@ class CacheService {
                 this.notifyListeners(key, store.data);
 
                 if (this.config.enableLogging) {
-                    console.log(`✅ CacheService: Dados de "${key}" atualizados`);
                 }
             } catch (error) {
                 console.error(`❌ CacheService: Erro ao buscar dados para "${key}"`, error);
                 
                 // Se temos dados antigos, retornar mesmo sendo expirados
                 if (store.data) {
-                    console.warn(`⚠️ CacheService: Usando dados expirados para "${key}"`);
                     return store.data;
                 }
                 
@@ -159,10 +148,6 @@ class CacheService {
             store.hits++;
             
             if (this.config.enableLogging) {
-                console.log(`✨ CacheService: Cache hit para "${key}"`, {
-                    age: Math.round((now - store.timestamp) / 1000) + 's',
-                    ttl: Math.round(store.ttl / 1000) + 's'
-                });
             }
         }
 
@@ -179,7 +164,6 @@ class CacheService {
         const store = this.stores[key];
         
         if (!store) {
-            console.warn(`CacheService: Store "${key}" não existe`);
             return;
         }
 
@@ -195,7 +179,6 @@ class CacheService {
         this.notifyListeners(key, data);
 
         if (this.config.enableLogging) {
-            console.log(`✅ CacheService: Dados de "${key}" definidos manualmente`);
         }
     }
 
@@ -208,7 +191,6 @@ class CacheService {
         const store = this.stores[key];
         
         if (!store) {
-            console.warn(`CacheService: Store "${key}" não existe`);
             return;
         }
 
@@ -221,7 +203,6 @@ class CacheService {
         }
 
         if (this.config.enableLogging) {
-            console.log(`🗑️ CacheService: Cache de "${key}" invalidado`);
         }
     }
 
@@ -242,7 +223,6 @@ class CacheService {
         }
 
         if (this.config.enableLogging) {
-            console.log('🗑️ CacheService: Todos os caches invalidados');
         }
     }
 
@@ -370,7 +350,6 @@ class CacheService {
             };
             localStorage.setItem(`cache_${key}`, JSON.stringify(cacheData));
         } catch (error) {
-            console.warn(`Erro ao salvar cache "${key}" no localStorage`, error);
         }
     }
 
@@ -388,7 +367,6 @@ class CacheService {
                         store.timestamp = timestamp;
                         
                         if (this.config.enableLogging) {
-                            console.log(`📦 CacheService: Dados de "${key}" carregados do localStorage`);
                         }
                     } else {
                         // Remover cache expirado
@@ -396,7 +374,6 @@ class CacheService {
                     }
                 }
             } catch (error) {
-                console.warn(`Erro ao carregar cache "${key}" do localStorage`, error);
             }
         });
     }
@@ -405,7 +382,6 @@ class CacheService {
         try {
             localStorage.removeItem(`cache_${key}`);
         } catch (error) {
-            console.warn(`Erro ao remover cache "${key}" do localStorage`, error);
         }
     }
 
@@ -424,7 +400,6 @@ class CacheService {
             });
 
             if (cleaned > 0 && this.config.enableLogging) {
-                console.log(`🧹 CacheService: ${cleaned} cache(s) expirado(s) limpo(s)`);
             }
         }, this.config.cleanupInterval);
     }
@@ -437,7 +412,6 @@ class CacheService {
         const stats = this.getStats();
         
         console.table(stats.stores);
-        console.log('Totais:', stats.totals);
         
         console.groupEnd();
     }
@@ -452,7 +426,6 @@ class CacheService {
         });
         
         if (this.config.enableLogging) {
-            console.log('📊 CacheService: Estatísticas resetadas');
         }
     }
 }

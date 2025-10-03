@@ -71,7 +71,6 @@ class DashboardModule {
         if (summary) {
             this.dataLoaded = true;
             this.summaryData = summary;
-            console.log('📊 Dados agregados do dashboard carregados:', this.summaryData);
 
             // Sempre atualizar estatísticas quando dados são carregados
             this.updateStats();
