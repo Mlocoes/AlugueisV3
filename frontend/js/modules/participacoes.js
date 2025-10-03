@@ -103,6 +103,13 @@ class ParticipacoesModule {
             
             this.datas = (datas && Array.isArray(datas)) ? datas : [];
 
+            // Se não há dados, pode ser cache desatualizado - forçar reload sem cache
+            if (this.datas.length === 0) {
+                console.log('⚠️ Nenhuma data encontrada, tentando sem cache...');
+                const datasNoCache = await this.apiService.getDatasParticipacoes(false);
+                this.datas = (datasNoCache && Array.isArray(datasNoCache)) ? datasNoCache : [];
+            }
+
             // Mobile: apenas o mais recente
             if (this.isMobile && this.datas.length > 0) {
                 this.datas = [this.datas[0]];
