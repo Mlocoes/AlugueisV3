@@ -909,121 +909,125 @@ class ViewManager {
         return `
             <div class="imoveis-container">
                 <div class="d-flex justify-content-end mb-3">
-                            <table class="table table-striped table-hover table-custom" id="imoveis-table" style="font-size: 0.8rem;">
-                                <thead class="table-dark">
-                                    <tr>
-                                        <th>Nome<br><span style="font-weight: normal; color: inherit; font-size: inherit;">Tipo</span></th>
-                                        <th>Endereço</th>
-                                        <th>Área Total<br><span style="font-weight: normal; color: inherit; font-size: inherit;">Construída</span></th>
-                                        <th>Valor Cadastral<br><span style="font-weight: normal; color: inherit; font-size: inherit;">Mercado</span></th>
-                                        <th>IPTU<br><span style="font-weight: normal; color: inherit; font-size: inherit;">Condomínio</span></th>
-                                        <th>Alugado</th>
-                                        <th>Data Cadastro</th>
-                                        <th width="120">Ações</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="imoveis-table-body">
-                                    <tr>
-                                        <td colspan="8" class="text-center text-muted py-4">
-                                            <div class="spinner-border" role="status">
-                                                <span class="visually-hidden">Carregando...</span>
-                                            </div>
-                                            <br>Carregando imóveis...
-                                        </td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
+                    <button class="btn btn-primary admin-only" id="btn-novo-imovel">
+                        <i class="fas fa-plus me-2"></i>Novo Imóvel
+                    </button>
                 </div>
-
-                <!-- Modal de Novo Imóvel -->
-                <div class="modal fade" id="novo-imovel-modal" tabindex="-1" aria-labelledby="novoImovelModalLabel">
-                    <div class="modal-dialog">
-                        <div class="modal-content">
-                            <div class="modal-header bg-primary text-white">
-                                <h5 class="modal-title" id="novoImovelModalLabel"><i class="fas fa-building me-2"></i>Novo Imóvel</h5>
-                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                            </div>
-                            <form id="form-novo-imovel">
-                                <div class="modal-body p-1" style="font-size: 0.80rem; max-height: 70vh; overflow-y: auto;">
-                                    <div class="mb-1"><label class="form-label">Nome</label><input type="text" class="form-control" name="nome" required style="font-size:0.85em;"></div>
-                                    <div class="mb-3"><label class="form-label">Endereço</label><input type="text" class="form-control" name="endereco" required style="font-size:0.85em;"></div>
-                                    <div class="mb-3"><label class="form-label">Tipo</label><input type="text" class="form-control" name="tipo_imovel" style="font-size:0.85em;"></div>
-                                    <div class="mb-3"><label class="form-label">Área Total</label><input type="number" class="form-control" name="area_total" style="font-size:0.85em;"></div>
-                                    <div class="mb-3"><label class="form-label">Área Construída</label><input type="number" class="form-control" name="area_construida" style="font-size:0.85em;"></div>
-                                    <div class="mb-3"><label class="form-label">Valor Cadastral</label><input type="number" class="form-control" name="valor_cadastral" style="font-size:0.85em;"></div>
-                                    <div class="mb-3"><label class="form-label">Valor Mercado</label><input type="number" class="form-control" name="valor_mercado" style="font-size:0.85em;"></div>
-                                    <div class="mb-3"><label class="form-label">IPTU Mensal</label><input type="number" class="form-control" name="iptu_mensal" style="font-size:0.85em;"></div>
-                                    <div class="mb-3"><label class="form-label">Condomínio Mensal</label><input type="number" class="form-control" name="condominio_mensal" style="font-size:0.85em;"></div>
-                                    <div class="mb-3"><label class="form-label">Quartos</label><input type="number" class="form-control" name="numero_quartos" style="font-size:0.85em;"></div>
-                                    <div class="mb-3"><label class="form-label">Banheiros</label><input type="number" class="form-control" name="numero_banheiros" style="font-size:0.85em;"></div>
-                                    <div class="mb-3"><label class="form-label">Vagas Garagem</label><input type="number" class="form-control" name="numero_vagas_garagem" style="font-size:0.85em;"></div>
-                                    <div class="mb-3"><div class="form-check"><input class="form-check-input" type="checkbox" name="alugado" id="alugado-novo" value="true"><label class="form-check-label" for="alugado-novo">Alugado</label></div></div>
-                                    <div class="mb-3"><label class="form-label">Data Cadastro</label><input type="date" class="form-control" name="data_cadastro" style="font-size:0.85em;"></div>
-                                    <div class="mb-3"><label class="form-label">Observações</label><textarea class="form-control" name="observacoes" style="font-size:0.85em;"></textarea></div>
-                                </div>
-                                <div class="modal-footer">
-                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                                    <button type="submit" class="btn btn-primary">Salvar</button>
-                                </div>
-                            </form>
-                        </div>
-                    </div>
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover table-custom" id="imoveis-table" style="font-size: 0.8rem;">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>Nome<br><span style="font-weight: normal; color: inherit; font-size: inherit;">Tipo</span></th>
+                                <th>Endereço</th>
+                                <th>Área Total<br><span style="font-weight: normal; color: inherit; font-size: inherit;">Construída</span></th>
+                                <th>Valor Cadastral<br><span style="font-weight: normal; color: inherit; font-size: inherit;">Mercado</span></th>
+                                <th>IPTU<br><span style="font-weight: normal; color: inherit; font-size: inherit;">Condomínio</span></th>
+                                <th>Alugado</th>
+                                <th>Data Cadastro</th>
+                                <th width="120">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="imoveis-table-body">
+                            <tr>
+                                <td colspan="8" class="text-center text-muted py-4">
+                                    <div class="spinner-border" role="status">
+                                        <span class="visually-hidden">Carregando...</span>
+                                    </div>
+                                    <br>Carregando imóveis...
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
                 </div>
+            </div>
 
-                <!-- Modal de Edición de Imóvel -->
-                <div class="modal fade" id="edit-imovel-modal" tabindex="-1" aria-labelledby="editImovelModalLabel">
-                    <div class="modal-dialog">
-                        <div class="modal-content">
-                            <div class="modal-header bg-primary text-white">
-                                <h5 class="modal-title" id="editImovelModalLabel"><i class="fas fa-building me-2"></i>Editar Imóvel</h5>
-                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                            </div>
-                            <form id="form-edit-imovel">
-                                <div class="modal-body p-1" style="font-size: 0.80rem; max-height: 70vh; overflow-y: auto;">
-                                    <div class="mb-1"><label class="form-label">Nome</label><input type="text" class="form-control" name="nome" required style="font-size:0.85em;"></div>
-                                    <div class="mb-3"><label class="form-label">Endereço</label><input type="text" class="form-control" name="endereco" required style="font-size:0.85em;"></div>
-                                    <div class="mb-3"><label class="form-label">Tipo</label><input type="text" class="form-control" name="tipo_imovel" style="font-size:0.85em;"></div>
-                                    <div class="mb-3"><label class="form-label">Área Total</label><input type="number" class="form-control" name="area_total" style="font-size:0.85em;"></div>
-                                    <div class="mb-3"><label class="form-label">Área Construída</label><input type="number" class="form-control" name="area_construida" style="font-size:0.85em;"></div>
-                                    <div class="mb-3"><label class="form-label">Valor Cadastral</label><input type="number" class="form-control" name="valor_cadastral" style="font-size:0.85em;"></div>
-                                    <div class="mb-3"><label class="form-label">Valor Mercado</label><input type="number" class="form-control" name="valor_mercado" style="font-size:0.85em;"></div>
-                                    <div class="mb-3"><label class="form-label">IPTU Mensal</label><input type="number" class="form-control" name="iptu_mensal" style="font-size:0.85em;"></div>
-                                    <div class="mb-3"><label class="form-label">Condomínio Mensal</label><input type="number" class="form-control" name="condominio_mensal" style="font-size:0.85em;"></div>
-                                    <div class="mb-3"><label class="form-label">Quartos</label><input type="number" class="form-control" name="numero_quartos" style="font-size:0.85em;"></div>
-                                    <div class="mb-3"><label class="form-label">Banheiros</label><input type="number" class="form-control" name="numero_banheiros" style="font-size:0.85em;"></div>
-                                    <div class="mb-3"><label class="form-label">Vagas Garagem</label><input type="number" class="form-control" name="numero_vagas_garagem" style="font-size:0.85em;"></div>
-                                    <div class="mb-3"><div class="form-check"><input class="form-check-input" type="checkbox" name="alugado" id="alugado-edit" value="true"><label class="form-check-label" for="alugado-edit">Alugado</label></div></div>
-                                    <div class="mb-3"><label class="form-label">Data Cadastro</label><input type="date" class="form-control" name="data_cadastro" style="font-size:0.85em;"></div>
-                                    <div class="mb-3"><label class="form-label">Observações</label><textarea class="form-control" name="observacoes" style="font-size:0.85em;"></textarea></div>
-                                </div>
-                                <div class="modal-footer">
-                                    <button type="button" class="btn btn-danger" id="btn-excluir-usuario"><i class="fas fa-trash me-2"></i>Excluir</button>
-                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                                    <button type="submit" class="btn btn-primary" id="btn-confirmar-alterar">
-                                        <span class="spinner-border spinner-border-sm d-none me-2" id="spinner-alterar"></span>
-                                        Salvar
-                                    </button>
-                                </div>
-                            </form>
+            <!-- Modal de Novo Imóvel -->
+            <div class="modal fade" id="novo-imovel-modal" tabindex="-1" aria-labelledby="novoImovelModalLabel">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header bg-primary text-white">
+                            <h5 class="modal-title" id="novoImovelModalLabel"><i class="fas fa-building me-2"></i>Novo Imóvel</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                         </div>
-                    </div>
-                </div>
-
-                <!-- Modal de Confirmação de Exclusão -->
-                <div class="modal fade" id="modal-confirmar-exclusao-imovel" tabindex="-1" aria-labelledby="modalConfirmarExclusaoLabel">
-                    <div class="modal-dialog">
-                        <div class="modal-content">
-                            <div class="modal-header bg-danger text-white">
-                                <h5 class="modal-title" id="modalConfirmarExclusaoLabel"><i class="fas fa-exclamation-triangle me-2"></i>Confirmar Exclusão</h5>
-                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                            </div>
-                            <div class="modal-body">
-                                <p>Tem certeza de que deseja excluir este imóvel?</p>
-                                <p class="text-danger"><strong>Esta ação não pode ser desfeita.</strong></p>
+                        <form id="form-novo-imovel">
+                            <div class="modal-body p-1" style="font-size: 0.80rem; max-height: 70vh; overflow-y: auto;">
+                                <div class="mb-1"><label class="form-label">Nome</label><input type="text" class="form-control" name="nome" required style="font-size:0.85em;"></div>
+                                <div class="mb-3"><label class="form-label">Endereço</label><input type="text" class="form-control" name="endereco" required style="font-size:0.85em;"></div>
+                                <div class="mb-3"><label class="form-label">Tipo</label><input type="text" class="form-control" name="tipo_imovel" style="font-size:0.85em;"></div>
+                                <div class="mb-3"><label class="form-label">Área Total</label><input type="number" class="form-control" name="area_total" style="font-size:0.85em;"></div>
+                                <div class="mb-3"><label class="form-label">Área Construída</label><input type="number" class="form-control" name="area_construida" style="font-size:0.85em;"></div>
+                                <div class="mb-3"><label class="form-label">Valor Cadastral</label><input type="number" class="form-control" name="valor_cadastral" style="font-size:0.85em;"></div>
+                                <div class="mb-3"><label class="form-label">Valor Mercado</label><input type="number" class="form-control" name="valor_mercado" style="font-size:0.85em;"></div>
+                                <div class="mb-3"><label class="form-label">IPTU Mensal</label><input type="number" class="form-control" name="iptu_mensal" style="font-size:0.85em;"></div>
+                                <div class="mb-3"><label class="form-label">Condomínio Mensal</label><input type="number" class="form-control" name="condominio_mensal" style="font-size:0.85em;"></div>
+                                <div class="mb-3"><label class="form-label">Quartos</label><input type="number" class="form-control" name="numero_quartos" style="font-size:0.85em;"></div>
+                                <div class="mb-3"><label class="form-label">Banheiros</label><input type="number" class="form-control" name="numero_banheiros" style="font-size:0.85em;"></div>
+                                <div class="mb-3"><label class="form-label">Vagas Garagem</label><input type="number" class="form-control" name="numero_vagas_garagem" style="font-size:0.85em;"></div>
+                                <div class="mb-3"><div class="form-check"><input class="form-check-input" type="checkbox" name="alugado" id="alugado-novo" value="true"><label class="form-check-label" for="alugado-novo">Alugado</label></div></div>
+                                <div class="mb-3"><label class="form-label">Data Cadastro</label><input type="date" class="form-control" name="data_cadastro" style="font-size:0.85em;"></div>
+                                <div class="mb-3"><label class="form-label">Observações</label><textarea class="form-control" name="observacoes" style="font-size:0.85em;"></textarea></div>
                             </div>
                             <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                                <button type="submit" class="btn btn-primary">Salvar</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modal de Edición de Imóvel -->
+            <div class="modal fade" id="edit-imovel-modal" tabindex="-1" aria-labelledby="editImovelModalLabel">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header bg-primary text-white">
+                            <h5 class="modal-title" id="editImovelModalLabel"><i class="fas fa-building me-2"></i>Editar Imóvel</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <form id="form-edit-imovel">
+                            <div class="modal-body p-1" style="font-size: 0.80rem; max-height: 70vh; overflow-y: auto;">
+                                <div class="mb-1"><label class="form-label">Nome</label><input type="text" class="form-control" name="nome" required style="font-size:0.85em;"></div>
+                                <div class="mb-3"><label class="form-label">Endereço</label><input type="text" class="form-control" name="endereco" required style="font-size:0.85em;"></div>
+                                <div class="mb-3"><label class="form-label">Tipo</label><input type="text" class="form-control" name="tipo_imovel" style="font-size:0.85em;"></div>
+                                <div class="mb-3"><label class="form-label">Área Total</label><input type="number" class="form-control" name="area_total" style="font-size:0.85em;"></div>
+                                <div class="mb-3"><label class="form-label">Área Construída</label><input type="number" class="form-control" name="area_construida" style="font-size:0.85em;"></div>
+                                <div class="mb-3"><label class="form-label">Valor Cadastral</label><input type="number" class="form-control" name="valor_cadastral" style="font-size:0.85em;"></div>
+                                <div class="mb-3"><label class="form-label">Valor Mercado</label><input type="number" class="form-control" name="valor_mercado" style="font-size:0.85em;"></div>
+                                <div class="mb-3"><label class="form-label">IPTU Mensal</label><input type="number" class="form-control" name="iptu_mensal" style="font-size:0.85em;"></div>
+                                <div class="mb-3"><label class="form-label">Condomínio Mensal</label><input type="number" class="form-control" name="condominio_mensal" style="font-size:0.85em;"></div>
+                                <div class="mb-3"><label class="form-label">Quartos</label><input type="number" class="form-control" name="numero_quartos" style="font-size:0.85em;"></div>
+                                <div class="mb-3"><label class="form-label">Banheiros</label><input type="number" class="form-control" name="numero_banheiros" style="font-size:0.85em;"></div>
+                                <div class="mb-3"><label class="form-label">Vagas Garagem</label><input type="number" class="form-control" name="numero_vagas_garagem" style="font-size:0.85em;"></div>
+                                <div class="mb-3"><div class="form-check"><input class="form-check-input" type="checkbox" name="alugado" id="alugado-edit" value="true"><label class="form-check-label" for="alugado-edit">Alugado</label></div></div>
+                                <div class="mb-3"><label class="form-label">Data Cadastro</label><input type="date" class="form-control" name="data_cadastro" style="font-size:0.85em;"></div>
+                                <div class="mb-3"><label class="form-label">Observações</label><textarea class="form-control" name="observacoes" style="font-size:0.85em;"></textarea></div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-danger" id="btn-excluir-usuario"><i class="fas fa-trash me-2"></i>Excluir</button>
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                                <button type="submit" class="btn btn-primary" id="btn-confirmar-alterar">
+                                    <span class="spinner-border spinner-border-sm d-none me-2" id="spinner-alterar"></span>
+                                    Salvar
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modal de Confirmação de Exclusão -->
+            <div class="modal fade" id="modal-confirmar-exclusao-imovel" tabindex="-1" aria-labelledby="modalConfirmarExclusaoLabel">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header bg-danger text-white">
+                            <h5 class="modal-title" id="modalConfirmarExclusaoLabel"><i class="fas fa-exclamation-triangle me-2"></i>Confirmar Exclusão</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <p>Tem certeza de que deseja excluir este imóvel?</p>
+                            <p class="text-danger"><strong>Esta ação não pode ser desfeita.</strong></p>
+                        </div>
+                        <div class="modal-footer">
                                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
                                 <button type="button" class="btn btn-danger" id="btn-confirmar-exclusao-imovel">Excluir</button>
                             </div>
