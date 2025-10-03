@@ -500,14 +500,14 @@ class ParticipacoesModule {
                 }
 
                 console.log('[EditParticipacao] =================================');
-                console.log('[EditParticipacao] Buscando TODAS as participações atuais do backend...');
+                console.log('[EditParticipacao] Usando a versão apresentada na tela:', this.selectedData);
                 
-                // CRÍTICO: Buscar TODAS as participações atuais do backend (não do cache!)
-                // Isso garante que temos TODOS os registros, mesmo aqueles com porcentagem = 0
-                const responseParticipacoes = await this.apiService.getParticipacoes(null);
+                // CRÍTICO: Usar a versão que está sendo EXIBIDA na tela como base
+                // A lógica é: Versão apresentada + edição do usuário = nova versão
+                const responseParticipacoes = await this.apiService.getParticipacoes(this.selectedData);
                 const todasParticipacoes = responseParticipacoes || [];
                 
-                console.log('[EditParticipacao] Total de participações no backend:', todasParticipacoes.length);
+                console.log('[EditParticipacao] Total de participações da versão exibida:', todasParticipacoes.length);
                 console.log('[EditParticipacao] Total esperado:', this.imoveis.length * this.proprietarios.length);
                 
                 // Construir lista completa: UMA participação por cada combinação imóvel × proprietário
