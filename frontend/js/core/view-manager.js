@@ -913,31 +913,35 @@ class ViewManager {
                         <i class="fas fa-plus me-2"></i>Novo Imóvel
                     </button>
                 </div>
-                <div class="table-responsive">
-                    <table class="table table-striped table-hover table-custom" id="imoveis-table" style="font-size: 0.8rem;">
-                        <thead class="table-dark">
-                            <tr>
-                                <th>Nome<br><span style="font-weight: normal; color: inherit; font-size: inherit;">Tipo</span></th>
-                                <th>Endereço</th>
-                                <th>Área Total<br><span style="font-weight: normal; color: inherit; font-size: inherit;">Construída</span></th>
-                                <th>Valor Cadastral<br><span style="font-weight: normal; color: inherit; font-size: inherit;">Mercado</span></th>
-                                <th>IPTU<br><span style="font-weight: normal; color: inherit; font-size: inherit;">Condomínio</span></th>
-                                <th>Alugado</th>
-                                <th>Data Cadastro</th>
-                                <th width="120">Ações</th>
-                            </tr>
-                        </thead>
-                        <tbody id="imoveis-table-body">
-                            <tr>
-                                <td colspan="8" class="text-center text-muted py-4">
-                                    <div class="spinner-border" role="status">
-                                        <span class="visually-hidden">Carregando...</span>
-                                    </div>
-                                    <br>Carregando imóveis...
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
+                <div class="card-responsive">
+                    <div class="card-body-responsive">
+                        <div class="table-responsive-custom" style="max-height: 75vh; min-height: 55vh; overflow-y: auto;">
+                            <table class="table table-striped table-hover table-custom" id="imoveis-table" style="font-size: 0.8rem;">
+                                <thead class="table-dark">
+                                    <tr>
+                                        <th>Nome<br><span style="font-weight: normal; color: inherit; font-size: inherit;">Tipo</span></th>
+                                        <th>Endereço</th>
+                                        <th>Área Total<br><span style="font-weight: normal; color: inherit; font-size: inherit;">Construída</span></th>
+                                        <th>Valor Cadastral<br><span style="font-weight: normal; color: inherit; font-size: inherit;">Mercado</span></th>
+                                        <th>IPTU<br><span style="font-weight: normal; color: inherit; font-size: inherit;">Condomínio</span></th>
+                                        <th>Alugado</th>
+                                        <th>Data Cadastro</th>
+                                        <th width="120">Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="imoveis-table-body">
+                                    <tr>
+                                        <td colspan="8" class="text-center text-muted py-4">
+                                            <div class="spinner-border" role="status">
+                                                <span class="visually-hidden">Carregando...</span>
+                                            </div>
+                                            <br>Carregando imóveis...
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
                 </div>
             </div>
 
