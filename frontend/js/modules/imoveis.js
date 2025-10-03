@@ -168,8 +168,8 @@ class ImoveisModule {
 
         const rowsHtml = this.imoveis.map(imovel => {
             const statusAlugado = imovel.alugado 
-                ? '<span class="badge bg-danger">Alugado</span>' 
-                : '<span class="badge bg-success">Disponível</span>';
+                ? '<span class="badge bg-success">Alugado</span>' 
+                : '<span class="badge bg-danger">Disponível</span>';
             
             const dataCadastro = imovel.data_cadastro 
                 ? new Date(imovel.data_cadastro).toLocaleDateString('pt-BR') 
@@ -221,8 +221,8 @@ class ImoveisModule {
     renderMobileCard(imovel) {
         const dataIdAttribute = `data-id="${imovel.id}"`;
         const statusAlugado = imovel.alugado 
-            ? '<span class="badge bg-danger">Alugado</span>' 
-            : '<span class="badge bg-success">Disponível</span>';
+            ? '<span class="badge bg-success">Alugado</span>' 
+            : '<span class="badge bg-danger">Disponível</span>';
         const isAdmin = window.authService && window.authService.isAdmin();
         const disabledAttr = isAdmin ? '' : 'disabled';
 
