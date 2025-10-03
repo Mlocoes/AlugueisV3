@@ -1007,7 +1007,6 @@ class ViewManager {
                                 <div class="mb-3"><label class="form-label">Observações</label><textarea class="form-control" name="observacoes" style="font-size:0.85em;"></textarea></div>
                             </div>
                             <div class="modal-footer">
-                                <button type="button" class="btn btn-danger" id="btn-excluir-usuario"><i class="fas fa-trash me-2"></i>Excluir</button>
                                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
                                 <button type="submit" class="btn btn-primary" id="btn-confirmar-alterar">
                                     <span class="spinner-border spinner-border-sm d-none me-2" id="spinner-alterar"></span>
