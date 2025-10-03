@@ -19,8 +19,8 @@ class ParticipacaoService:
     @staticmethod
     def listar_datas_versoes(db: Session) -> List[Dict[str, Any]]:
         """
-        Lista todas as datas de versões disponíveis (ativas + histórico)
-        Otimizado para minimizar queries
+        Lista todas as datas de versões disponíveis (apenas participações ativas)
+        Padrão único: sempre usar data_registro como identificador
         
         Args:
             db: Sessão do banco de dados
@@ -28,55 +28,25 @@ class ParticipacaoService:
         Returns:
             Lista de dicionários com informações das versões
         """
-        # Buscar versões do histórico - uma por versao_id com a data mais recente
-        versoes_historico = db.query(
-            HistoricoParticipacao.versao_id,
-            func.max(HistoricoParticipacao.data_versao).label('data_versao')
-        ).group_by(
-            HistoricoParticipacao.versao_id
-        ).order_by(
-            func.max(HistoricoParticipacao.data_versao).desc()
-        ).all()
-        
-        # Buscar datas das participações ativas atuais
+        # Buscar datas das participações ativas (ordenadas por data_registro desc)
         datas_ativas = db.query(
             Participacao.data_registro
-        ).filter(
-            Participacao.ativo == True
-        ).order_by(
+        ).distinct().order_by(
             Participacao.data_registro.desc()
         ).all()
         
-        # Combinar e filtrar datas distintas
+        # Criar lista padronizada - SEMPRE usar data_registro como versao_id
         datas_list = []
-        seen_dates = set()
         
-        # Adicionar versões do histórico
-        for versao_id, data_versao in versoes_historico:
-            if data_versao:
-                datas_list.append({
-                    "data": data_versao.isoformat(),
-                    "tipo": "histórico",
-                    "versao_id": versao_id,
-                    "label": f"Versão {versao_id} - {data_versao.strftime('%d/%m/%Y %H:%M')}"
-                })
-                seen_dates.add(data_versao.date().isoformat())
-        
-        # Adicionar datas ativas (se não estiverem no histórico)
         for (data_registro,) in datas_ativas:
             if data_registro:
-                key = data_registro.date().isoformat()
-                if key not in seen_dates:
-                    seen_dates.add(key)
-                    datas_list.append({
-                        "data": data_registro.isoformat(),
-                        "tipo": "ativo",
-                        "versao_id": "ativo",
-                        "label": f"Participações Ativas - {data_registro.strftime('%d/%m/%Y %H:%M')}"
-                    })
-        
-        # Ordenar por data descendente
-        datas_list.sort(key=lambda x: x["data"], reverse=True)
+                datas_list.append({
+                    "data": data_registro.isoformat(),
+                    "tipo": "ativo",
+                    "versao_id": data_registro.isoformat(),  # PADRONIZADO: sempre data_registro
+                    "data_registro": data_registro.isoformat(),
+                    "label": f"Versão {data_registro.strftime('%d/%m/%Y %H:%M')}"
+                })
         
         return datas_list
     

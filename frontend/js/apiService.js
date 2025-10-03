@@ -234,17 +234,11 @@ window.apiService = {
     },
 
     // === MÉTODOS ESPECÍFICOS PARA PARTICIPAÇÕES ===
-    async getParticipacoes(data = null) {
+    async getParticipacoes(data_registro = null) {
         let endpoint = '/api/participacoes/';
-        if (data && data !== "ativo") {
-            // Se data é um UUID (versao_id), usar o endpoint do histórico
-            const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-            if (uuidRegex.test(data)) {
-                endpoint = `/api/participacoes/historico/${encodeURIComponent(data)}`;
-            } else {
-                // Si data es un string (fecha), usarlo como parámetro data_registro
-                endpoint += `?data_registro=${encodeURIComponent(data)}`;
-            }
+        if (data_registro) {
+            // PADRÃO ÚNICO: sempre usar data_registro como parâmetro
+            endpoint += `?data_registro=${encodeURIComponent(data_registro)}`;
         }
         const response = await this.get(endpoint);
         return response.success ? response.data : null;
