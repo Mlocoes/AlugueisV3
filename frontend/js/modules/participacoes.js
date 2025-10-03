@@ -708,7 +708,19 @@ class ParticipacoesModule {
 
         // Event listener para salvar
         document.getElementById('save-nova-versao').addEventListener('click', async () => {
-            const newParticipacoes = participacoes.map(p => {
+            // 1️⃣ Buscar TODAS as participações da versão atual
+            console.log('🔍 [DEBUG novaVersao] Buscando TODAS as participações da versão atual...');
+            const todasParticipacoesDaVersao = await this.apiService.getParticipacoes(this.selectedData);
+            
+            if (!todasParticipacoesDaVersao || todasParticipacoesDaVersao.length === 0) {
+                this.uiManager.showError("Erro: Não foi possível obter todas as participações.");
+                return;
+            }
+            
+            console.log(`🔍 [DEBUG novaVersao] Total de participações da versão: ${todasParticipacoesDaVersao.length}`);
+            
+            // 2️⃣ Construir participações editadas do imóvel atual
+            const participacoesEditadasImovel = participacoes.map(p => {
                 const input = modalInstance.querySelector(`#prop-${p.proprietario.id}`);
                 return {
                     imovel_id: imovel.id,
@@ -717,12 +729,46 @@ class ParticipacoesModule {
                 };
             });
 
-            // Validar total
-            const total = newParticipacoes.reduce((sum, p) => sum + p.porcentagem, 0);
+            // Validar total do imóvel editado
+            const total = participacoesEditadasImovel.reduce((sum, p) => sum + p.porcentagem, 0);
             if (Math.abs(100 - total) > 0.01) {
                 this.uiManager.showError("A soma das porcentagens deve ser 100.");
                 return;
             }
+
+            // 3️⃣ Construir matriz completa: participações não editadas + participações editadas
+            const newParticipacoes = [];
+            
+            // Agrupar participações por imóvel
+            const participacoesPorImovel = {};
+            todasParticipacoesDaVersao.forEach(p => {
+                if (!participacoesPorImovel[p.imovel.id]) {
+                    participacoesPorImovel[p.imovel.id] = [];
+                }
+                participacoesPorImovel[p.imovel.id].push(p);
+            });
+            
+            // Para cada imóvel
+            Object.keys(participacoesPorImovel).forEach(imovelId => {
+                const imovelIdNum = parseInt(imovelId);
+                
+                if (imovelIdNum === imovel.id) {
+                    // Usar participações EDITADAS para o imóvel atual
+                    newParticipacoes.push(...participacoesEditadasImovel);
+                } else {
+                    // Manter participações ORIGINAIS para outros imóveis
+                    participacoesPorImovel[imovelId].forEach(p => {
+                        newParticipacoes.push({
+                            imovel_id: p.imovel.id,
+                            proprietario_id: p.proprietario.id,
+                            porcentagem: p.porcentagem
+                        });
+                    });
+                }
+            });
+            
+            console.log(`🔍 [DEBUG novaVersao] Matriz completa: ${newParticipacoes.length} participações`);
+            console.log(`🔍 [DEBUG novaVersao] Editadas: ${participacoesEditadasImovel.length}, Não editadas: ${newParticipacoes.length - participacoesEditadasImovel.length}`);
 
             try {
                 this.uiManager.showLoading('Salvando nova versão...');
