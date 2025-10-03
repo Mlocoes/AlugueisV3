@@ -478,84 +478,93 @@ class ParticipacoesModule {
 
         // Event listener para salvar
         document.getElementById('save-edit-participacao').addEventListener('click', async () => {
-            // Recopilar datos modificados para este imóvel
-            const updatedForImovel = participacoes.map(p => {
-                const input = modalInstance.querySelector(`#edit-prop-${p.proprietario.id}`);
-                return {
-                    imovel_id: imovel.id,
-                    proprietario_id: p.proprietario.id,
-                    porcentagem: parseFloat(input.value) || 0
-                };
-            });
-
-            // Validar total para este imóvel
-            const totalImovel = updatedForImovel.reduce((sum, p) => sum + p.porcentagem, 0);
-            if (Math.abs(100 - totalImovel) > 0.01) {
-                this.uiManager.showError("A soma das porcentagens deve ser 100.");
-                return;
-            }
-
-            // Construir lista completa: UMA participação por cada combinación imóvel × proprietário
-            const allParticipacoes = [];
-
-            console.log('[EditParticipacao] =================================');
-            console.log('[EditParticipacao] this.participacoes contém:', this.participacoes.length, 'registros');
-            console.log('[EditParticipacao] Esperamos:', this.imoveis.length * this.proprietarios.length, 'registros');
-            console.log('[EditParticipacao] Primeira participação:', this.participacoes[0]);
-            
-            // Para CADA imóvel
-            this.imoveis.forEach(im => {
-                // Para CADA proprietário
-                this.proprietarios.forEach(prop => {
-                    if (im.id === imovel.id) {
-                        // Usar los datos editados para el imóvel atual
-                        const edited = updatedForImovel.find(p => p.proprietario_id === prop.id);
-                        if (edited) {
-                            allParticipacoes.push(edited);
-                        } else {
-                            console.error(`[EditParticipacao] ERRO: Não encontrei dados editados para proprietário ${prop.id}`);
-                        }
-                    } else {
-                        // Para outros imóveis, buscar a participação atual
-                        const part = this.participacoes.find(p => 
-                            p.imovel_id === im.id && 
-                            p.proprietario_id === prop.id
-                        );
-                        
-                        if (!part) {
-                            console.warn(`[EditParticipacao] AVISO: Não encontrei participação para imóvel ${im.id} (${im.nome}) × proprietário ${prop.id} (${prop.nome})`);
-                        }
-                        
-                        const porcentagem = part 
-                            ? (part.porcentagem < 1 ? part.porcentagem * 100 : part.porcentagem)
-                            : 0;
-                        
-                        allParticipacoes.push({
-                            imovel_id: im.id,
-                            proprietario_id: prop.id,
-                            porcentagem: porcentagem
-                        });
-                    }
-                });
-            });
-            
-            console.log('[EditParticipacao] =================================');
-            console.log('[EditParticipacao] Total de participações a enviar:', allParticipacoes.length);
-            console.log('[EditParticipacao] Total de imóveis:', this.imoveis.length);
-            console.log('[EditParticipacao] Total de proprietários:', this.proprietarios.length);
-            console.log('[EditParticipacao] Esperado total:', this.imoveis.length * this.proprietarios.length);
-            console.log('[EditParticipacao] Participações editadas do imóvel:', updatedForImovel);
-            
-            // Validar que tengamos el número correcto
-            const expectedTotal = this.imoveis.length * this.proprietarios.length;
-            if (allParticipacoes.length !== expectedTotal) {
-                console.error('[EditParticipacao] ERROR: Número de participações incorreto!');
-                console.error('[EditParticipacao] Esperado:', expectedTotal, 'Actual:', allParticipacoes.length);
-                this.uiManager.showError(`Erro: Número incorreto de participações (${allParticipacoes.length} en lugar de ${expectedTotal})`);
-                return;
-            }
-
             try {
+                this.uiManager.showLoading('Preparando dados...');
+                
+                // Recopilar datos modificados para este imóvel
+                const updatedForImovel = participacoes.map(p => {
+                    const input = modalInstance.querySelector(`#edit-prop-${p.proprietario.id}`);
+                    return {
+                        imovel_id: imovel.id,
+                        proprietario_id: p.proprietario.id,
+                        porcentagem: parseFloat(input.value) || 0
+                    };
+                });
+
+                // Validar total para este imóvel
+                const totalImovel = updatedForImovel.reduce((sum, p) => sum + p.porcentagem, 0);
+                if (Math.abs(100 - totalImovel) > 0.01) {
+                    this.uiManager.hideLoading();
+                    this.uiManager.showError("A soma das porcentagens deve ser 100.");
+                    return;
+                }
+
+                console.log('[EditParticipacao] =================================');
+                console.log('[EditParticipacao] Buscando TODAS as participações atuais do backend...');
+                
+                // CRÍTICO: Buscar TODAS as participações atuais do backend (não do cache!)
+                // Isso garante que temos TODOS os registros, mesmo aqueles com porcentagem = 0
+                const responseParticipacoes = await this.apiService.getParticipacoes(null);
+                const todasParticipacoes = responseParticipacoes || [];
+                
+                console.log('[EditParticipacao] Total de participações no backend:', todasParticipacoes.length);
+                console.log('[EditParticipacao] Total esperado:', this.imoveis.length * this.proprietarios.length);
+                
+                // Construir lista completa: UMA participação por cada combinação imóvel × proprietário
+                const allParticipacoes = [];
+                
+                // Para CADA imóvel
+                this.imoveis.forEach(im => {
+                    // Para CADA proprietário
+                    this.proprietarios.forEach(prop => {
+                        if (im.id === imovel.id) {
+                            // Usar os dados editados para o imóvel atual
+                            const edited = updatedForImovel.find(p => p.proprietario_id === prop.id);
+                            if (edited) {
+                                allParticipacoes.push(edited);
+                            } else {
+                                console.error(`[EditParticipacao] ERRO: Não encontrei dados editados para proprietário ${prop.id}`);
+                                // Adicionar com 0 para não quebrar
+                                allParticipacoes.push({
+                                    imovel_id: im.id,
+                                    proprietario_id: prop.id,
+                                    porcentagem: 0
+                                });
+                            }
+                        } else {
+                            // Para outros imóveis, buscar a participação atual do backend
+                            const part = todasParticipacoes.find(p => 
+                                p.imovel_id === im.id && 
+                                p.proprietario_id === prop.id
+                            );
+                            
+                            const porcentagem = part 
+                                ? (part.porcentagem < 1 ? part.porcentagem * 100 : part.porcentagem)
+                                : 0;
+                            
+                            allParticipacoes.push({
+                                imovel_id: im.id,
+                                proprietario_id: prop.id,
+                                porcentagem: porcentagem
+                            });
+                        }
+                    });
+                });
+                
+                console.log('[EditParticipacao] Total de participações construídas:', allParticipacoes.length);
+                console.log('[EditParticipacao] Participações editadas:', updatedForImovel);
+                console.log('[EditParticipacao] =================================');
+                
+                // Validar que tenhamos o número correto
+                const expectedTotal = this.imoveis.length * this.proprietarios.length;
+                if (allParticipacoes.length !== expectedTotal) {
+                    this.uiManager.hideLoading();
+                    console.error('[EditParticipacao] ERROR: Número de participações incorreto!');
+                    console.error('[EditParticipacao] Esperado:', expectedTotal, 'Atual:', allParticipacoes.length);
+                    this.uiManager.showError(`Erro: Número incorreto de participações (${allParticipacoes.length} em vez de ${expectedTotal})`);
+                    return;
+                }
+
                 this.uiManager.showLoading('Salvando participações...');
                 
                 // Enviar TODAS las participaciones al endpoint
