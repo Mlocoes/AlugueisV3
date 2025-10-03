@@ -5,8 +5,7 @@ class ModalManager {
             const modalCadastroEl = document.getElementById(modalCadastroId);
             if (modalCadastroEl) {
                 this.modalCadastro = new bootstrap.Modal(modalCadastroEl);
-                this.modalCadastroTitleEl = modalCadastroEl.querySelector('.modal-title'); // Store title element
-            } else {
+                this.modalCadastroTitleEl = modalCadastroEl.querySelector('.modal-title');
             }
         }
 
@@ -14,16 +13,48 @@ class ModalManager {
             const modalEdicaoEl = document.getElementById(modalEdicaoId);
             if (modalEdicaoEl) {
                 this.modalEdicao = new bootstrap.Modal(modalEdicaoEl);
-                this.modalEdicaoTitleEl = modalEdicaoEl.querySelector('.modal-title'); // Store title element
-            } else {
+                this.modalEdicaoTitleEl = modalEdicaoEl.querySelector('.modal-title');
             }
         }
     }
 
+    /**
+     * Remove focus from elements inside a modal before closing
+     * This prevents the aria-hidden warning
+     */
+    static removeFocusFromModal(modalElement) {
+        const focusedElement = modalElement.querySelector(':focus');
+        if (focusedElement) {
+            focusedElement.blur();
+        }
+        // Move focus to body to ensure it's not trapped
+        document.body.focus();
+    }
+
+    /**
+     * Safely hide a modal by removing focus first
+     */
+    static safeHideModal(modalId) {
+        const modalEl = document.getElementById(modalId);
+        if (modalEl) {
+            // Remove focus from any element inside the modal
+            ModalManager.removeFocusFromModal(modalEl);
+            
+            // Get or create Bootstrap modal instance
+            let modal = bootstrap.Modal.getInstance(modalEl);
+            if (!modal) {
+                modal = new bootstrap.Modal(modalEl);
+            }
+            
+            // Hide the modal
+            modal.hide();
+        }
+    }
+
     setTitle(title) {
-        if (this.modalCadastroTitleEl) { // Assuming setTitle is for the cadastro modal
+        if (this.modalCadastroTitleEl) {
             this.modalCadastroTitleEl.innerHTML = title;
-        } else if (this.modalEdicaoTitleEl) { // Fallback for edit modal if cadastro not present
+        } else if (this.modalEdicaoTitleEl) {
             this.modalEdicaoTitleEl.innerHTML = title;
         }
     }
@@ -35,7 +66,6 @@ class ModalManager {
             if (modalEl) {
                 const modal = new bootstrap.Modal(modalEl);
                 modal.show();
-            } else {
             }
         } else {
             // Default behavior: show cadastro modal
@@ -46,14 +76,7 @@ class ModalManager {
     hide(modalId) { 
         // If modalId is provided, hide that specific modal
         if (modalId) {
-            const modalEl = document.getElementById(modalId);
-            if (modalEl) {
-                const modal = bootstrap.Modal.getInstance(modalEl);
-                if (modal) {
-                    modal.hide();
-                }
-            } else {
-            }
+            ModalManager.safeHideModal(modalId);
         } else {
             // Default behavior: hide cadastro modal
             this.fecharModalCadastro();
@@ -62,15 +85,17 @@ class ModalManager {
 
     abrirModalCadastro() {
         if (this.modalCadastro) {
-            // Note: a limpeza do formulário deve ser feita no módulo específico
             this.modalCadastro.show();
         }
     }
 
     fecharModalCadastro() {
         if (this.modalCadastro) {
+            const modalEl = this.modalCadastro._element;
+            if (modalEl) {
+                ModalManager.removeFocusFromModal(modalEl);
+            }
             this.modalCadastro.hide();
-        } else {
         }
     }
 
@@ -82,7 +107,12 @@ class ModalManager {
 
     fecharModalEdicao() {
         if (this.modalEdicao) {
+            const modalEl = this.modalEdicao._element;
+            if (modalEl) {
+                ModalManager.removeFocusFromModal(modalEl);
+            }
             this.modalEdicao.hide();
         }
     }
 }
+
