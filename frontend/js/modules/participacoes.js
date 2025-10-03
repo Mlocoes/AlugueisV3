@@ -376,18 +376,6 @@ class ParticipacoesModule {
         const imovel = this.imoveis.find(i => i.id == imovelId);
         if (!imovel) return;
 
-        console.log('[EditParticipacao] Iniciando edição');
-        console.log('[EditParticipacao] Imóvel:', imovel.nome);
-        console.log('[EditParticipacao] this.selectedData:', this.selectedData);
-        console.log('[EditParticipacao] this.isMobile:', this.isMobile);
-
-        // Determinar versão target
-        const targetVersaoId = (this.selectedData === 'ativo' || this.selectedData === null) 
-            ? null 
-            : this.selectedData;
-
-        console.log('[EditParticipacao] targetVersaoId calculado:', targetVersaoId);
-
         // Obter participações atuais para esta versão
         const participacoesAtuais = this.proprietarios.map(prop => {
             const part = this.participacoes.find(p => 
@@ -408,13 +396,13 @@ class ParticipacoesModule {
 
         // Criar e mostrar modal de edição
         const modalId = 'edit-participacao-modal';
-        this.createEditModal(modalId, imovel, participacoesAtuais, targetVersaoId);
+        this.createEditModal(modalId, imovel, participacoesAtuais);
         
         const modal = new bootstrap.Modal(document.getElementById(modalId));
         modal.show();
     }
 
-    createEditModal(modalId, imovel, participacoes, versaoId) {
+    createEditModal(modalId, imovel, participacoes) {
         // Remover modal anterior se existir
         let modalElement = document.getElementById(modalId);
         if (modalElement) modalElement.remove();
@@ -506,40 +494,12 @@ class ParticipacoesModule {
                     return;
                 }
 
-                console.log('[EditParticipacao] =================================');
-                console.log('[EditParticipacao] selectedData:', this.selectedData);
-                
                 // CRÍTICO: Usar a versão que está sendo EXIBIDA na tela como base
                 // A lógica é: Versão apresentada + edição do usuário = nova versão
-                let responseParticipacoes = await this.apiService.getParticipacoes(this.selectedData);
-                let todasParticipacoes = responseParticipacoes || [];
-                
-                console.log('[EditParticipacao] Participações retornadas:', todasParticipacoes.length);
+                const responseParticipacoes = await this.apiService.getParticipacoes(this.selectedData);
+                const todasParticipacoes = responseParticipacoes || [];
                 
                 const expectedTotal = this.imoveis.length * this.proprietarios.length;
-                console.log('[EditParticipacao] Total esperado:', expectedTotal);
-                
-                // PROTEÇÃO: Se a versão retornou menos que o esperado, buscar TODAS as versões
-                // Isso acontece quando a última versão foi corrompida (salvou só 10 em vez de 190)
-                if (todasParticipacoes.length < expectedTotal) {
-                    console.warn('[EditParticipacao] ⚠️ Versão incompleta! Buscando todas as participações...');
-                    
-                    // Buscar todas as versões disponíveis
-                    const allVersions = await this.cacheService.get('participacoes_datas', 
-                        () => this.apiService.getParticipacoesDatas());
-                    
-                    if (allVersions && allVersions.length > 0) {
-                        // Buscar a versão mais antiga (primeira importação completa)
-                        const oldestVersion = allVersions[allVersions.length - 1].versao_id;
-                        console.log('[EditParticipacao] Buscando versão mais antiga:', oldestVersion);
-                        
-                        const fallbackResponse = await this.apiService.getParticipacoes(oldestVersion);
-                        if (fallbackResponse && fallbackResponse.length >= expectedTotal) {
-                            todasParticipacoes = fallbackResponse;
-                            console.log('[EditParticipacao] ✅ Versão completa encontrada:', todasParticipacoes.length);
-                        }
-                    }
-                }
                 
                 // Construir lista completa: UMA participação por cada combinação imóvel × proprietário
                 const allParticipacoes = [];
@@ -582,15 +542,9 @@ class ParticipacoesModule {
                     });
                 });
                 
-                console.log('[EditParticipacao] Total de participações construídas:', allParticipacoes.length);
-                console.log('[EditParticipacao] Participações editadas:', updatedForImovel);
-                console.log('[EditParticipacao] =================================');
-                
                 // Validar que tenhamos o número correto
                 if (allParticipacoes.length !== expectedTotal) {
                     this.uiManager.hideLoading();
-                    console.error('[EditParticipacao] ERROR: Número de participações incorreto!');
-                    console.error('[EditParticipacao] Esperado:', expectedTotal, 'Atual:', allParticipacoes.length);
                     this.uiManager.showError(`Erro: Número incorreto de participações (${allParticipacoes.length} em vez de ${expectedTotal})`);
                     return;
                 }
