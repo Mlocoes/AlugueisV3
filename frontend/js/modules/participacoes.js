@@ -376,10 +376,17 @@ class ParticipacoesModule {
         const imovel = this.imoveis.find(i => i.id == imovelId);
         if (!imovel) return;
 
+        console.log('[EditParticipacao] Iniciando edição');
+        console.log('[EditParticipacao] Imóvel:', imovel.nome);
+        console.log('[EditParticipacao] this.selectedData:', this.selectedData);
+        console.log('[EditParticipacao] this.isMobile:', this.isMobile);
+
         // Determinar versão target
         const targetVersaoId = (this.selectedData === 'ativo' || this.selectedData === null) 
             ? null 
             : this.selectedData;
+
+        console.log('[EditParticipacao] targetVersaoId calculado:', targetVersaoId);
 
         // Obter participações atuais para esta versão
         const participacoesAtuais = this.proprietarios.map(prop => {
