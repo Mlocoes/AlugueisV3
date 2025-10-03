@@ -27,21 +27,8 @@ def listar_datas_participacoes(db: Session = Depends(get_db), current_user: Usua
 def listar_participacoes(data_registro: str = None, db: Session = Depends(get_db), current_user: Usuario = Depends(verify_token_flexible)):
     """Lista participações do conjunto mais recente ou de uma data específica - OPTIMIZED"""
     try:
-        if data_registro:
-            from dateutil import parser
-            try:
-                dt = parser.isoparse(data_registro)
-            except Exception:
-                raise HTTPException(status_code=400, detail=f"Formato de data_registro inválido: {data_registro}")
-            
-            # Filtrar por timestamp EXACTO (não apenas a data)
-            query = db.query(Participacao).options(
-                joinedload(Participacao.imovel),
-                joinedload(Participacao.proprietario)
-            ).filter(
-                Participacao.data_registro == dt
-            )
-        else:
+        # Se data_registro é "ativo" ou vazio, buscar a versão mais recente
+        if not data_registro or data_registro == "ativo":
             # Buscar conjunto mais recente com eager loading
             subquery = db.query(Participacao.data_registro).order_by(
                 Participacao.data_registro.desc()
@@ -52,6 +39,20 @@ def listar_participacoes(data_registro: str = None, db: Session = Depends(get_db
                 joinedload(Participacao.proprietario)
             ).filter(
                 Participacao.data_registro == subquery
+            )
+        else:
+            # Filtrar por timestamp EXACTO
+            from dateutil import parser
+            try:
+                dt = parser.isoparse(data_registro)
+            except Exception:
+                raise HTTPException(status_code=400, detail=f"Formato de data_registro inválido: {data_registro}")
+            
+            query = db.query(Participacao).options(
+                joinedload(Participacao.imovel),
+                joinedload(Participacao.proprietario)
+            ).filter(
+                Participacao.data_registro == dt
             )
         
         participacoes = query.all()

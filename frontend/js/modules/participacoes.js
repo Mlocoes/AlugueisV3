@@ -108,15 +108,15 @@ class ParticipacoesModule {
                 this.datas = [this.datas[0]];
             }
 
-            // Selecionar primeira versão (ativo)
-            this.selectedData = this.datas.length ? this.datas[0].versao_id : "ativo";
+            // Selecionar primeira versão (ou null se não houver dados)
+            this.selectedData = this.datas.length ? this.datas[0].versao_id : null;
 
             // Renderizar seletor (desktop only)
             if (!this.isMobile) {
                 this.renderDataSelector();
             }
             
-            // Carregar participações
+            // Carregar participações (se houver versão selecionada)
             if (this.selectedData) {
                 // Mobile e desktop usam this.selectedData (versão mais recente)
                 await this.loadParticipacoes(this.selectedData);
