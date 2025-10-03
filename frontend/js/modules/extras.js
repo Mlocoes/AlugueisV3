@@ -10,66 +10,33 @@ class ExtrasManager {
     safeCloseModal(modalId, buttonId) {
         const modalEl = document.getElementById(modalId);
         if (modalEl) {
-            const modalInstance = bootstrap.Modal.getInstance(modalEl);
-            if (modalInstance) {
-                modalInstance.hide();
-            }
+            const modalInstance = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
+            modalInstance.hide();
         }
         if (buttonId) {
             const btn = document.getElementById(buttonId);
             if (btn) {
-                // O timeout é bom para permitir que o modal feche antes de focar
-                setTimeout(() => {
-                    btn.focus();
-                }, 300);
+                setTimeout(() => btn.focus(), 300);
             }
         }
     }
     confirmarExclusao(tipo, id, nome) {
-        
+        this.exclusaoTipo = tipo;
+        this.exclusaoId = id;
+        this.exclusaoNome = nome;
+        const modalMsg = document.getElementById('modal-confirmar-exclusao-extras-msg');
+        if (modalMsg) {
+            if (tipo === 'alias') {
+                modalMsg.textContent = `Tem certeza que deseja excluir o alias "${nome}"? Esta ação não pode ser desfeita.`;
+            } else if (tipo === 'transferencia') {
+                modalMsg.textContent = `Tem certeza que deseja excluir a transferência "${nome}"? Esta ação não pode ser desfeita.`;
+            } else {
+                modalMsg.textContent = 'Tem certeza que deseja excluir este item? Esta ação não pode ser desfeita.';
+            }
+        }
         // Mostrar el modal de confirmación
         const modalEl = document.getElementById('modal-confirmar-exclusao-extras');
         if (modalEl) {
-            const modalMsg = document.getElementById('modal-confirmar-exclusao-extras-msg');
-            if (modalMsg) {
-                if (tipo === 'alias') {
-                    modalMsg.textContent = `Tem certeza que deseja excluir o alias "${nome}"? Esta ação não pode ser desfeita.`;
-                } else if (tipo === 'transferencia') {
-                    modalMsg.textContent = `Tem certeza que deseja excluir a transferência "${nome}"? Esta ação não pode ser desfeita.`;
-                } else {
-                    modalMsg.textContent = 'Tem certeza que deseja excluir este item? Esta ação não pode ser desfeita.';
-                }
-            }
-            
-            // Configurar el event listener con closure para capturar los parámetros
-            const btnConfirmarExclusao = document.getElementById('btn-confirmar-exclusao-extras');
-            if (btnConfirmarExclusao) {
-                // Remover listener anterior si existe
-                if (this._exclusaoListener) {
-                    btnConfirmarExclusao.removeEventListener('click', this._exclusaoListener);
-                }
-                
-                // Crear nuevo listener com closure
-                this._exclusaoListener = async (e) => {
-                    e.stopImmediatePropagation();
-                    btnConfirmarExclusao.removeEventListener('click', this._exclusaoListener);
-                    try {
-                        if (tipo === 'alias') {
-                            await this.excluirAlias(id);
-                        } else if (tipo === 'transferencia') {
-                            await this.excluirTransferencia(id);
-                        }
-                        // Fechar modal após exclusão
-                        this.safeCloseModal('modal-confirmar-exclusao-extras', 'btn-confirmar-exclusao-extras');
-                    } catch (error) {
-                        console.error('❌ Erro durante exclusão:', error);
-                        this.showError('Erro ao excluir: ' + error.message);
-                    }
-                };
-                
-                btnConfirmarExclusao.addEventListener('click', this._exclusaoListener);
-            }
-            
             const modalInstance = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
             modalInstance.show();
         }
@@ -85,12 +52,6 @@ class ExtrasManager {
         this.allProprietarios = [];
         this.initialized = false;
         this.pendingOperations = new Set();
-        // Propriedades para exclusão
-        this.exclusaoTipo = null;
-        this.exclusaoId = null;
-        this.exclusaoNome = null;
-        // Flag para controlar configuração de eventos do modal de transferências
-        this._transferModalEventsConfigured = false;
         // Binding de métodos
         this.load = this.load.bind(this);
         this.loadExtras = this.loadExtras.bind(this);
@@ -103,6 +64,42 @@ class ExtrasManager {
      * Inicializar eventos
      */
     setupEvents() {
+        // Botón de confirmar exclusão no modal
+        const btnConfirmarExclusao = document.getElementById('btn-confirmar-exclusao-extras');
+        const modalExclusao = document.getElementById('modal-confirmar-exclusao-extras');
+        if (btnConfirmarExclusao && modalExclusao) {
+            // Listener para mostrar el modal: vincular el evento solo cuando se muestra
+            modalExclusao.addEventListener('shown.bs.modal', () => {
+                // Eliminar listener anterior si existe
+                if (this._exclusaoListener) {
+                    btnConfirmarExclusao.removeEventListener('click', this._exclusaoListener);
+                }
+                this._exclusaoListener = async (e) => {
+                    // Detener propagación y eliminar listener inmediatamente
+                    e.stopImmediatePropagation();
+                    btnConfirmarExclusao.removeEventListener('click', this._exclusaoListener);
+                    try {
+                        if (this.exclusaoTipo === 'alias') {
+                            await this.excluirAlias(this.exclusaoId);
+                        } else if (this.exclusaoTipo === 'transferencia') {
+                            await this.excluirTransferencia(this.exclusaoId);
+                        }
+                        // Fechar modal após exclusão
+                        this.safeCloseModal('modal-confirmar-exclusao-extras', 'btn-confirmar-exclusao-extras');
+                    } catch (error) {
+                        console.error('❌ Erro durante exclusão:', error);
+                        this.showError('Erro ao excluir: ' + error.message);
+                    }
+                };
+                btnConfirmarExclusao.addEventListener('click', this._exclusaoListener);
+            });
+            // Listener para ocultar el modal: eliminar el evento
+            modalExclusao.addEventListener('hidden.bs.modal', () => {
+                if (this._exclusaoListener) {
+                    btnConfirmarExclusao.removeEventListener('click', this._exclusaoListener);
+                }
+            });
+        }
         // Botões principais
         document.getElementById('btn-novo-alias')?.addEventListener('click', () => {
             this.showAliasModal();
@@ -120,24 +117,12 @@ class ExtrasManager {
 
         // Formulário de transferências - configurar apenas uma vez
         const formTransferencias = document.getElementById('form-transferencias');
-        const btnSalvarTransferencias = document.getElementById('btn-salvar-transferencias');
-        
-        
         if (formTransferencias && !formTransferencias.hasTransferenciasListener) {
             formTransferencias.addEventListener('submit', (e) => {
                 e.preventDefault();
                 this.salvarTransferencias();
             });
             formTransferencias.hasTransferenciasListener = true;
-        }
-        
-        // Backup: event listener direto no botão
-        if (btnSalvarTransferencias && !btnSalvarTransferencias.hasClickListener) {
-            btnSalvarTransferencias.addEventListener('click', (e) => {
-                e.preventDefault();
-                this.salvarTransferencias();
-            });
-            btnSalvarTransferencias.hasClickListener = true;
         }
 
         document.addEventListener('DOMContentLoaded', () => {
@@ -149,10 +134,9 @@ class ExtrasManager {
         });
 
         // Limpar currentTransferencia quando o modal fechar
-        // REMOVIDO: Event listener pode estar causando conflitos
-        // document.getElementById('modal-transferencias')?.addEventListener('hidden.bs.modal', () => {
-        //     this.currentTransferencia = null;
-        // });
+        document.getElementById('modal-transferencias')?.addEventListener('hidden.bs.modal', () => {
+            this.currentTransferencia = null;
+        });
 
         // Event listeners para botões de cancelar para gerenciamento de foco
         const setupCancelButtonHandlers = () => {
@@ -207,7 +191,6 @@ class ExtrasManager {
         try {
             // Verificar se o usuário é administrador antes de fazer a chamada
             const isAdmin = window.authService && window.authService.isAdmin();
-            const disabledAttr = isAdmin ? '' : 'disabled';
             if (!isAdmin) {
                 this.renderExtrasTable([]);
                 return;
@@ -244,6 +227,9 @@ class ExtrasManager {
 
             
             const response = await this.apiService.get('/api/extras/proprietarios/disponiveis');
+            
+            if (response && response.success && Array.isArray(response.data)) {
+                this.allProprietarios = response.data;
                 this.populateProprietariosSelects();
             } else {
                 throw new Error('Resposta inválida do servidor');
@@ -348,6 +334,7 @@ class ExtrasManager {
                 
                 this.renderTransferenciasTable(this.allTransferencias);
             } else {
+                console.warn('⚠️ Resposta inválida da API de transferências:', response);
                 this.renderTransferenciasTable([]);
             }
 
@@ -401,6 +388,18 @@ class ExtrasManager {
                 <td class="text-center">${dataFimFormatada}</td>
                 <td class="text-center">
                     <div class="btn-group btn-group-sm">
+                        <button class="btn btn-outline-primary ${disabledClass}" onclick="window.extrasManager.editarTransferencia(${transferencia.id})" ${disabledAttr} ${titleAttr}>
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="btn btn-outline-danger ${disabledClass}"
+                                onclick="window.extrasManager.confirmarExclusao('transferencia', ${transferencia.id}, '${transferencia.nome_transferencia}')" 
+                                data-transferencia-id="${transferencia.id}"
+                                ${disabledAttr} ${deleteTitleAttr}>
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </td>
+            `;
             
             tbody.appendChild(row);
         });
@@ -456,9 +455,9 @@ class ExtrasManager {
     /**
      * Mostrar modal de alias
      */
-    async showAliasModal(extra = null) {
+    async showAliasModal(extra = null) { // Added async here
         this.currentExtra = extra;
-        const modalEl = document.getElementById('modal-alias');
+        const modal = document.getElementById('modal-alias');
         const modalTitle = document.getElementById('modalAliasLabel');
         const form = document.getElementById('form-alias');
         
@@ -468,22 +467,54 @@ class ExtrasManager {
         } else {
             modalTitle.innerHTML = '<i class="fas fa-plus me-2"></i>Novo Alias';
             form.reset();
+            // Cargar lista de proprietários disponibles
             await this.loadProprietarios();
         }
 
+        // Limpar alertas
         const alerts = document.getElementById('alias-alerts');
         if (alerts) alerts.innerHTML = '';
 
-        const bootstrapModal = bootstrap.Modal.getOrCreateInstance(modalEl);
+        // Criar instância do modal
+        const bootstrapModal = new bootstrap.Modal(modal);
 
-        // Focar no primeiro input quando o modal for exibido
-        modalEl.addEventListener('shown.bs.modal', () => {
-            const firstInput = modalEl.querySelector('input[type="text"], select');
-            if (firstInput) {
-                firstInput.focus();
+        const saveBtn = document.getElementById('btn-salvar-alias');
+        if(saveBtn) {
+            const newSaveBtn = saveBtn.cloneNode(true);
+            saveBtn.parentNode.replaceChild(newSaveBtn, saveBtn);
+    
+            newSaveBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                this.salvarAlias();
+            });
+        }
+
+        // Configurar eventos mais robustos - usando 'once' para evitar acúmulo
+        modal.addEventListener('shown.bs.modal', () => {
+            // Permitir que o Bootstrap termine de configurar o modal primeiro
+            setTimeout(() => {
+                // Focar no primeiro input disponível após o modal ser exibido
+                const firstInput = modal.querySelector('input[type="text"]:not([disabled]), select:not([disabled])');
+                if (firstInput && !firstInput.matches(':focus')) {
+                    firstInput.focus();
+                }
+            }, 200);
+        }, { once: true });
+
+        modal.addEventListener('hide.bs.modal', () => {
+            // Remover foco antes que o modal seja oculto
+            const focusedElement = modal.querySelector(':focus');
+            if (focusedElement) {
+                focusedElement.blur();
             }
         }, { once: true });
 
+        modal.addEventListener('hidden.bs.modal', () => {
+            // O Bootstrap lida com aria-hidden automaticamente, não precisamos interferir
+            modal.removeAttribute('aria-modal');
+        }, { once: true });
+
+        // Mostrar modal
         bootstrapModal.show();
     }
 
@@ -502,6 +533,7 @@ class ExtrasManager {
                     option.selected = proprietarioIds.includes(parseInt(option.value));
                 });
             } catch (e) {
+                console.warn('Erro ao processar proprietários:', e);
             }
         }
     }
@@ -510,39 +542,100 @@ class ExtrasManager {
      * Mostrar modal de transferências
      */
     showTransferenciasModal() {
-        const modalEl = document.getElementById('modal-transferencias');
+        // Si los propietarios no están cargados, cargarlos primero y continuar
+        if (!this.allProprietarios || this.allProprietarios.length === 0) {
+            this.loadProprietarios().then(() => {
+                this.showTransferenciasModal();
+            });
+            return;
+        }
+        // Mostrar integrantes si hay alias seleccionado y cargar propietarios
+        setTimeout(() => {
+            const aliasSelect = document.getElementById('transferencia-alias');
+            const container = document.getElementById('transferencia-proprietarios-container');
+            if (aliasSelect && container && aliasSelect.value) {
+                container.style.display = '';
+                // Copia lógica de edição: carregar proprietários do alias selecionado
+                if (typeof this.carregarProprietariosAlias === 'function') {
+                    this.carregarProprietariosAlias(aliasSelect.value);
+                }
+            }
+        }, 300);
+        // Si estamos em modo criação e já hay um alias seleccionado, cargar propietarios igual que en edição
+        if (!this.currentTransferencia) {
+            const aliasSelect = document.getElementById('transferencia-alias');
+            if (aliasSelect && aliasSelect.value) {
+                if (typeof this.carregarProprietariosAlias === 'function') {
+                    this.carregarProprietariosAlias(aliasSelect.value);
+                }
+            }
+        }
+        const modal = document.getElementById('modal-transferencias');
         const form = document.getElementById('form-transferencias');
         const modalTitle = document.getElementById('modalTransferenciasLabel');
 
-        if (this.currentTransferencia) {
-            if (modalTitle) modalTitle.innerHTML = '<i class="fas fa-edit me-2"></i>Editar Transferência';
-        } else {
-            form.reset();
-            if (modalTitle) modalTitle.innerHTML = '<i class="fas fa-exchange-alt me-2"></i>Nova Transferência';
+        // REMOVIDO: Configuração de event listener duplicada - agora é feita no setupEvents()
 
+        // Se NÃO estivermos editando, limpiar todo e forçar título
+        if (!this.currentTransferencia) {
+            form.reset();
+            if (modalTitle) {
+                modalTitle.innerHTML = '<i class="fas fa-exchange-alt me-2"></i>Nova Transferência';
+            }
+            // Limpar campo de nome da transferência
+            const nomeInput = document.getElementById('transferencia-nome');
+            if (nomeInput) nomeInput.value = '';
+            // Inicializar data de criação com a data atual
             const dataCriacaoInput = document.getElementById('transferencia-data-criacao');
             if (dataCriacaoInput) {
-                dataCriacaoInput.value = new Date().toISOString().split('T')[0];
+                const hoje = new Date();
+                const dataFormatada = hoje.toISOString().split('T')[0];
+                dataCriacaoInput.value = dataFormatada;
             }
-
+            // Limpar data fim
+            const dataFimInput = document.getElementById('transferencia-data-fim');
+            if (dataFimInput) dataFimInput.value = '';
+            // Ocultar contêiner de proprietários até selecionar alias
             const container = document.getElementById('transferencia-proprietarios-container');
             if (container) container.style.display = 'none';
         }
         
+        // Carregar aliases disponíveis (sempre)
         this.carregarAliasParaTransferencia();
 
+        // Limpar alertas
         const alerts = document.getElementById('transferencia-alerts');
         if (alerts) alerts.innerHTML = '';
 
-        const bootstrapModal = bootstrap.Modal.getOrCreateInstance(modalEl);
+        // Criar instância do modal
+        const bootstrapModal = new bootstrap.Modal(modal);
+        
+        // Configurar eventos mais robustos - usando 'once' para evitar acúmulo
+        modal.addEventListener('shown.bs.modal', () => {
+            // Permitir que o Bootstrap termine de configurar o modal primeiro
+            setTimeout(() => {
+                // Focar no primeiro select disponível após o modal ser exibido
+                const firstSelect = modal.querySelector('select:not([disabled])');
+                if (firstSelect && !firstSelect.matches(':focus')) {
+                    firstSelect.focus();
+                }
+            }, 200);
+        }, { once: true });
 
-        modalEl.addEventListener('shown.bs.modal', () => {
-            const firstSelect = modalEl.querySelector('select');
-            if (firstSelect) {
-                firstSelect.focus();
+        modal.addEventListener('hide.bs.modal', () => {
+            // Remover foco antes que o modal seja oculto
+            const focusedElement = modal.querySelector(':focus');
+            if (focusedElement) {
+                focusedElement.blur();
             }
         }, { once: true });
 
+        modal.addEventListener('hidden.bs.modal', () => {
+            // O Bootstrap lida com aria-hidden automaticamente
+            modal.removeAttribute('aria-modal');
+        }, { once: true });
+
+        // Mostrar modal
         bootstrapModal.show();
     }
 
@@ -570,6 +663,7 @@ class ExtrasManager {
                     }
                 }
             } else {
+                console.warn('[DEBUG] No se recibieron alias válidos de la API');
             }
         } catch (error) {
             console.error('[DEBUG] Erro ao carregar aliases:', error);
@@ -592,7 +686,6 @@ class ExtrasManager {
         try {
             const aliasSelect = document.getElementById('transferencia-alias');
             const selectedOption = aliasSelect.querySelector(`option[value="${aliasId}"]`);
-
             if (selectedOption && selectedOption.dataset.proprietarios) {
                 const proprietarioIds = JSON.parse(selectedOption.dataset.proprietarios);
                 tableBody.innerHTML = '';
@@ -627,7 +720,6 @@ class ExtrasManager {
                             </td>
                         `;
                         tableBody.appendChild(row);
-                    } else {
                     }
                 }
                 container.style.display = proprietarioIds.length > 0 ? 'block' : 'none';
@@ -681,7 +773,7 @@ class ExtrasManager {
                 this.showSuccess(this.currentExtra ? 'Alias atualizado com sucesso!' : 'Alias criado com sucesso!');
                 // Fechar modal de forma segura para acessibilidade
                 this.safeCloseModal('modal-alias', 'btn-salvar-alias');
-                // Recargar la lista de aliases para mostrar el novo alias
+                // Recargar la lista de aliases para mostrar el nuevo alias
                 await this.loadExtras();
             }
 
@@ -713,7 +805,6 @@ class ExtrasManager {
             const dataCriacao = document.getElementById('transferencia-data-criacao').value;
             const dataFim = document.getElementById('transferencia-data-fim').value;
             
-            
             if (!aliasId) {
                 this.showAlert('Selecione um alias', 'danger', 'transferencia-alerts');
                 return;
@@ -735,7 +826,6 @@ class ExtrasManager {
                 return;
             }
 
-            
             // Coletar valores das transferências
             const proprietarios = [];
             const inputs = document.querySelectorAll('#transferencia-proprietarios-table input[type="number"]');
@@ -758,13 +848,8 @@ class ExtrasManager {
                 return;
             }
 
-            // Calcular valor total da transferência (soma dos valores absolutos)
-            const valorTotal = proprietarios.reduce((sum, p) => sum + Math.abs(p.valor), 0);
-
-            // Verificar se é edição ou criação usando campo hidden
-            const form = document.getElementById('form-transferencias');
-            const transferenciaIdInput = form.querySelector('input[name="transferencia_id"]');
-            const transferenciaId = transferenciaIdInput ? transferenciaIdInput.value : null;
+            // Calcular valor total
+            const valorTotal = proprietarios.reduce((sum, prop) => sum + prop.valor, 0);
 
             // Preparar dados para envio
             const transferenciaData = {
@@ -777,23 +862,22 @@ class ExtrasManager {
             };
 
             let response;
-            
-            if (transferenciaId) {
+            if (this.currentTransferencia) {
                 // Atualizar transferência existente
-                response = await this.apiService.put(`/api/transferencias/${transferenciaId}`, transferenciaData);
+                response = await this.apiService.put(`/api/transferencias/${this.currentTransferencia.id}`, transferenciaData);
             } else {
                 // Criar nova transferência
                 response = await this.apiService.post('/api/transferencias/', transferenciaData);
             }
 
             if (response && (response.id || response.success !== false)) {
-                this.showSuccess(transferenciaId ? 
+                this.showSuccess(this.currentTransferencia ? 
                     'Transferência atualizada com sucesso!' : 
                     'Transferência criada com sucesso!');
-                // Resetar campo hidden
-                if (transferenciaIdInput) transferenciaIdInput.value = '';
+                // Resetar currentTransferencia
+                this.currentTransferencia = null;
                 // Fechar modal de forma segura para acessibilidade
-                this.safeCloseModal('modal-transferencias', 'btn-salvar-transferencias');
+                this.safeCloseModal('modal-transferencias', 'btn-salvar-transferencia');
                 // Recargar la lista de transferencias para mostrar la nova transferência
                 await this.loadTransferencias();
             }
@@ -928,99 +1012,49 @@ class ExtrasManager {
      * Editar transferência
      */
     async editarTransferencia(id) {
-        // MOSTRAR MODAL IMEDIATAMENTE para feedback visual
-        const modal = document.getElementById('modal-transferencias');
-        if (!modal) {
-            console.error('❌ Modal não encontrado no DOM');
-            alert('Erro: Modal não encontrado!');
-            return;
-        }
-
         try {
-            // Buscar transferência específica da API
-            const response = await this.apiService.get(`/api/transferencias/${id}`);
-            
-            if (!response || !response.success) {
-                throw new Error('Transferência não encontrada');
+            const transferencia = this.allTransferencias.find(t => t.id === id);
+            if (!transferencia) {
+                this.showError('Transferência não encontrada');
+                return;
             }
-            
-            const transferencia = response.data || response;
-
-            try {
-                // DEFINIR currentTransferencia para que os valores sejam carregados
-                this.currentTransferencia = transferencia;
-            } catch (error) {
-                console.error('❌ Erro ao setar currentTransferencia:', error);
-            }
-
-            // Resetar formulário
-            const form = document.getElementById('form-transferencias');
-            if (form) form.reset();
-
-            // Adicionar campo hidden para o ID da transferência
-            let hiddenId = form.querySelector('input[name="transferencia_id"]');
-            if (!hiddenId) {
-                hiddenId = document.createElement('input');
-                hiddenId.type = 'hidden';
-                hiddenId.name = 'transferencia_id';
-                form.appendChild(hiddenId);
-            }
-            hiddenId.value = transferencia.id;
-
-            // Definir título
-            const modalTitle = document.getElementById('modalTransferenciasLabel');
-            if (modalTitle) {
-                modalTitle.innerHTML = '<i class="fas fa-edit me-2"></i>Editar Transferência';
-            }
-
-            // Preencher campos
-            const nomeInput = document.getElementById('transferencia-nome');
-            if (nomeInput) nomeInput.value = transferencia.nome_transferencia || '';
-
-            const dataCriacaoInput = document.getElementById('transferencia-data-criacao');
-            if (dataCriacaoInput && transferencia.data_criacao) {
-                dataCriacaoInput.value = transferencia.data_criacao.split('T')[0];
-            }
-
-            const dataFimInput = document.getElementById('transferencia-data-fim');
-            if (dataFimInput && transferencia.data_fim) {
-                dataFimInput.value = transferencia.data_fim.split('T')[0];
-            }
-
-            // CARREGAR PROPRIETÁRIOS PRIMEIRO se não estiverem carregados
-            if (!this.allProprietarios || this.allProprietarios.length === 0) {
-                await this.loadProprietarios();
-            }
-
-            // CARREGAR ALIASES E SELECIONAR O CORRETO
-            await this.carregarAliasParaTransferencia();
-            
-            // Aguardar um pouco para os aliases serem carregados
-            setTimeout(() => {
-                const aliasSelect = document.getElementById('transferencia-alias');
-                if (aliasSelect && transferencia.alias_id) {
-                    aliasSelect.value = transferencia.alias_id;
-                    
-                    // Carregar proprietários do alias selecionado
-                    if (typeof this.carregarProprietariosAlias === 'function') {
+            this.currentTransferencia = transferencia;
+            this.showTransferenciasModal();
+            requestAnimationFrame(async () => {
+                try {
+                    await this.carregarAliasParaTransferencia();
+                    requestAnimationFrame(() => {
+                        const aliasSelect = document.getElementById('transferencia-alias');
+                        if (aliasSelect) {
+                            aliasSelect.value = transferencia.alias_id;
+                        }
+                        const nomeInput = document.getElementById('transferencia-nome');
+                        if (nomeInput) {
+                            nomeInput.value = transferencia.nome_transferencia || '';
+                        }
+                        if (transferencia.data_criacao) {
+                            const dataCriacaoInput = document.getElementById('transferencia-data-criacao');
+                            if (dataCriacaoInput) {
+                                const data = new Date(transferencia.data_criacao);
+                                dataCriacaoInput.value = data.toISOString().split('T')[0];
+                            }
+                        }
+                        if (transferencia.data_fim) {
+                            const dataFimInput = document.getElementById('transferencia-data-fim');
+                            if (dataFimInput) {
+                                const data = new Date(transferencia.data_fim);
+                                dataFimInput.value = data.toISOString().split('T')[0];
+                            }
+                        }
                         this.carregarProprietariosAlias(transferencia.alias_id);
-                    } else {
-                        console.error('❌ Função carregarProprietariosAlias não encontrada');
-                    }
-                } else {
+                    });
+                } catch (error) {
+                    console.error('Erro ao carregar dados para edição:', error);
                 }
-            }, 200); // Aumentei para 200ms para dar mais tempo
-
-            // MOSTRAR MODAL
-            const bsModal = new bootstrap.Modal(modal, {
-                backdrop: 'static',
-                keyboard: false
             });
-            bsModal.show();
-
         } catch (error) {
-            console.error('❌ Erro ao buscar transferência:', error);
-            alert('Erro ao carregar transferência: ' + error.message);
+            console.error('Erro ao carregar transferência para edição:', error);
+            this.showError('Erro ao carregar transferência: ' + error.message);
         }
     }
 
@@ -1029,6 +1063,12 @@ class ExtrasManager {
      */
     async excluirTransferencia(id) {
         try {
+            // Buscar a transferência sem operações pesadas
+        const transferencia = this.allTransferencias.find(t => t.id == id);
+            if (!transferencia) {
+                this.showError('Transferência não encontrada');
+                return;
+            }
             // Executar a exclusão diretamente (modal já confirma)
             await this.executeDeleteTransferencia(id);
         } catch (error) {
@@ -1055,9 +1095,14 @@ class ExtrasManager {
             const response = await this.apiService.delete(`/api/transferencias/${id}`);
             
             if (response && (response.message || response.success !== false)) {
-                // Recargar transferências da API para garantir dados atualizados
+                // Actualizar dados localmente sem renderizar imediatamente
+                this.allTransferencias = this.allTransferencias.filter(t => t.id !== id);
+                
+                // Mostrar sucesso e renderizar no próximo frame
                 this.showSuccess('Transferência excluída com sucesso!');
-                await this.loadTransferencias();
+                requestAnimationFrame(() => {
+                    this.renderTransferenciasTable(this.allTransferencias);
+                });
                 
             } else {
                 throw new Error('Resposta inválida do servidor');
