@@ -499,7 +499,14 @@ class ParticipacoesModule {
                 const responseParticipacoes = await this.apiService.getParticipacoes(this.selectedData);
                 const todasParticipacoes = responseParticipacoes || [];
                 
+                console.log('🔍 [DEBUG] responseParticipacoes:', responseParticipacoes);
+                console.log('🔍 [DEBUG] todasParticipacoes:', todasParticipacoes);
+                console.log('🔍 [DEBUG] todasParticipacoes.length:', todasParticipacoes.length);
+                console.log('🔍 [DEBUG] this.imoveis.length:', this.imoveis.length);
+                console.log('🔍 [DEBUG] this.proprietarios.length:', this.proprietarios.length);
+                
                 const expectedTotal = this.imoveis.length * this.proprietarios.length;
+                console.log('🔍 [DEBUG] expectedTotal:', expectedTotal);
                 
                 // Construir lista completa: UMA participação por cada combinação imóvel × proprietário
                 const allParticipacoes = [];
@@ -542,13 +549,20 @@ class ParticipacoesModule {
                     });
                 });
                 
+                console.log('🔍 [DEBUG] allParticipacoes.length:', allParticipacoes.length);
+                console.log('🔍 [DEBUG] allParticipacoes sample:', allParticipacoes.slice(0, 3));
+                
                 // Validar que tenhamos o número correto
                 if (allParticipacoes.length !== expectedTotal) {
                     this.uiManager.hideLoading();
+                    console.error('❌ [DEBUG] ERRO: Tamanho incorreto!');
+                    console.error('❌ [DEBUG] Esperado:', expectedTotal, 'Recebido:', allParticipacoes.length);
                     this.uiManager.showError(`Erro: Número incorreto de participações (${allParticipacoes.length} em vez de ${expectedTotal})`);
                     return;
                 }
 
+                console.log('✅ [DEBUG] Validação OK! Enviando', allParticipacoes.length, 'participações');
+                
                 this.uiManager.showLoading('Salvando participações...');
                 
                 // Enviar TODAS las participaciones al endpoint
