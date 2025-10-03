@@ -742,10 +742,12 @@ class ParticipacoesModule {
             // Agrupar participações por imóvel
             const participacoesPorImovel = {};
             todasParticipacoesDaVersao.forEach(p => {
-                if (!participacoesPorImovel[p.imovel.id]) {
-                    participacoesPorImovel[p.imovel.id] = [];
+                // Usar imovel_id ou imovel.id dependendo da estrutura
+                const imovelId = p.imovel_id || (p.imovel && p.imovel.id);
+                if (!participacoesPorImovel[imovelId]) {
+                    participacoesPorImovel[imovelId] = [];
                 }
-                participacoesPorImovel[p.imovel.id].push(p);
+                participacoesPorImovel[imovelId].push(p);
             });
             
             // Para cada imóvel
@@ -759,8 +761,8 @@ class ParticipacoesModule {
                     // Manter participações ORIGINAIS para outros imóveis
                     participacoesPorImovel[imovelId].forEach(p => {
                         newParticipacoes.push({
-                            imovel_id: p.imovel.id,
-                            proprietario_id: p.proprietario.id,
+                            imovel_id: p.imovel_id || (p.imovel && p.imovel.id),
+                            proprietario_id: p.proprietario_id || (p.proprietario && p.proprietario.id),
                             porcentagem: p.porcentagem
                         });
                     });
