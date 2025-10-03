@@ -54,13 +54,6 @@ class DashboardModule {
         if (this.isLoading) return;
         this.isLoading = true;
 
-        // Para mobile, os dados são carregados pelo mobileUIManager
-        const isMobile = window.deviceManager && window.deviceManager.deviceType === 'mobile';
-        if (isMobile) {
-            this.isLoading = false;
-            return;
-        }
-
         const summary = await this.handleApiCall(
             () => this.apiService.getDashboardSummary(),
             'Carregando dashboard...',
@@ -89,18 +82,22 @@ class DashboardModule {
             receitas_ultimo_mes
         } = this.summaryData;
 
+        // Desktop stats
         this.updateCounter('dashboard-total-proprietarios', total_proprietarios);
         this.updateCounter('dashboard-total-inmuebles', total_imoveis);
         this.updateCounter('dashboard-alugueis-ano-corrente', `R$ ${total_alugueis_ano_corrente.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`);
         this.updateCounter('dashboard-ingresos-mensuales', `R$ ${receitas_ultimo_mes.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`);
+
+        // Mobile stats
+        this.updateCounter('mobile-stats-proprietarios', total_proprietarios);
+        this.updateCounter('mobile-stats-imoveis', total_imoveis);
+        this.updateCounter('mobile-stats-receita', `R$ ${receitas_ultimo_mes.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`);
     }
 
     updateCounter(elementId, value) {
         const element = document.getElementById(elementId);
         if (element) {
             element.textContent = value;
-        } else {
-            console.error(`❌ Elemento ${elementId} não encontrado para atualização`);
         }
     }
 

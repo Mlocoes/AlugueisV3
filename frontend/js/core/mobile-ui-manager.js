@@ -36,9 +36,23 @@ class MobileUIManager {
             </div>
         `;
 
+        const chartHTML = `
+            <div class="card-responsive mt-3">
+                <div class="card-header-responsive">
+                    <h6 class="mb-0"><i class="fas fa-chart-line me-2"></i>Evolução de Receitas</h6>
+                </div>
+                <div class="card-body-responsive p-2">
+                    <div class="chart-container" style="position: relative; height: 250px;">
+                        <canvas id="ingresosChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        `;
+
         return `
             <div class="mobile-dashboard">
                 ${statsHTML}
+                ${chartHTML}
             </div>
         `;
     }
