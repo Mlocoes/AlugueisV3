@@ -116,7 +116,7 @@ class DashboardModule {
     }
 
     createIncomeChart() {
-        if (!this.isViewActive || (window.deviceManager && window.deviceManager.deviceType === 'mobile')) {
+        if (!this.isViewActive) {
             return;
         }
 
@@ -126,8 +126,6 @@ class DashboardModule {
                 this.renderIncomeChart(canvas);
             } else if (retries < 10) {
                 setTimeout(() => waitForCanvas(retries + 1), 100);
-            } else {
-                console.error("Elemento canvas 'ingresosChart' não encontrado ou não visível após múltiplas tentativas.");
             }
         };
         waitForCanvas();
