@@ -71,7 +71,10 @@ class ImoveisModule {
         if (formNovo) {
             formNovo.addEventListener('submit', (e) => {
                 e.preventDefault();
-                const data = Object.fromEntries(new FormData(formNovo).entries());
+                const formData = new FormData(formNovo);
+                const data = Object.fromEntries(formData.entries());
+                // Converter checkbox alugado para booleano
+                data.alugado = formData.has('alugado');
                 this.handleCreate(data, formNovo);
             });
         }
@@ -80,7 +83,10 @@ class ImoveisModule {
         if (formEdit) {
             formEdit.addEventListener('submit', (e) => {
                 e.preventDefault();
-                const data = Object.fromEntries(new FormData(formEdit).entries());
+                const formData = new FormData(formEdit);
+                const data = Object.fromEntries(formData.entries());
+                // Converter checkbox alugado para booleano
+                data.alugado = formData.has('alugado');
                 this.handleUpdate(data);
             });
         }
