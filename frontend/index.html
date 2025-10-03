@@ -368,44 +368,44 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.6/purify.min.js"></script>
 
     <!-- Core Scripts -->
-    <script src="js/utils/security.js?v=1759498857"></script>
-    <script src="js/core/config.js?v=1759498857"></script>
-    <script src="js/core/network-config.js?v=1759498857"></script>
-    <script src="js/core/device-manager.js?v=1759498857"></script>
-    <script src="js/core/navigator.js?v=1759498857"></script>
-    <script src="js/core/view-manager.js?v=1759498857"></script>
-    <script src="js/core/table-manager.js?v=1759498857"></script>
-    <script src="js/core/grid-component.js?v=1759498857"></script>
-    <script src="js/core/mobile-ui-manager.js?v=1759498857"></script>
+    <script src="js/utils/security.js?v=1759499096"></script>
+    <script src="js/core/config.js?v=1759499096"></script>
+    <script src="js/core/network-config.js?v=1759499096"></script>
+    <script src="js/core/device-manager.js?v=1759499096"></script>
+    <script src="js/core/navigator.js?v=1759499096"></script>
+    <script src="js/core/view-manager.js?v=1759499096"></script>
+    <script src="js/core/table-manager.js?v=1759499096"></script>
+    <script src="js/core/grid-component.js?v=1759499096"></script>
+    <script src="js/core/mobile-ui-manager.js?v=1759499096"></script>
     
     <!-- Services Scripts -->
-    <script src="js/services/cache-service.js?v=1759498857"></script>
-    <script src="js/apiService.js?v=1759498857"></script>
-    <script src="js/services/authService.js?v=1759498857"></script>
-    <script src="js/core/ui-manager.js?v=1759498857"></script>
-    <script src="js/core/modal-manager.js?v=1759498857"></script>
+    <script src="js/services/cache-service.js?v=1759499096"></script>
+    <script src="js/apiService.js?v=1759499096"></script>
+    <script src="js/services/authService.js?v=1759499096"></script>
+    <script src="js/core/ui-manager.js?v=1759499096"></script>
+    <script src="js/core/modal-manager.js?v=1759499096"></script>
     
 
     <!-- Module Scripts: dashboard debe ir antes de app.js -->
-    <script src="js/modules/dashboard.js?v=1759498857"></script>
+    <script src="js/modules/dashboard.js?v=1759499096"></script>
 
     <!-- Main App Script -->
-    <script src="js/app.js?v=1759498857"></script>
+    <script src="js/app.js?v=1759499096"></script>
 
     <!-- Resto de módulos -->
     <!-- loginManager.js removido - no usado (UnifiedApp gerencia login) -->
     <!-- Resto de módulos -->
     <!-- loginManager.js removido - no usado (UnifiedApp gerencia login) -->
-    <script src="js/modules/proprietarios.js?v=1759498857"></script>
-    <script src="js/modules/imoveis.js?v=1759498857"></script>
-    <script src="js/modules/participacoes.js?v=1759498857"></script>
-    <script src="js/modules/alugueis.js?v=1759498857"></script>
-    <script src="js/modules/relatorios.js?v=1759498857"></script>
-    <script src="js/modules/extras.js?v=1759498857"></script>
+    <script src="js/modules/proprietarios.js?v=1759499096"></script>
+    <script src="js/modules/imoveis.js?v=1759499096"></script>
+    <script src="js/modules/participacoes.js?v=1759499096"></script>
+    <script src="js/modules/alugueis.js?v=1759499096"></script>
+    <script src="js/modules/relatorios.js?v=1759499096"></script>
+    <script src="js/modules/extras.js?v=1759499096"></script>
 
-    <script src="js/modules/importacao.js?v=1759498857"></script>
-    <script src="js/modules/usuarioManager.js?v=1759498857"></script>
-    <script src="js/apiService.js?v=1759498857"></script>    <!-- Inicialización automática de la app -->
+    <script src="js/modules/importacao.js?v=1759499096"></script>
+    <script src="js/modules/usuarioManager.js?v=1759499096"></script>
+    <script src="js/apiService.js?v=1759499096"></script>    <!-- Inicialización automática de la app -->
     <script>
         // Aguardar que todos os scripts sejam carregados antes de inicializar
         window.addEventListener('load', function() {
@@ -430,14 +430,11 @@
             async init() {
                 if (this.isInitialized) return;
 
-                console.log('🚀 Inicializando aplicação unificada...');
-
                 try {
                     // Limpar localStorage corrupto al inicio
                     this.cleanupLocalStorage();
 
                     // Para desenvolvimento: sempre começar com login (F5 sempre volta ao início)
-                    console.log('🔄 Sempre iniciando com tela de login (F5 = reset)');
                     this.showLogin();
 
                     // Configurar device manager
@@ -467,7 +464,6 @@
                     localStorage.removeItem('userData');
                     localStorage.removeItem('sistema_alquileres_token');
                     localStorage.removeItem('sistema_alquileres_user');
-                    console.log('🧹 Limpeza de localStorage concluída.');
                 } catch (error) {
                     console.warn('⚠️ Erro ao limpar o localStorage antigo:', error);
                 }
@@ -481,7 +477,6 @@
                 // Destruir y reconstruir formulário completamente
                 this.rebuildLoginForm();
                 
-                console.log('🧹 Formulário de login reconstruído ao mostrar tela de login');
             }
 
             rebuildLoginForm() {
@@ -555,11 +550,9 @@
                     const usuario = document.getElementById('login-usuario');
                     const senha = document.getElementById('login-senha');
                     if (usuario && usuario.value) {
-                        console.log('🧹 Limpiando campo usuario autocompletado por navegador');
                         usuario.value = '';
                     }
                     if (senha && senha.value) {
-                        console.log('🧹 Limpiando campo senha autocompletado por navegador');
                         senha.value = '';
                     }
                 };
@@ -628,47 +621,36 @@
             }
 
             initializeModules() {
-                console.log('📦 Inicializando módulos...');
 
                 // Criar instâncias dos módulos
                 if (typeof ProprietariosModule !== 'undefined') {
                     window.proprietariosModule = new ProprietariosModule();
-                    console.log('✅ Módulo Proprietarios criado');
                 }
 
                 if (typeof ParticipacoesModule !== 'undefined') {
                     window.participacoesModule = new ParticipacoesModule();
-                    console.log('✅ Módulo Participacoes criado');
                 }
 
                 if (typeof ImportacaoModule !== 'undefined') {
                     window.importacaoModule = new ImportacaoModule();
-                    console.log('✅ Módulo Importacao criado');
                 }
 
                 if (typeof AlugueisModule !== 'undefined') {
                     window.alugueisModule = new AlugueisModule();
-                    console.log('✅ Módulo Alugueis criado');
                 }
 
                 if (typeof ExtrasManager !== 'undefined') {
                     window.extrasModule = new ExtrasManager();
-                    console.log('✅ Módulo Extras criado');
-                    // Chamar o método load() do ExtrasModule para carregar dados iniciais
-                    window.extrasModule.load();
                 }
 
                 if (typeof RelatoriosModule !== 'undefined') {
                     window.relatoriosModule = new RelatoriosModule();
-                    console.log('✅ Módulo Relatorios criado');
                 }
 
                 if (typeof window.usuarioManager !== 'undefined') {
                     window.usuarioManager.init();
-                    console.log('✅ Gerenciador de usuário inicializado');
                 }
 
-                console.log('✅ Módulos inicializados');
             }
 
             setupEventListeners() {
@@ -729,7 +711,6 @@
                             tipo: response.tipo
                         };
                         
-                        console.log('Login bem-sucedido, o cookie foi definido pelo servidor.');
 
                         this.showApp();
                         // Aplicar permissões baseado no tipo de usuário
@@ -754,7 +735,6 @@
             }
 
             async handleLogout() {
-                console.log('Iniciando processo de logout...');
                 const authService = window.authService;
                 if (authService) {
                     await authService.logout();
@@ -765,7 +745,6 @@
 
                 // Mostrar tela de login (que reconstruirá el formulario)
                 this.showLogin();
-                console.log('Logout concluído.');
             }
 
             updateUserInfo() {
@@ -792,7 +771,6 @@
              */
             applyUserPermissions() {
                 const isAdmin = this.currentUser && this.currentUser.tipo === 'administrador';
-                console.log(`🔒 Aplicando permissões para usuário ${isAdmin ? 'ADMIN' : 'USUÁRIO'}`);
 
                 // 1. Reconstruir a navegação com base nas novas permissões
                 if (window.unifiedNavigator) {
@@ -878,7 +856,6 @@
                 senhaField.setAttribute('value', '');
             }
             
-            console.log('🧹 Formulário de login limpo no DOMContentLoaded');
             
             // Inicializar aplicación
             window.unifiedApp = new UnifiedApp();
