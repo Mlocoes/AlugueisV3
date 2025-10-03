@@ -383,9 +383,18 @@ class ParticipacoesModule {
         const imovel = this.imoveis.find(i => i.id == imovelId);
         if (!imovel) return;
 
-        // Obter participações atuais para esta versão
+        // CRÍTICO: Buscar TODAS as participações da versão exibida ANTES de abrir o modal
+        // Não usar this.participacoes porque pode estar filtrado!
+        const todasParticipacoesDaVersao = await this.apiService.getParticipacoes(this.selectedData);
+        
+        if (!todasParticipacoesDaVersao || todasParticipacoesDaVersao.length === 0) {
+            this.uiManager.showError('Erro ao carregar participações');
+            return;
+        }
+
+        // Obter participações atuais DESTE IMÓVEL para preencher o modal
         const participacoesAtuais = this.proprietarios.map(prop => {
-            const part = this.participacoes.find(p => 
+            const part = todasParticipacoesDaVersao.find(p => 
                 p.imovel_id == imovelId && 
                 p.proprietario_id === prop.id
             );
@@ -401,15 +410,15 @@ class ParticipacoesModule {
             };
         });
 
-        // Criar e mostrar modal de edição
+        // Criar e mostrar modal de edição, passando TODAS as participações
         const modalId = 'edit-participacao-modal';
-        this.createEditModal(modalId, imovel, participacoesAtuais);
+        this.createEditModal(modalId, imovel, participacoesAtuais, todasParticipacoesDaVersao);
         
         const modal = new bootstrap.Modal(document.getElementById(modalId));
         modal.show();
     }
 
-    createEditModal(modalId, imovel, participacoes) {
+    createEditModal(modalId, imovel, participacoes, todasParticipacoesDaVersao) {
         // Remover modal anterior se existir
         let modalElement = document.getElementById(modalId);
         if (modalElement) modalElement.remove();
@@ -501,14 +510,10 @@ class ParticipacoesModule {
                     return;
                 }
 
-                // CRÍTICO: Usar a versão que está sendo EXIBIDA na tela como base
-                // A lógica é: Versão apresentada + edição do usuário = nova versão
-                const responseParticipacoes = await this.apiService.getParticipacoes(this.selectedData);
-                const todasParticipacoes = responseParticipacoes || [];
-                
-                console.log('🔍 [DEBUG] responseParticipacoes:', responseParticipacoes);
-                console.log('🔍 [DEBUG] todasParticipacoes:', todasParticipacoes);
-                console.log('🔍 [DEBUG] todasParticipacoes.length:', todasParticipacoes.length);
+                // CRÍTICO: Usar as participações que JÁ FORAM BUSCADAS ao abrir o modal
+                // NÃO buscar novamente - usar todasParticipacoesDaVersao passado como parâmetro
+                console.log('🔍 [DEBUG] todasParticipacoesDaVersao:', todasParticipacoesDaVersao);
+                console.log('🔍 [DEBUG] todasParticipacoesDaVersao.length:', todasParticipacoesDaVersao.length);
                 console.log('🔍 [DEBUG] this.imoveis.length:', this.imoveis.length);
                 console.log('🔍 [DEBUG] this.proprietarios.length:', this.proprietarios.length);
                 
@@ -538,7 +543,7 @@ class ParticipacoesModule {
                             }
                         } else {
                             // Para outros imóveis, buscar a participação atual do backend
-                            const part = todasParticipacoes.find(p => 
+                            const part = todasParticipacoesDaVersao.find(p => 
                                 p.imovel_id === im.id && 
                                 p.proprietario_id === prop.id
                             );
