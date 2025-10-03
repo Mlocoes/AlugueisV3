@@ -167,9 +167,9 @@ class ImoveisModule {
         const disabledAttr = isAdmin ? '' : 'disabled';
 
         const rowsHtml = this.imoveis.map(imovel => {
-            const alugadoIcon = imovel.alugado 
-                ? '<i class="fas fa-check-circle text-success" title="Alugado"></i>' 
-                : '<i class="fas fa-times-circle text-danger" title="Disponível"></i>';
+            const statusAlugado = imovel.alugado 
+                ? '<span class="badge bg-danger">Alugado</span>' 
+                : '<span class="badge bg-success">Disponível</span>';
             
             const dataCadastro = imovel.data_cadastro 
                 ? new Date(imovel.data_cadastro).toLocaleDateString('pt-BR') 
@@ -194,7 +194,7 @@ class ImoveisModule {
                         ${imovel.valor_iptu ? 'R$ ' + parseFloat(imovel.valor_iptu).toLocaleString('pt-BR', {minimumFractionDigits: 2}) : 'N/A'}<br>
                         <small class="text-muted">${imovel.valor_condominio ? 'R$ ' + parseFloat(imovel.valor_condominio).toLocaleString('pt-BR', {minimumFractionDigits: 2}) : 'N/A'}</small>
                     </td>
-                    <td class="text-center">${alugadoIcon}</td>
+                    <td class="text-center">${statusAlugado}</td>
                     <td>${dataCadastro}</td>
                     <td class="text-center">
                         <button class="btn btn-sm btn-outline-primary edit-btn me-1" data-id="${imovel.id}" ${disabledAttr} title="Editar">
