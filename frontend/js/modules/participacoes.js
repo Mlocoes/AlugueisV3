@@ -507,15 +507,39 @@ class ParticipacoesModule {
                 }
 
                 console.log('[EditParticipacao] =================================');
-                console.log('[EditParticipacao] Usando a versão apresentada na tela:', this.selectedData);
+                console.log('[EditParticipacao] selectedData:', this.selectedData);
                 
                 // CRÍTICO: Usar a versão que está sendo EXIBIDA na tela como base
                 // A lógica é: Versão apresentada + edição do usuário = nova versão
-                const responseParticipacoes = await this.apiService.getParticipacoes(this.selectedData);
-                const todasParticipacoes = responseParticipacoes || [];
+                let responseParticipacoes = await this.apiService.getParticipacoes(this.selectedData);
+                let todasParticipacoes = responseParticipacoes || [];
                 
-                console.log('[EditParticipacao] Total de participações da versão exibida:', todasParticipacoes.length);
-                console.log('[EditParticipacao] Total esperado:', this.imoveis.length * this.proprietarios.length);
+                console.log('[EditParticipacao] Participações retornadas:', todasParticipacoes.length);
+                
+                const expectedTotal = this.imoveis.length * this.proprietarios.length;
+                console.log('[EditParticipacao] Total esperado:', expectedTotal);
+                
+                // PROTEÇÃO: Se a versão retornou menos que o esperado, buscar TODAS as versões
+                // Isso acontece quando a última versão foi corrompida (salvou só 10 em vez de 190)
+                if (todasParticipacoes.length < expectedTotal) {
+                    console.warn('[EditParticipacao] ⚠️ Versão incompleta! Buscando todas as participações...');
+                    
+                    // Buscar todas as versões disponíveis
+                    const allVersions = await this.cacheService.get('participacoes_datas', 
+                        () => this.apiService.getParticipacoesDatas());
+                    
+                    if (allVersions && allVersions.length > 0) {
+                        // Buscar a versão mais antiga (primeira importação completa)
+                        const oldestVersion = allVersions[allVersions.length - 1].versao_id;
+                        console.log('[EditParticipacao] Buscando versão mais antiga:', oldestVersion);
+                        
+                        const fallbackResponse = await this.apiService.getParticipacoes(oldestVersion);
+                        if (fallbackResponse && fallbackResponse.length >= expectedTotal) {
+                            todasParticipacoes = fallbackResponse;
+                            console.log('[EditParticipacao] ✅ Versão completa encontrada:', todasParticipacoes.length);
+                        }
+                    }
+                }
                 
                 // Construir lista completa: UMA participação por cada combinação imóvel × proprietário
                 const allParticipacoes = [];
@@ -563,7 +587,6 @@ class ParticipacoesModule {
                 console.log('[EditParticipacao] =================================');
                 
                 // Validar que tenhamos o número correto
-                const expectedTotal = this.imoveis.length * this.proprietarios.length;
                 if (allParticipacoes.length !== expectedTotal) {
                     this.uiManager.hideLoading();
                     console.error('[EditParticipacao] ERROR: Número de participações incorreto!');
