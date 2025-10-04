@@ -1120,15 +1120,6 @@ class ViewManager {
                     </div>
                 </div>
             </div>
-                                <button type="submit" class="btn btn-primary" id="btn-confirmar-alterar">
-                                    <span class="spinner-border spinner-border-sm d-none me-2" id="spinner-alterar"></span>
-                                    Salvar
-                                </button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            </div>
 
             <!-- Modal de Confirmação de Exclusão -->
             <div class="modal fade" id="modal-confirmar-exclusao-imovel" tabindex="-1" aria-labelledby="modalConfirmarExclusaoLabel">
