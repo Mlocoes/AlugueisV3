@@ -20,27 +20,6 @@ class ExtrasManager {
             }
         }
     }
-    confirmarExclusao(tipo, id, nome) {
-        this.exclusaoTipo = tipo;
-        this.exclusaoId = id;
-        this.exclusaoNome = nome;
-        const modalMsg = document.getElementById('modal-confirmar-exclusao-extras-msg');
-        if (modalMsg) {
-            if (tipo === 'alias') {
-                modalMsg.textContent = `Tem certeza que deseja excluir o alias "${nome}"? Esta ação não pode ser desfeita.`;
-            } else if (tipo === 'transferencia') {
-                modalMsg.textContent = `Tem certeza que deseja excluir a transferência "${nome}"? Esta ação não pode ser desfeita.`;
-            } else {
-                modalMsg.textContent = 'Tem certeza que deseja excluir este item? Esta ação não pode ser desfeita.';
-            }
-        }
-        // Mostrar el modal de confirmación
-        const modalEl = document.getElementById('modal-confirmar-exclusao-extras');
-        if (modalEl) {
-            const modalInstance = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
-            modalInstance.show();
-        }
-    }
 
     constructor() {
         this.apiService = window.apiService;
@@ -64,42 +43,6 @@ class ExtrasManager {
      * Inicializar eventos
      */
     setupEvents() {
-        // Botón de confirmar exclusão no modal
-        const btnConfirmarExclusao = document.getElementById('btn-confirmar-exclusao-extras');
-        const modalExclusao = document.getElementById('modal-confirmar-exclusao-extras');
-        if (btnConfirmarExclusao && modalExclusao) {
-            // Listener para mostrar el modal: vincular el evento solo cuando se muestra
-            modalExclusao.addEventListener('shown.bs.modal', () => {
-                // Eliminar listener anterior si existe
-                if (this._exclusaoListener) {
-                    btnConfirmarExclusao.removeEventListener('click', this._exclusaoListener);
-                }
-                this._exclusaoListener = async (e) => {
-                    // Detener propagación y eliminar listener inmediatamente
-                    e.stopImmediatePropagation();
-                    btnConfirmarExclusao.removeEventListener('click', this._exclusaoListener);
-                    try {
-                        if (this.exclusaoTipo === 'alias') {
-                            await this.excluirAlias(this.exclusaoId);
-                        } else if (this.exclusaoTipo === 'transferencia') {
-                            await this.excluirTransferencia(this.exclusaoId);
-                        }
-                        // Fechar modal após exclusão
-                        this.safeCloseModal('modal-confirmar-exclusao-extras', 'btn-confirmar-exclusao-extras');
-                    } catch (error) {
-                        console.error('❌ Erro durante exclusão:', error);
-                        this.showError('Erro ao excluir: ' + error.message);
-                    }
-                };
-                btnConfirmarExclusao.addEventListener('click', this._exclusaoListener);
-            });
-            // Listener para ocultar el modal: eliminar el evento
-            modalExclusao.addEventListener('hidden.bs.modal', () => {
-                if (this._exclusaoListener) {
-                    btnConfirmarExclusao.removeEventListener('click', this._exclusaoListener);
-                }
-            });
-        }
         // Botões principais
         document.getElementById('btn-novo-alias')?.addEventListener('click', () => {
             this.showAliasModal();
@@ -298,7 +241,7 @@ class ExtrasManager {
                             <i class="fas fa-edit"></i>
                         </button>
                         <button class="btn btn-outline-danger ${disabledClass}"
-                                onclick="window.extrasManager.confirmarExclusao('alias', ${extra.id}, '${extra.alias}')" 
+                                onclick="window.extrasManager.excluirAlias(${extra.id})" 
                                 data-alias-id="${extra.id}"
                                 ${disabledAttr} ${deleteTitleAttr}>
                             <i class="fas fa-trash"></i>
@@ -392,7 +335,7 @@ class ExtrasManager {
                             <i class="fas fa-edit"></i>
                         </button>
                         <button class="btn btn-outline-danger ${disabledClass}"
-                                onclick="window.extrasManager.confirmarExclusao('transferencia', ${transferencia.id}, '${transferencia.nome_transferencia}')" 
+                                onclick="window.extrasManager.excluirTransferencia(${transferencia.id})" 
                                 data-transferencia-id="${transferencia.id}"
                                 ${disabledAttr} ${deleteTitleAttr}>
                             <i class="fas fa-trash"></i>
@@ -918,7 +861,17 @@ class ExtrasManager {
                 this.showError('Alias não encontrado');
                 return;
             }
-            // Executar a exclusão diretamente (modal já confirma)
+
+            // Usar uiManager.showConfirm para confirmar exclusão
+            const confirmed = await this.uiManager.showConfirm(
+                'Excluir Alias',
+                `Tem certeza que deseja excluir o alias "${extra.nome || extra.extra_nome}"?`,
+                'danger'
+            );
+
+            if (!confirmed) return;
+
+            // Executar a exclusão
             await this.executeDeleteAlias(parseInt(id));
         } catch (error) {
             console.error('Erro ao excluir alias:', error);
@@ -1064,12 +1017,22 @@ class ExtrasManager {
     async excluirTransferencia(id) {
         try {
             // Buscar a transferência sem operações pesadas
-        const transferencia = this.allTransferencias.find(t => t.id == id);
+            const transferencia = this.allTransferencias.find(t => t.id == id);
             if (!transferencia) {
                 this.showError('Transferência não encontrada');
                 return;
             }
-            // Executar a exclusão diretamente (modal já confirma)
+
+            // Usar uiManager.showConfirm para confirmar exclusão
+            const confirmed = await this.uiManager.showConfirm(
+                'Excluir Transferência',
+                `Tem certeza que deseja excluir a transferência "${transferencia.alias_nome || 'sem nome'}"?`,
+                'danger'
+            );
+
+            if (!confirmed) return;
+
+            // Executar a exclusão
             await this.executeDeleteTransferencia(id);
         } catch (error) {
             console.error('Erro ao excluir transferência:', error);
