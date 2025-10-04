@@ -211,6 +211,71 @@ body.device-mobile #editar-proprietario-modal .modal-footer {
     padding: 0.5rem 0.75rem;
 }
 
+/* Ajustar modais de imóvel para mobile */
+body.device-mobile #novo-imovel-modal .modal-dialog,
+body.device-mobile #edit-imovel-modal .modal-dialog {
+    max-width: 100%;
+    margin: 0.5rem;
+}
+
+body.device-mobile #novo-imovel-modal .modal-content,
+body.device-mobile #edit-imovel-modal .modal-content {
+    max-height: 95vh;
+    overflow-y: auto;
+}
+
+body.device-mobile #novo-imovel-modal .modal-body,
+body.device-mobile #edit-imovel-modal .modal-body {
+    padding: 0.75rem;
+    max-height: calc(95vh - 120px);
+    overflow-y: auto;
+}
+
+body.device-mobile #novo-imovel-modal .mb-3,
+body.device-mobile #edit-imovel-modal .mb-3 {
+    margin-bottom: 0.75rem !important;
+}
+
+body.device-mobile #novo-imovel-modal .form-label,
+body.device-mobile #edit-imovel-modal .form-label {
+    margin-bottom: 0.25rem;
+    font-size: 0.9rem;
+}
+
+body.device-mobile #novo-imovel-modal .form-control,
+body.device-mobile #edit-imovel-modal .form-control {
+    padding: 0.5rem;
+    font-size: 0.95rem;
+}
+
+body.device-mobile #novo-imovel-modal h5,
+body.device-mobile #edit-imovel-modal h5 {
+    font-size: 1rem;
+    margin-bottom: 0.5rem;
+}
+
+body.device-mobile #novo-imovel-modal .modal-header,
+body.device-mobile #edit-imovel-modal .modal-header {
+    padding: 0.75rem;
+}
+
+body.device-mobile #novo-imovel-modal .modal-footer,
+body.device-mobile #edit-imovel-modal .modal-footer {
+    padding: 0.5rem 0.75rem;
+}
+
+body.device-mobile #novo-imovel-modal .row,
+body.device-mobile #edit-imovel-modal .row {
+    margin-left: 0;
+    margin-right: 0;
+}
+
+body.device-mobile #novo-imovel-modal .row > [class*="col-"],
+body.device-mobile #edit-imovel-modal .row > [class*="col-"] {
+    padding-left: 0;
+    padding-right: 0;
+}
+
 /* Estilos para botões para serem mais fáceis de tocar */
 body.device-mobile .btn {
     padding: 0.75rem 1rem;
