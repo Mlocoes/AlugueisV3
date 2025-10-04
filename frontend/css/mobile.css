@@ -155,7 +155,60 @@ body.device-mobile {
 /* Garantir que os modais ocupem mais da tela */
 body.device-mobile .modal-dialog {
     max-width: 95%;
-    margin: 1.75rem auto;
+    margin: 0.5rem auto;
+}
+
+/* Ajustar modais de proprietário para mobile */
+body.device-mobile #novo-proprietario-modal .modal-dialog,
+body.device-mobile #editar-proprietario-modal .modal-dialog {
+    max-width: 100%;
+    margin: 0.5rem;
+}
+
+body.device-mobile #novo-proprietario-modal .modal-content,
+body.device-mobile #editar-proprietario-modal .modal-content {
+    max-height: 95vh;
+    overflow-y: auto;
+}
+
+body.device-mobile #novo-proprietario-modal .modal-body,
+body.device-mobile #editar-proprietario-modal .modal-body {
+    padding: 0.75rem;
+    max-height: calc(95vh - 120px);
+    overflow-y: auto;
+}
+
+body.device-mobile #novo-proprietario-modal .form-group,
+body.device-mobile #editar-proprietario-modal .form-group {
+    margin-bottom: 0.75rem;
+}
+
+body.device-mobile #novo-proprietario-modal .form-label,
+body.device-mobile #editar-proprietario-modal .form-label {
+    margin-bottom: 0.25rem;
+    font-size: 0.9rem;
+}
+
+body.device-mobile #novo-proprietario-modal .form-control,
+body.device-mobile #editar-proprietario-modal .form-control {
+    padding: 0.5rem;
+    font-size: 0.95rem;
+}
+
+body.device-mobile #novo-proprietario-modal h5,
+body.device-mobile #editar-proprietario-modal h5 {
+    font-size: 1rem;
+    margin-bottom: 0.5rem;
+}
+
+body.device-mobile #novo-proprietario-modal .modal-header,
+body.device-mobile #editar-proprietario-modal .modal-header {
+    padding: 0.75rem;
+}
+
+body.device-mobile #novo-proprietario-modal .modal-footer,
+body.device-mobile #editar-proprietario-modal .modal-footer {
+    padding: 0.5rem 0.75rem;
 }
 
 /* Estilos para botões para serem mais fáceis de tocar */
