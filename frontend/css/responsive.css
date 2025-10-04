@@ -458,8 +458,8 @@ body {
     }
 }
 
-/* Modo oscuro (preparado para implementación futura) */
-@media (prefers-color-scheme: dark) {
+/* Modo oscuro DESHABILITADO - mantener siempre tema claro */
+/* @media (prefers-color-scheme: dark) {
     :root {
         --light-color: #212529;
         --dark-color: #f8f9fa;
@@ -474,4 +474,4 @@ body {
         background-color: #2d3748;
         color: var(--dark-color);
     }
-}
+} */
