@@ -739,52 +739,52 @@ class ViewManager {
                 <!-- Encabezado eliminado -->
                 <div class="container-fluid">
                     <div class="row mb-4">
-                        <div class="col-12 col-sm-6 col-md-3">
+                        <div class="col-12 col-sm-6 col-lg-3 mb-3">
                             <div class="card-responsive stats-card shadow-sm h-100">
                                 <div class="card-body-responsive text-center">
-                                    <i class="fas fa-users fa-2x text-primary mb-3"></i>
-                                    <h4 id="dashboard-total-proprietarios" class="counter" style="font-size:1.5rem;">-</h4>
-                                    <p class="text-muted">Proprietários</p>
+                                    <i class="fas fa-users fa-2x text-primary mb-2"></i>
+                                    <h4 id="dashboard-total-proprietarios" class="counter" style="font-size:1.4rem;">-</h4>
+                                    <p class="text-muted mb-0" style="font-size:0.9rem;">Proprietários</p>
                                 </div>
                             </div>
                         </div>
-                        <div class="col-12 col-sm-6 col-md-3">
+                        <div class="col-12 col-sm-6 col-lg-3 mb-3">
                             <div class="card-responsive stats-card shadow-sm h-100">
                                 <div class="card-body-responsive text-center">
-                                    <i class="fas fa-building fa-2x text-success mb-3"></i>
-                                    <h4 id="dashboard-total-inmuebles" class="counter" style="font-size:1.5rem;">-</h4>
-                                    <p class="text-muted">Imóveis</p>
+                                    <i class="fas fa-building fa-2x text-success mb-2"></i>
+                                    <h4 id="dashboard-total-inmuebles" class="counter" style="font-size:1.4rem;">-</h4>
+                                    <p class="text-muted mb-0" style="font-size:0.9rem;">Imóveis</p>
                                 </div>
                             </div>
                         </div>
-                        <div class="col-12 col-sm-6 col-md-3">
+                        <div class="col-12 col-sm-6 col-lg-3 mb-3">
                             <div class="card-responsive stats-card shadow-sm h-100">
                                 <div class="card-body-responsive text-center">
-                                    <i class="fas fa-handshake fa-2x text-warning mb-3"></i>
-                                    <h4 id="dashboard-alugueis-ano-corrente" class="counter" style="font-size:1.5rem;">-</h4>
-                                    <p class="text-muted">Aluguéis no Ano</p>
+                                    <i class="fas fa-dollar-sign fa-2x text-info mb-2"></i>
+                                    <h4 id="dashboard-ingresos-mensuales" class="counter" style="font-size:1.4rem;">-</h4>
+                                    <p class="text-muted mb-0" style="font-size:0.9rem;">Receita/Mês</p>
                                 </div>
                             </div>
                         </div>
-                        <div class="col-12 col-sm-6 col-md-3">
+                        <div class="col-12 col-sm-6 col-lg-3 mb-3">
                             <div class="card-responsive stats-card shadow-sm h-100">
                                 <div class="card-body-responsive text-center">
-                                    <i class="fas fa-dollar-sign fa-2x text-info mb-3"></i>
-                                    <h4 id="dashboard-ingresos-mensuales" class="counter" style="font-size:1.5rem;">-</h4>
-                                    <p class="text-muted">Receita/Mês</p>
+                                    <i class="fas fa-chart-line fa-2x text-warning mb-2"></i>
+                                    <h4 id="dashboard-variacao-percentual" class="counter" style="font-size:1.4rem;">-</h4>
+                                    <p class="text-muted mb-0" style="font-size:0.9rem;">Variação Mensal</p>
                                 </div>
                             </div>
                         </div>
                     </div>
                     <div class="row">
-                        <div class="col-md-8">
+                        <div class="col-12">
                             <div class="card-responsive">
                                 <div class="card-header-responsive">
                                     <h5><i class="fas fa-chart-line me-2"></i>Evolução de Receitas</h5>
                                 </div>
                                 <div class="card-body-responsive">
-                                    <div class="chart-container">
-                                        <canvas id="ingresosChart" height="300"></canvas>
+                                    <div class="chart-container" style="position: relative; height: 400px;">
+                                        <canvas id="ingresosChart"></canvas>
                                     </div>
                                 </div>
                             </div>

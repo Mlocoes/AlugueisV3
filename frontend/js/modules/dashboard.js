@@ -79,14 +79,23 @@ class DashboardModule {
             total_proprietarios,
             total_imoveis,
             total_alugueis_ano_corrente,
-            receitas_ultimo_mes
+            receitas_ultimo_mes,
+            variacao_percentual
         } = this.summaryData;
 
         // Desktop stats
         this.updateCounter('dashboard-total-proprietarios', total_proprietarios);
         this.updateCounter('dashboard-total-inmuebles', total_imoveis);
-        this.updateCounter('dashboard-alugueis-ano-corrente', `R$ ${total_alugueis_ano_corrente.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`);
         this.updateCounter('dashboard-ingresos-mensuales', `R$ ${receitas_ultimo_mes.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`);
+        
+        // Variação percentual com formatação especial
+        const variacaoElement = document.getElementById('dashboard-variacao-percentual');
+        if (variacaoElement && variacao_percentual !== undefined) {
+            const sinal = variacao_percentual >= 0 ? '+' : '';
+            const cor = variacao_percentual >= 0 ? 'text-success' : 'text-danger';
+            const icone = variacao_percentual >= 0 ? 'fa-arrow-up' : 'fa-arrow-down';
+            variacaoElement.innerHTML = `<span class="${cor}">${sinal}${variacao_percentual.toFixed(2)}% <i class="fas ${icone}"></i></span>`;
+        }
 
         // Mobile stats
         this.updateCounter('mobile-stats-proprietarios', total_proprietarios);

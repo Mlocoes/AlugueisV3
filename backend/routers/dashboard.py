@@ -28,11 +28,32 @@ def get_dashboard_summary(db: Session = Depends(get_db), current_user: Usuario =
         .first()
     
     receitas_ultimo_mes = 0
+    receitas_mes_anterior = 0
+    variacao_percentual = 0
+    
     if last_month_data:
         last_year, last_month = last_month_data
         receitas_ultimo_mes = db.query(func.sum(AluguelSimples.valor_liquido_proprietario)) \
             .filter(AluguelSimples.ano == last_year, AluguelSimples.mes == last_month) \
             .scalar() or 0
+        
+        # Calcular mês anterior
+        if last_month == 1:
+            prev_month = 12
+            prev_year = last_year - 1
+        else:
+            prev_month = last_month - 1
+            prev_year = last_year
+        
+        receitas_mes_anterior = db.query(func.sum(AluguelSimples.valor_liquido_proprietario)) \
+            .filter(AluguelSimples.ano == prev_year, AluguelSimples.mes == prev_month) \
+            .scalar() or 0
+        
+        # Calcular variação percentual
+        if receitas_mes_anterior > 0:
+            variacao_percentual = ((receitas_ultimo_mes - receitas_mes_anterior) / receitas_mes_anterior) * 100
+        elif receitas_ultimo_mes > 0:
+            variacao_percentual = 100  # 100% de aumento quando anterior era 0
 
     # 4. Dados para o gráfico de receitas (últimos 12 meses)
     twelve_months_ago = datetime.now() - timedelta(days=365)
@@ -55,6 +76,7 @@ def get_dashboard_summary(db: Session = Depends(get_db), current_user: Usuario =
         "total_imoveis": total_imoveis,
         "total_alugueis_ano_corrente": float(total_alugueis_ano_corrente),
         "receitas_ultimo_mes": float(receitas_ultimo_mes),
+        "variacao_percentual": round(variacao_percentual, 2),
         "income_chart_data": {
             "labels": chart_labels,
             "values": chart_values
