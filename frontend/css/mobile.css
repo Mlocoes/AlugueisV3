@@ -10,9 +10,10 @@ body.device-mobile .mobile-dashboard {
 
 body.device-mobile .stats-container {
     display: flex;
-    justify-content: space-around;
+    justify-content: space-between;
+    gap: 0.3rem;
     background-color: #fff;
-    padding: 0.8rem 0.5rem;
+    padding: 0.6rem 0.3rem;
     border-radius: 8px;
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     margin-bottom: 1.5rem;
@@ -24,21 +25,27 @@ body.device-mobile .stat-item {
     align-items: center;
     flex: 1;
     min-width: 0;
+    padding: 0 0.2rem;
 }
 
 body.device-mobile .stat-value {
-    font-size: 1.2rem;
+    font-size: 1rem;
     font-weight: 600;
     color: #333;
     white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
 }
 
 body.device-mobile .stat-label {
-    font-size: 0.65rem;
+    font-size: 0.55rem;
     color: #666;
     text-transform: uppercase;
     text-align: center;
-    line-height: 1.2;
+    line-height: 1.1;
+    margin-top: 0.2rem;
+    word-break: break-word;
 }
 
 body.device-mobile .nav-grid {
