@@ -237,19 +237,45 @@ class ExtrasManager {
                 </td>
                 <td class="text-center">
                     <div class="btn-group btn-group-sm">
-                        <button class="btn btn-outline-primary ${disabledClass}" onclick="window.extrasManager.editarAlias(${extra.id})" ${disabledAttr} ${titleAttr}>
+                        <button class="btn btn-outline-primary edit-alias-btn ${disabledClass}" data-id="${extra.id}" ${disabledAttr} ${titleAttr}>
                             <i class="fas fa-edit"></i>
                         </button>
-                        <button class="btn btn-outline-danger ${disabledClass}"
-                                onclick="window.extrasManager.excluirAlias(${extra.id})" 
-                                data-alias-id="${extra.id}"
-                                ${disabledAttr} ${deleteTitleAttr}>
+                        <button class="btn btn-outline-danger delete-alias-btn ${disabledClass}" data-id="${extra.id}" ${disabledAttr} ${deleteTitleAttr}>
                             <i class="fas fa-trash"></i>
                         </button>
                     </div>
                 </td>
             `;
             tbody.appendChild(row);
+        });
+
+        // Adicionar event listeners para botões de editar e excluir alias
+        this.setupAliasEventListeners();
+    }
+
+    /**
+     * Configurar event listeners para botões de alias
+     */
+    setupAliasEventListeners() {
+        const tbody = document.getElementById('extras-table-body');
+        if (!tbody) return;
+
+        // Event delegation para botões de editar
+        tbody.querySelectorAll('.edit-alias-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.preventDefault();
+                const id = btn.getAttribute('data-id');
+                if (id) this.editarAlias(parseInt(id));
+            });
+        });
+
+        // Event delegation para botões de excluir
+        tbody.querySelectorAll('.delete-alias-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.preventDefault();
+                const id = btn.getAttribute('data-id');
+                if (id) this.excluirAlias(parseInt(id));
+            });
         });
     }
 
@@ -331,13 +357,10 @@ class ExtrasManager {
                 <td class="text-center">${dataFimFormatada}</td>
                 <td class="text-center">
                     <div class="btn-group btn-group-sm">
-                        <button class="btn btn-outline-primary ${disabledClass}" onclick="window.extrasManager.editarTransferencia(${transferencia.id})" ${disabledAttr} ${titleAttr}>
+                        <button class="btn btn-outline-primary edit-transferencia-btn ${disabledClass}" data-id="${transferencia.id}" ${disabledAttr} ${titleAttr}>
                             <i class="fas fa-edit"></i>
                         </button>
-                        <button class="btn btn-outline-danger ${disabledClass}"
-                                onclick="window.extrasManager.excluirTransferencia(${transferencia.id})" 
-                                data-transferencia-id="${transferencia.id}"
-                                ${disabledAttr} ${deleteTitleAttr}>
+                        <button class="btn btn-outline-danger delete-transferencia-btn ${disabledClass}" data-id="${transferencia.id}" ${disabledAttr} ${deleteTitleAttr}>
                             <i class="fas fa-trash"></i>
                         </button>
                     </div>
@@ -346,7 +369,35 @@ class ExtrasManager {
             
             tbody.appendChild(row);
         });
-        // ...no llamar a setupEvents aquí...
+
+        // Adicionar event listeners para botões de editar e excluir transferências
+        this.setupTransferenciaEventListeners();
+    }
+
+    /**
+     * Configurar event listeners para botões de transferência
+     */
+    setupTransferenciaEventListeners() {
+        const tbody = document.getElementById('transferencias-table-body');
+        if (!tbody) return;
+
+        // Event delegation para botões de editar
+        tbody.querySelectorAll('.edit-transferencia-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.preventDefault();
+                const id = btn.getAttribute('data-id');
+                if (id) this.editarTransferencia(parseInt(id));
+            });
+        });
+
+        // Event delegation para botões de excluir
+        tbody.querySelectorAll('.delete-transferencia-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.preventDefault();
+                const id = btn.getAttribute('data-id');
+                if (id) this.excluirTransferencia(parseInt(id));
+            });
+        });
     }
 
     /**
