@@ -159,56 +159,60 @@ body.device-mobile .modal-dialog {
 }
 
 /* Ajustar modais de proprietário para mobile */
-body.device-mobile #novo-proprietario-modal .modal-dialog,
-body.device-mobile #editar-proprietario-modal .modal-dialog {
+body.device-mobile #proprietario-modal .modal-dialog {
     max-width: 100%;
     margin: 0.5rem;
 }
 
-body.device-mobile #novo-proprietario-modal .modal-content,
-body.device-mobile #editar-proprietario-modal .modal-content {
+body.device-mobile #proprietario-modal .modal-content {
     max-height: 95vh;
     overflow-y: auto;
 }
 
-body.device-mobile #novo-proprietario-modal .modal-body,
-body.device-mobile #editar-proprietario-modal .modal-body {
+body.device-mobile #proprietario-modal .modal-body {
     padding: 0.75rem;
     max-height: calc(95vh - 120px);
     overflow-y: auto;
 }
 
-body.device-mobile #novo-proprietario-modal .form-group,
-body.device-mobile #editar-proprietario-modal .form-group {
-    margin-bottom: 0.75rem;
+body.device-mobile #proprietario-modal .mb-1,
+body.device-mobile #proprietario-modal .row {
+    margin-bottom: 0.75rem !important;
 }
 
-body.device-mobile #novo-proprietario-modal .form-label,
-body.device-mobile #editar-proprietario-modal .form-label {
-    margin-bottom: 0.25rem;
-    font-size: 0.9rem;
+body.device-mobile #proprietario-modal .form-label {
+    margin-bottom: 0.25rem !important;
+    font-size: 0.9rem !important;
 }
 
-body.device-mobile #novo-proprietario-modal .form-control,
-body.device-mobile #editar-proprietario-modal .form-control {
-    padding: 0.5rem;
-    font-size: 0.95rem;
+body.device-mobile #proprietario-modal .form-control,
+body.device-mobile #proprietario-modal .form-control-sm {
+    padding: 0.5rem !important;
+    font-size: 0.95rem !important;
 }
 
-body.device-mobile #novo-proprietario-modal h5,
-body.device-mobile #editar-proprietario-modal h5 {
-    font-size: 1rem;
-    margin-bottom: 0.5rem;
+body.device-mobile #proprietario-modal h5,
+body.device-mobile #proprietario-modal h6 {
+    font-size: 1rem !important;
+    margin-bottom: 0.5rem !important;
 }
 
-body.device-mobile #novo-proprietario-modal .modal-header,
-body.device-mobile #editar-proprietario-modal .modal-header {
+body.device-mobile #proprietario-modal .modal-header {
     padding: 0.75rem;
 }
 
-body.device-mobile #novo-proprietario-modal .modal-footer,
-body.device-mobile #editar-proprietario-modal .modal-footer {
-    padding: 0.5rem 0.75rem;
+body.device-mobile #proprietario-modal .modal-footer {
+    padding: 0.5rem 0.75rem !important;
+}
+
+body.device-mobile #proprietario-modal .row {
+    margin-left: 0;
+    margin-right: 0;
+}
+
+body.device-mobile #proprietario-modal .row > [class*="col-"] {
+    padding-left: 0.25rem;
+    padding-right: 0.25rem;
 }
 
 /* Ajustar modais de imóvel para mobile */
