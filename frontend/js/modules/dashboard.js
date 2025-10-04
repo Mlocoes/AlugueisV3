@@ -195,15 +195,26 @@ class DashboardModule {
                     }
                 },
                 scales: {
-                    x: { grid: { display: false } },
+                    x: { 
+                        grid: { display: false },
+                        ticks: { color: '#000000' }
+                    },
                     y: {
                         beginAtZero: true,
-                        grid: { borderDash: [5, 5] },
+                        grid: { 
+                            borderDash: [5, 5],
+                            color: 'rgba(0, 0, 0, 0.1)'
+                        },
                         ticks: {
+                            color: '#000000',
                             callback: value => `R$ ${value.toLocaleString('pt-BR')}`
                         }
                     }
-                }
+                },
+                layout: {
+                    padding: 10
+                },
+                backgroundColor: '#ffffff'
             }
         });
     }
