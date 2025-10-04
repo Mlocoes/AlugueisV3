@@ -652,9 +652,13 @@ class UsuarioManager {
             return;
         }
 
-        const confirmacao = confirm(`Tem certeza que deseja excluir o usuário '${this.usuarioSelecionado.usuario}'?\n\nEsta ação não pode ser desfeita.`);
+        const confirmed = await window.uiManager.showConfirm(
+            'Excluir Usuário',
+            `Tem certeza que deseja excluir o usuário '${this.usuarioSelecionado.usuario}'?`,
+            'danger'
+        );
 
-        if (confirmacao) {
+        if (confirmed) {
             await this.excluirUsuario();
         }
     }
