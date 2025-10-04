@@ -101,6 +101,15 @@ class DashboardModule {
         this.updateCounter('mobile-stats-proprietarios', total_proprietarios);
         this.updateCounter('mobile-stats-imoveis', total_imoveis);
         this.updateCounter('mobile-stats-receita', `R$ ${receitas_ultimo_mes.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`);
+        
+        // Variação percentual mobile
+        const variacaoMobileElement = document.getElementById('mobile-stats-variacao');
+        if (variacaoMobileElement && variacao_percentual !== undefined) {
+            const sinal = variacao_percentual >= 0 ? '+' : '';
+            const cor = variacao_percentual >= 0 ? 'text-success' : 'text-danger';
+            const icone = variacao_percentual >= 0 ? 'fa-arrow-up' : 'fa-arrow-down';
+            variacaoMobileElement.innerHTML = `<span class="${cor}">${sinal}${variacao_percentual.toFixed(2)}% <i class="fas ${icone}"></i></span>`;
+        }
     }
 
     updateCounter(elementId, value) {

@@ -33,6 +33,10 @@ class MobileUIManager {
                     <span class="stat-value" id="mobile-stats-receita">-</span>
                     <span class="stat-label">Receita/Mês</span>
                 </div>
+                <div class="stat-item">
+                    <span class="stat-value" id="mobile-stats-variacao">-</span>
+                    <span class="stat-label">Variação Mensal</span>
+                </div>
             </div>
         `;
 
