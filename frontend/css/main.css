@@ -312,6 +312,8 @@ body {
 
 .chart-container canvas {
     max-height: 100%;
+    background-color: #fff !important;
+    border-radius: 8px;
 }
 
 /* === ALERTS === */
