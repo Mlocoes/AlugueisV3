@@ -783,7 +783,7 @@ class ViewManager {
                                     <h5><i class="fas fa-chart-line me-2"></i>Evolução de Receitas</h5>
                                 </div>
                                 <div class="card-body-responsive">
-                                    <div class="chart-container" style="position: relative; height: 400px;">
+                                    <div class="chart-container" style="position: relative; height: 300px;">
                                         <canvas id="ingresosChart"></canvas>
                                     </div>
                                 </div>
