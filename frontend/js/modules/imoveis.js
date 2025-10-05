@@ -31,7 +31,7 @@ class ImoveisModule {
                     : document.getElementById('imoveis-table-body');
                 
                 if (this.container) {
-                    this.modalManager = new ModalManager('novo-imovel-modal', 'edit-imovel-modal');
+                    this.modalManager = new ModalManager('novo-imovel-modal');
                     this.bindPageEvents();
                     this.bindContainerEvents();
                     this.loadImoveis();
