@@ -262,6 +262,47 @@ class ViewManager {
                     }
                 });
             }
+            
+            // Registrar eventos para versões mobile dos botões
+            const btnNovoAliasMobile = document.getElementById('btn-novo-alias-mobile');
+            if (btnNovoAliasMobile) {
+                btnNovoAliasMobile.addEventListener('click', async function() {
+                    if (window.extrasModule && typeof window.extrasModule.loadProprietarios === 'function') {
+                        await window.extrasModule.loadProprietarios();
+                        window.extrasModule.showAliasModal(null);
+                    } else if (window.extrasModule && typeof window.extrasModule.showAliasModal === 'function') {
+                        window.extrasModule.showAliasModal(null);
+                    } else {
+                        const form = document.getElementById('form-alias');
+                        if (form) form.reset();
+                        const modalTitle = document.getElementById('modalAliasLabel');
+                        if (modalTitle) modalTitle.innerHTML = '<i class="fas fa-plus me-2"></i>Novo Alias';
+                        const modal = document.getElementById('modal-alias');
+                        if (modal) {
+                            bootstrap.Modal.getOrCreateInstance(modal).show();
+                        }
+                    }
+                });
+            }
+            
+            const btnNovasTransferenciasMobile = document.getElementById('btn-novas-transferencias-mobile');
+            if (btnNovasTransferenciasMobile) {
+                btnNovasTransferenciasMobile.addEventListener('click', function() {
+                    // Forzar modo de nova transferência
+                    if (window.extrasModule && typeof window.extrasModule.showTransferenciasModal === 'function') {
+                        window.extrasModule.currentTransferencia = null;
+                        window.extrasModule.showTransferenciasModal();
+                    } else {
+                        // Fallback: limpiar y mostrar modal diretamente
+                        const form = document.getElementById('form-transferencias');
+                        if (form) form.reset();
+                        const modal = document.getElementById('modal-transferencias');
+                        if (modal) {
+                            bootstrap.Modal.getOrCreateInstance(modal).show();
+                        }
+                    }
+                });
+            }
             // Registrar evento para el select de alias en transferencias
             setTimeout(() => {
                 const aliasSelect = document.getElementById('transferencia-alias');
@@ -641,6 +682,22 @@ class ViewManager {
 
         return `
             <div class="importar-container-mobile p-3">
+                <div class="mb-3">
+                    <div class="d-grid gap-2">
+                        <button class="btn btn-primary" id="btn-cadastrar-usuario-mobile" data-bs-toggle="modal" data-bs-target="#modal-cadastrar-usuario">
+                            <i class="fas fa-user-plus me-2"></i> Cadastrar Novo Usuário
+                        </button>
+                        <button class="btn btn-primary" id="btn-alterar-usuario-mobile" data-bs-toggle="modal" data-bs-target="#modal-alterar-usuario">
+                            <i class="fas fa-user-edit me-2"></i> Alterar Usuário
+                        </button>
+                        <button class="btn btn-primary" id="btn-novo-alias-mobile" type="button">
+                            <i class="fas fa-user-tag me-2"></i> Novo Alias
+                        </button>
+                        <button class="btn btn-primary" id="btn-novas-transferencias-mobile" type="button">
+                            <i class="fas fa-exchange-alt me-2"></i> Nova Transferência
+                        </button>
+                    </div>
+                </div>
                 <div class="accordion" id="${accordionId}">
                     ${items}
                 </div>
