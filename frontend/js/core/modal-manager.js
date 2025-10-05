@@ -1,6 +1,9 @@
 
 class ModalManager {
     constructor(modalCadastroId, modalEdicaoId) {
+        this.modalCadastroId = modalCadastroId;
+        this.modalEdicaoId = modalEdicaoId;
+        
         if (modalCadastroId) {
             const modalCadastroEl = document.getElementById(modalCadastroId);
             if (modalCadastroEl) {
@@ -52,6 +55,20 @@ class ModalManager {
     }
 
     setTitle(title) {
+        // Lazy initialization: try to get title elements if not already available
+        if (!this.modalCadastroTitleEl && this.modalCadastroId) {
+            const modalCadastroEl = document.getElementById(this.modalCadastroId);
+            if (modalCadastroEl) {
+                this.modalCadastroTitleEl = modalCadastroEl.querySelector('.modal-title');
+            }
+        }
+        if (!this.modalEdicaoTitleEl && this.modalEdicaoId) {
+            const modalEdicaoEl = document.getElementById(this.modalEdicaoId);
+            if (modalEdicaoEl) {
+                this.modalEdicaoTitleEl = modalEdicaoEl.querySelector('.modal-title');
+            }
+        }
+        
         if (this.modalCadastroTitleEl) {
             this.modalCadastroTitleEl.innerHTML = title;
         } else if (this.modalEdicaoTitleEl) {
@@ -84,6 +101,15 @@ class ModalManager {
     }
 
     abrirModalCadastro() {
+        // Lazy initialization: try to initialize the modal if it wasn't created in constructor
+        if (!this.modalCadastro && this.modalCadastroId) {
+            const modalCadastroEl = document.getElementById(this.modalCadastroId);
+            if (modalCadastroEl) {
+                this.modalCadastro = new bootstrap.Modal(modalCadastroEl);
+                this.modalCadastroTitleEl = modalCadastroEl.querySelector('.modal-title');
+            }
+        }
+        
         if (this.modalCadastro) {
             this.modalCadastro.show();
         }
@@ -100,6 +126,15 @@ class ModalManager {
     }
 
     abrirModalEdicao() {
+        // Lazy initialization: try to initialize the modal if it wasn't created in constructor
+        if (!this.modalEdicao && this.modalEdicaoId) {
+            const modalEdicaoEl = document.getElementById(this.modalEdicaoId);
+            if (modalEdicaoEl) {
+                this.modalEdicao = new bootstrap.Modal(modalEdicaoEl);
+                this.modalEdicaoTitleEl = modalEdicaoEl.querySelector('.modal-title');
+            }
+        }
+        
         if (this.modalEdicao) {
             this.modalEdicao.show();
         }
