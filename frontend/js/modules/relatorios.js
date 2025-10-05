@@ -76,9 +76,32 @@ class RelatoriosModule {
             this.loadMeses();
             await this.loadYears();
             await this.loadProprietariosAndAliases();
+            // Set default year and month before loading data
+            await this.setDefaultPeriod();
             await this.loadRelatoriosData();
         } catch (error) {
             console.error('Erro ao carregar dados iniciais de relatórios:', error);
+        }
+    }
+
+    async setDefaultPeriod() {
+        try {
+            const response = await this.apiService.get('/api/reportes/ultimo-periodo');
+            const data = response.success ? response.data : response;
+            
+            if (data && data.ano && data.mes) {
+                // Set year dropdown to last available year
+                if (this.anoSelect) {
+                    this.anoSelect.value = data.ano.toString();
+                }
+                
+                // Set month dropdown to last available month
+                if (this.mesSelect) {
+                    this.mesSelect.value = data.mes.toString();
+                }
+            }
+        } catch (error) {
+            console.error('Erro ao carregar último período:', error);
         }
     }
 
