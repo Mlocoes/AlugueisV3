@@ -66,6 +66,9 @@ function createSafeElement(tagName, textContent = '', attributes = {}) {
  * @param {Object} data - Objeto com dados a serem inseridos no template (opcional).
  */
 function setSafeHTML(element, htmlString, data = {}) {
+    console.log('[SecurityUtils] setSafeHTML chamado');
+    console.log('[SecurityUtils] DOMPurify disponível:', typeof DOMPurify !== 'undefined');
+    
     if (typeof DOMPurify === 'undefined') {
         console.error('DOMPurify não está carregado. O conteúdo não será renderizado por segurança.');
         element.textContent = 'Erro: Biblioteca de segurança não carregada.';
@@ -82,6 +85,12 @@ function setSafeHTML(element, htmlString, data = {}) {
         });
     }
     
+    // Debug: verificar conteúdo antes da sanitização
+    const hasModal = htmlString.includes('id="novo-imovel-modal"');
+    const hasForm = htmlString.includes('<form');
+    console.log('[SecurityUtils] HTML original contém novo-imovel-modal:', hasModal);
+    console.log('[SecurityUtils] HTML original contém form:', hasForm);
+    
     // Configuração do DOMPurify para permitir modals e forms Bootstrap
     const config = {
         ADD_TAGS: ['form'], // Permitir tags <form>
@@ -90,17 +99,28 @@ function setSafeHTML(element, htmlString, data = {}) {
         KEEP_CONTENT: true // Manter conteúdo de elementos removidos
     };
     
+    console.log('[SecurityUtils] Chamando DOMPurify.sanitize com config:', config);
+    
     // Sanitiza a string HTML final com DOMPurify usando a config personalizada
     const cleanHtml = DOMPurify.sanitize(finalHtml, config);
 
-    // Debug: verificar se modals foram removidos
-    if (htmlString.includes('id="novo-imovel-modal"')) {
-        console.log('[SecurityUtils] HTML contém novo-imovel-modal:', htmlString.includes('id="novo-imovel-modal"'));
-        console.log('[SecurityUtils] HTML limpo contém novo-imovel-modal:', cleanHtml.includes('id="novo-imovel-modal"'));
+    // Debug: verificar se modals foram preservados
+    const hasModalAfter = cleanHtml.includes('id="novo-imovel-modal"');
+    const hasFormAfter = cleanHtml.includes('<form');
+    console.log('[SecurityUtils] HTML limpo contém novo-imovel-modal:', hasModalAfter);
+    console.log('[SecurityUtils] HTML limpo contém form:', hasFormAfter);
+    
+    if (hasModal && !hasModalAfter) {
+        console.error('[SecurityUtils] PROBLEMA: Modal foi removido pelo DOMPurify!');
+    }
+    if (hasForm && !hasFormAfter) {
+        console.error('[SecurityUtils] PROBLEMA: Forms foram removidos pelo DOMPurify!');
     }
 
     // Insere o HTML limpo no elemento.
     element.innerHTML = cleanHtml;
+    
+    console.log('[SecurityUtils] HTML inserido no DOM');
 }
 
 // Exporta as funções para uso global.
