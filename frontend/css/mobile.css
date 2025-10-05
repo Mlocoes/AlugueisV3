@@ -317,3 +317,24 @@ body.device-mobile .bottom-nav-items {
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
     z-index: 1050; /* Ensure it's above other content but below modals */
 }
+
+/* ==========================================================================
+   Alugueis Mobile Styles
+   ========================================================================== */
+
+/* Make the search filters sticky when scrolling */
+body.device-mobile .alugueis-container-mobile > .card:first-child {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background-color: #fff;
+}
+
+/* Reduce font size for Ano and Mês labels and selects */
+body.device-mobile .alugueis-container-mobile .form-label {
+    font-size: 0.875rem;
+}
+
+body.device-mobile .alugueis-container-mobile .form-select {
+    font-size: 0.875rem;
+}
