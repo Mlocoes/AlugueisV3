@@ -56,6 +56,42 @@ async def get_anos_disponiveis(
         print(f"Erro ao obter anos disponíveis: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Erro interno do servidor: {str(e)}")
 
+@router.get("/ultimo-periodo")
+async def get_ultimo_periodo(
+    db: Session = Depends(get_db),
+    current_user: Usuario = Depends(verify_token_flexible)
+):
+    """
+    Obtém o último ano e mês disponível nos dados
+    """
+    try:
+        # Obter o último ano e mês disponível
+        result = db.query(
+            AluguelSimples.ano,
+            AluguelSimples.mes
+        ).order_by(
+            AluguelSimples.ano.desc(),
+            AluguelSimples.mes.desc()
+        ).first()
+        
+        if result:
+            return {
+                "ano": result.ano,
+                "mes": result.mes
+            }
+        else:
+            # Se não houver dados, retornar ano/mês atual
+            from datetime import datetime
+            now = datetime.now()
+            return {
+                "ano": now.year,
+                "mes": now.month
+            }
+
+    except Exception as e:
+        print(f"Erro ao obter último período: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Erro interno do servidor: {str(e)}")
+
 @router.get("/resumen-mensual", response_model=List[ResumenMensualItem])
 async def get_resumen_mensual(
     mes: Optional[int] = None,

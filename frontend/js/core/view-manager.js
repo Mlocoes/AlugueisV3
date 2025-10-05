@@ -709,7 +709,7 @@ class ViewManager {
     getRelatoriosMobileTemplate() {
         return `
             <div class="relatorios-container-mobile">
-                <div class="card mb-3">
+                <div class="card mb-3 shadow-sm sticky-filters-card">
                     <div class="card-body">
                         <div class="row g-2">
                             <div class="col-12">
@@ -735,7 +735,7 @@ class ViewManager {
                         </div>
                     </div>
                 </div>
-                <div id="relatorios-list-mobile">
+                <div id="relatorios-list-mobile" class="px-3">
                     <!-- Mobile cards will be inserted here -->
                 </div>
             </div>

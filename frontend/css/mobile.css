@@ -433,3 +433,53 @@ body.device-mobile .alugueis-container-mobile .sticky-filters-card .card-body {
 body.device-mobile .alugueis-container-mobile #alugueis-list-mobile {
     padding-bottom: 2rem;
 }
+
+/* ==========================================================================
+   Relatorios Mobile Styles
+   ========================================================================== */
+
+/* Container needs to allow scrolling */
+body.device-mobile .relatorios-container-mobile {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    overflow: visible;
+}
+
+/* Make the search filters sticky when scrolling */
+body.device-mobile .relatorios-container-mobile .sticky-filters-card {
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    background-color: #fff;
+    margin: 0;
+    border-radius: 0;
+    border-left: none;
+    border-right: none;
+    border-top: none;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1) !important;
+}
+
+/* Reduce font size for Ano and Mês labels and selects */
+body.device-mobile .relatorios-container-mobile .form-label {
+    font-size: 0.875rem;
+    margin-bottom: 0.25rem;
+    font-weight: 500;
+}
+
+body.device-mobile .relatorios-container-mobile .form-select {
+    font-size: 0.875rem;
+}
+
+/* Ensure the card body has proper padding */
+body.device-mobile .relatorios-container-mobile .sticky-filters-card .card-body {
+    padding: 1rem;
+}
+
+/* List container with bottom padding */
+body.device-mobile .relatorios-container-mobile #relatorios-list-mobile {
+    flex: 1;
+    overflow-y: auto;
+    padding-bottom: 2rem;
+}
