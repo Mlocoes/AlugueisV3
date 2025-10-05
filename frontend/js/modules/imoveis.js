@@ -63,8 +63,12 @@ class ImoveisModule {
 
     bindPageEvents() {
         const btnNovo = document.getElementById('btn-novo-imovel');
+        console.log('[ImoveisModule] bindPageEvents - btnNovo encontrado:', !!btnNovo);
         if (btnNovo) {
-            btnNovo.addEventListener('click', () => this.showNewModal());
+            btnNovo.addEventListener('click', () => {
+                console.log('[ImoveisModule] Botão Novo Imóvel clicado');
+                this.showNewModal();
+            });
         }
 
         const formNovo = document.getElementById('form-novo-imovel');
@@ -261,10 +265,13 @@ class ImoveisModule {
     }
 
     showNewModal() {
+        console.log('[ImoveisModule] showNewModal chamado');
+        console.log('[ImoveisModule] modalManager existe:', !!this.modalManager);
         this.currentEditId = null;
         const form = document.getElementById('form-novo-imovel');
         if (form) form.reset();
         this.modalManager.setTitle('Novo Imóvel');
+        console.log('[ImoveisModule] Chamando modalManager.show()');
         this.modalManager.show();
     }
 

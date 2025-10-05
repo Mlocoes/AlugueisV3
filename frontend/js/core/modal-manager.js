@@ -55,6 +55,7 @@ class ModalManager {
     }
 
     setTitle(title) {
+        console.log('[ModalManager] setTitle chamado com:', title);
         // Lazy initialization: try to get title elements if not already available
         if (!this.modalCadastroTitleEl && this.modalCadastroId) {
             const modalCadastroEl = document.getElementById(this.modalCadastroId);
@@ -71,8 +72,12 @@ class ModalManager {
         
         if (this.modalCadastroTitleEl) {
             this.modalCadastroTitleEl.innerHTML = title;
+            console.log('[ModalManager] Título definido no modal de cadastro');
         } else if (this.modalEdicaoTitleEl) {
             this.modalEdicaoTitleEl.innerHTML = title;
+            console.log('[ModalManager] Título definido no modal de edição');
+        } else {
+            console.warn('[ModalManager] Nenhum elemento de título encontrado');
         }
     }
 
@@ -101,17 +106,29 @@ class ModalManager {
     }
 
     abrirModalCadastro() {
+        console.log('[ModalManager] abrirModalCadastro chamado');
+        console.log('[ModalManager] modalCadastro existe:', !!this.modalCadastro);
+        console.log('[ModalManager] modalCadastroId:', this.modalCadastroId);
+        
         // Lazy initialization: try to initialize the modal if it wasn't created in constructor
         if (!this.modalCadastro && this.modalCadastroId) {
+            console.log('[ModalManager] Tentando lazy initialization...');
             const modalCadastroEl = document.getElementById(this.modalCadastroId);
+            console.log('[ModalManager] Modal element encontrado:', !!modalCadastroEl);
             if (modalCadastroEl) {
                 this.modalCadastro = new bootstrap.Modal(modalCadastroEl);
                 this.modalCadastroTitleEl = modalCadastroEl.querySelector('.modal-title');
+                console.log('[ModalManager] Modal Bootstrap criado com sucesso');
+            } else {
+                console.error('[ModalManager] Modal element não encontrado no DOM!');
             }
         }
         
         if (this.modalCadastro) {
+            console.log('[ModalManager] Chamando show() no modal Bootstrap');
             this.modalCadastro.show();
+        } else {
+            console.error('[ModalManager] modalCadastro não existe, não pode mostrar o modal');
         }
     }
 
