@@ -31,6 +31,7 @@ class ExtrasManager {
         this.allProprietarios = [];
         this.initialized = false;
         this.pendingOperations = new Set();
+        this.isMobile = document.body.classList.contains('device-mobile');
         // Binding de métodos
         this.load = this.load.bind(this);
         this.loadExtras = this.loadExtras.bind(this);
@@ -187,6 +188,11 @@ class ExtrasManager {
      * Renderizar tabela de extras
      */
     renderExtrasTable(extras) {
+        if (this.isMobile) {
+            this.renderExtrasMobile(extras);
+            return;
+        }
+
         const tbody = document.getElementById('extras-table-body');
         if (!tbody) return;
 
@@ -243,6 +249,96 @@ class ExtrasManager {
                         <button class="btn btn-outline-danger delete-alias-btn ${disabledClass}" data-id="${extra.id}" ${disabledAttr} ${deleteTitleAttr}>
                             <i class="fas fa-trash"></i>
                         </button>
+                    </div>
+                </td>
+            `;
+            tbody.appendChild(row);
+        });
+
+        // Adicionar event listeners para botões de editar e excluir alias
+        this.setupAliasEventListeners();
+    }
+
+    /**
+     * Renderizar cards móveis para extras/alias
+     */
+    renderExtrasMobile(extras) {
+        const tbody = document.getElementById('extras-table-body');
+        if (!tbody) return;
+
+        // Limpar tbody completamente
+        while (tbody.firstChild) {
+            tbody.removeChild(tbody.firstChild);
+        }
+
+        if (!extras || extras.length === 0) {
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="3" class="text-center text-muted py-4">
+                        <i class="fas fa-inbox fa-2x mb-2"></i><br>
+                        Nenhum alias encontrado
+                    </td>
+                </tr>
+            `;
+            return;
+        }
+
+        const isAdmin = window.authService && window.authService.isAdmin();
+
+        extras.forEach((extra) => {
+            // Processar proprietários
+            let proprietariosText = 'Nenhum';
+            let proprietariosList = [];
+            if (extra.id_proprietarios) {
+                try {
+                    const proprietarioIds = JSON.parse(extra.id_proprietarios);
+                    proprietariosList = proprietarioIds.map(id => {
+                        const prop = this.allProprietarios.find(p => p.id === id);
+                        return prop ? prop.nome : `ID:${id}`;
+                    });
+                    proprietariosText = proprietariosList.length > 0 ? proprietariosList.join(', ') : 'Nenhum';
+                } catch (e) {
+                    proprietariosText = 'Erro no formato';
+                }
+            }
+
+            // Criar lista de proprietários como badges
+            const proprietariosBadges = proprietariosList.length > 0 
+                ? proprietariosList.map(nome => `<span class="badge bg-info text-dark me-1 mb-1">${nome}</span>`).join('')
+                : '<span class="text-muted">Nenhum proprietário</span>';
+
+            const row = document.createElement('tr');
+            row.style.display = 'block';
+            row.style.marginBottom = '1rem';
+            row.innerHTML = `
+                <td colspan="3" style="display: block; padding: 0;">
+                    <div class="card mobile-card shadow-sm">
+                        <div class="card-header bg-gradient-primary text-white d-flex justify-content-between align-items-center">
+                            <h6 class="mb-0"><i class="fas fa-tag me-2"></i>${extra.alias}</h6>
+                            <span class="badge bg-light text-primary">${proprietariosList.length} ${proprietariosList.length === 1 ? 'Proprietário' : 'Proprietários'}</span>
+                        </div>
+                        <div class="card-body">
+                            <div class="mb-2">
+                                <small class="text-muted d-block mb-1"><i class="fas fa-users me-1"></i>Proprietários:</small>
+                                <div class="proprietarios-badges">
+                                    ${proprietariosBadges}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-footer bg-light d-flex justify-content-end gap-2">
+                            <button class="btn btn-sm btn-primary edit-alias-btn ${!isAdmin ? 'disabled' : ''}" 
+                                    data-id="${extra.id}" 
+                                    ${!isAdmin ? 'disabled' : ''} 
+                                    title="${isAdmin ? 'Editar alias' : 'Apenas administradores podem editar'}">
+                                <i class="fas fa-edit"></i> Editar
+                            </button>
+                            <button class="btn btn-sm btn-danger delete-alias-btn ${!isAdmin ? 'disabled' : ''}" 
+                                    data-id="${extra.id}" 
+                                    ${!isAdmin ? 'disabled' : ''} 
+                                    title="${isAdmin ? 'Excluir alias' : 'Apenas administradores podem excluir'}">
+                                <i class="fas fa-trash"></i> Excluir
+                            </button>
+                        </div>
                     </div>
                 </td>
             `;
@@ -318,6 +414,11 @@ class ExtrasManager {
      * Renderizar tabela de transferências
      */
     renderTransferenciasTable(transferencias) {
+        if (this.isMobile) {
+            this.renderTransferenciasMobile(transferencias);
+            return;
+        }
+
         const tbody = document.getElementById('transferencias-table-body');
         if (!tbody) return;
 
@@ -367,6 +468,142 @@ class ExtrasManager {
                 </td>
             `;
             
+            tbody.appendChild(row);
+        });
+
+        // Adicionar event listeners para botões de editar e excluir transferências
+        this.setupTransferenciaEventListeners();
+    }
+
+    /**
+     * Renderizar cards móveis para transferências
+     */
+    renderTransferenciasMobile(transferencias) {
+        const tbody = document.getElementById('transferencias-table-body');
+        if (!tbody) return;
+
+        if (!transferencias || transferencias.length === 0) {
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="5" class="text-center text-muted py-4">
+                        <i class="fas fa-inbox fa-2x mb-2"></i><br>
+                        Nenhuma transferência encontrada
+                    </td>
+                </tr>
+            `;
+            return;
+        }
+
+        tbody.innerHTML = '';
+
+        const isAdmin = window.authService && window.authService.isAdmin();
+
+        transferencias.forEach((transferencia) => {
+            const dataCriacaoFormatada = transferencia.data_criacao ? 
+                new Date(transferencia.data_criacao).toLocaleDateString('pt-BR') : 'Não informada';
+            
+            const dataFimFormatada = transferencia.data_fim ? 
+                new Date(transferencia.data_fim).toLocaleDateString('pt-BR') : 'Sem data fim';
+            
+            // Calcular status baseado nas datas
+            let statusBadge = '';
+            let statusClass = '';
+            if (transferencia.data_fim) {
+                const dataFim = new Date(transferencia.data_fim);
+                const hoje = new Date();
+                if (dataFim < hoje) {
+                    statusBadge = '<span class="badge bg-secondary">Encerrada</span>';
+                    statusClass = 'border-secondary';
+                } else {
+                    statusBadge = '<span class="badge bg-success">Ativa</span>';
+                    statusClass = 'border-success';
+                }
+            } else {
+                statusBadge = '<span class="badge bg-primary">Ativa</span>';
+                statusClass = 'border-primary';
+            }
+
+            // Processar proprietários e valores
+            let proprietariosHtml = '';
+            if (transferencia.id_proprietarios) {
+                try {
+                    const proprietarios = JSON.parse(transferencia.id_proprietarios);
+                    proprietariosHtml = proprietarios.map(prop => {
+                        const proprietario = this.allProprietarios.find(p => p.id === prop.id);
+                        const nome = proprietario ? proprietario.nome : `ID:${prop.id}`;
+                        const valor = prop.valor ? parseFloat(prop.valor).toLocaleString('pt-BR', { minimumFractionDigits: 2 }) : '0,00';
+                        return `
+                            <li class="list-group-item d-flex justify-content-between align-items-center py-2">
+                                <span><i class="fas fa-user-circle me-1 text-primary"></i>${nome}</span>
+                                <span class="badge bg-success rounded-pill">R$ ${valor}</span>
+                            </li>
+                        `;
+                    }).join('');
+                } catch (e) {
+                    proprietariosHtml = '<li class="list-group-item text-muted">Erro ao carregar proprietários</li>';
+                }
+            } else {
+                proprietariosHtml = '<li class="list-group-item text-muted">Nenhum proprietário vinculado</li>';
+            }
+
+            const valorTotal = transferencia.valor_total ? 
+                parseFloat(transferencia.valor_total).toLocaleString('pt-BR', { minimumFractionDigits: 2 }) : '0,00';
+
+            const row = document.createElement('tr');
+            row.style.display = 'block';
+            row.style.marginBottom = '1rem';
+            row.innerHTML = `
+                <td colspan="5" style="display: block; padding: 0;">
+                    <div class="card mobile-card shadow-sm ${statusClass}">
+                        <div class="card-header bg-gradient-info text-white">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <h6 class="mb-1"><i class="fas fa-exchange-alt me-2"></i>${transferencia.nome_transferencia}</h6>
+                                    <small><i class="fas fa-tag me-1"></i>Alias: <strong>${transferencia.alias}</strong></small>
+                                </div>
+                                ${statusBadge}
+                            </div>
+                        </div>
+                        <div class="card-body p-0">
+                            <ul class="list-group list-group-flush">
+                                ${proprietariosHtml}
+                            </ul>
+                            <div class="p-3 bg-light border-top">
+                                <div class="row g-2">
+                                    <div class="col-6">
+                                        <small class="text-muted d-block"><i class="fas fa-calendar-plus me-1"></i>Data Criação</small>
+                                        <strong class="d-block">${dataCriacaoFormatada}</strong>
+                                    </div>
+                                    <div class="col-6">
+                                        <small class="text-muted d-block"><i class="fas fa-calendar-times me-1"></i>Data Fim</small>
+                                        <strong class="d-block">${dataFimFormatada}</strong>
+                                    </div>
+                                </div>
+                                <div class="mt-2 pt-2 border-top">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <span class="text-muted"><i class="fas fa-coins me-1"></i>Valor Total:</span>
+                                        <strong class="text-success fs-5">R$ ${valorTotal}</strong>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-footer bg-white d-flex justify-content-end gap-2">
+                            <button class="btn btn-sm btn-primary edit-transferencia-btn ${!isAdmin ? 'disabled' : ''}" 
+                                    data-id="${transferencia.id}" 
+                                    ${!isAdmin ? 'disabled' : ''} 
+                                    title="${isAdmin ? 'Editar transferência' : 'Apenas administradores podem editar'}">
+                                <i class="fas fa-edit"></i> Editar
+                            </button>
+                            <button class="btn btn-sm btn-danger delete-transferencia-btn ${!isAdmin ? 'disabled' : ''}" 
+                                    data-id="${transferencia.id}" 
+                                    ${!isAdmin ? 'disabled' : ''} 
+                                    title="${isAdmin ? 'Excluir transferência' : 'Apenas administradores podem excluir'}">
+                                <i class="fas fa-trash"></i> Excluir
+                            </button>
+                        </div>
+                    </div>
+                </td>
+            `;
             tbody.appendChild(row);
         });
 
