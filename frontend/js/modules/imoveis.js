@@ -31,7 +31,7 @@ class ImoveisModule {
                     : document.getElementById('imoveis-table-body');
                 
                 if (this.container) {
-                    this.modalManager = new ModalManager('novo-imovel-modal', 'edit-imovel-modal');
+                    this.modalManager = new ModalManager('novo-imovel-modal');
                     this.bindPageEvents();
                     this.bindContainerEvents();
                     this.loadImoveis();
@@ -40,7 +40,7 @@ class ImoveisModule {
             return;
         }
 
-        this.modalManager = new ModalManager('novo-imovel-modal', 'edit-imovel-modal');
+        this.modalManager = new ModalManager('novo-imovel-modal');
         this.bindPageEvents();
         this.bindContainerEvents();
         this.loadImoveis();
@@ -75,19 +75,11 @@ class ImoveisModule {
                 const data = Object.fromEntries(formData.entries());
                 // Converter checkbox alugado para booleano
                 data.alugado = formData.has('alugado');
-                this.handleCreate(data, formNovo);
-            });
-        }
-
-        const formEdit = document.getElementById('form-edit-imovel');
-        if (formEdit) {
-            formEdit.addEventListener('submit', (e) => {
-                e.preventDefault();
-                const formData = new FormData(formEdit);
-                const data = Object.fromEntries(formData.entries());
-                // Converter checkbox alugado para booleano
-                data.alugado = formData.has('alugado');
-                this.handleUpdate(data);
+                if (this.currentEditId) {
+                    this.handleUpdate(data);
+                } else {
+                    this.handleCreate(data, formNovo);
+                }
             });
         }
     }
@@ -272,7 +264,8 @@ class ImoveisModule {
         this.currentEditId = null;
         const form = document.getElementById('form-novo-imovel');
         if (form) form.reset();
-        this.modalManager.show('novo-imovel-modal');
+        this.modalManager.setTitle('Novo Imóvel');
+        this.modalManager.show();
     }
 
     async handleCreate(data, formElement) {
@@ -283,7 +276,7 @@ class ImoveisModule {
         );
         
         if (result) {
-            this.modalManager.hide('novo-imovel-modal');
+            this.modalManager.hide();
             formElement.reset();
             
             // Invalidar cache de imoveis para forzar refresh
@@ -304,9 +297,9 @@ class ImoveisModule {
         }
 
         this.currentEditId = id;
-        const form = document.getElementById('form-edit-imovel');
+        const form = document.getElementById('form-novo-imovel');
         if (!form) {
-            console.error('[ImoveisModule] Form form-edit-imovel not found!');
+            console.error('[ImoveisModule] Form form-novo-imovel not found!');
             return;
         }
 
@@ -325,7 +318,8 @@ class ImoveisModule {
             }
         });
 
-        this.modalManager.show('edit-imovel-modal');
+        this.modalManager.setTitle('Editar Imóvel');
+        this.modalManager.show();
     }
 
     async handleUpdate(data) {
@@ -338,7 +332,7 @@ class ImoveisModule {
         );
 
         if (result) {
-            this.modalManager.hide('edit-imovel-modal');
+            this.modalManager.hide();
             
             // Invalidar cache de imoveis para forzar refresh
             if (this.cacheService) {
