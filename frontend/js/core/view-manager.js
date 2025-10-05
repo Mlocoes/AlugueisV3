@@ -687,8 +687,8 @@ class ViewManager {
 
     getAlugueisMobileTemplate() {
         return `
-            <div class="alugueis-container-mobile p-3">
-                <div class="card mb-3 shadow-sm">
+            <div class="alugueis-container-mobile">
+                <div class="card mb-3 shadow-sm sticky-filters-card">
                     <div class="card-body">
                         <div class="row g-2">
                             <div class="col-12">
@@ -702,7 +702,7 @@ class ViewManager {
                         </div>
                     </div>
                 </div>
-                <div id="alugueis-list-mobile">
+                <div id="alugueis-list-mobile" class="px-3">
                     <!-- Mobile cards will be inserted here -->
                 </div>
             </div>
