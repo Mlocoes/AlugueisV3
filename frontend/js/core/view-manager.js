@@ -945,178 +945,92 @@ class ViewManager {
                 </div>
             </div>
 
-            <!-- Modal de Novo Imóvel -->
+            <!-- Modal Genérico para Imóvel -->
             <div class="modal fade" id="novo-imovel-modal" tabindex="-1" aria-labelledby="novoImovelModalLabel">
-                <div class="modal-dialog">
+                <div class="modal-dialog modal-lg">
                     <div class="modal-content">
-                        <div class="modal-header bg-success text-white">
-                            <h5 class="modal-title" id="novoImovelModalLabel"><i class="fas fa-plus me-2"></i>Novo Imóvel</h5>
-                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-                        </div>
-                        <form id="form-novo-imovel">
-                            <div class="modal-body">
-                                <div class="mb-3">
-                                    <label class="form-label">Nome do Imóvel *</label>
-                                    <input type="text" class="form-control" name="nome" required>
-                                </div>
-                                <div class="mb-3">
-                                    <label class="form-label">Endereço</label>
-                                    <input type="text" class="form-control" name="endereco" required>
-                                </div>
-                                <div class="mb-3">
-                                    <label class="form-label">Tipo</label>
-                                    <input type="text" class="form-control" name="tipo_imovel">
-                                </div>
-                                <div class="row">
-                                    <div class="col-md-6 mb-3">
-                                        <label class="form-label">Área Total (m²)</label>
-                                        <input type="number" step="0.01" class="form-control" name="area_total">
-                                    </div>
-                                    <div class="col-md-6 mb-3">
-                                        <label class="form-label">Área Construída (m²)</label>
-                                        <input type="number" step="0.01" class="form-control" name="area_construida">
-                                    </div>
-                                </div>
-                                <div class="row">
-                                    <div class="col-md-6 mb-3">
-                                        <label class="form-label">Valor Cadastral</label>
-                                        <input type="number" step="0.01" class="form-control" name="valor_cadastral">
-                                    </div>
-                                    <div class="col-md-6 mb-3">
-                                        <label class="form-label">Valor Mercado</label>
-                                        <input type="number" step="0.01" class="form-control" name="valor_mercado">
-                                    </div>
-                                </div>
-                                <div class="row">
-                                    <div class="col-md-6 mb-3">
-                                        <label class="form-label">IPTU Mensal</label>
-                                        <input type="number" step="0.01" class="form-control" name="iptu_mensal">
-                                    </div>
-                                    <div class="col-md-6 mb-3">
-                                        <label class="form-label">Condomínio Mensal</label>
-                                        <input type="number" step="0.01" class="form-control" name="condominio_mensal">
-                                    </div>
-                                </div>
-                                <div class="row">
-                                    <div class="col-md-4 mb-3">
-                                        <label class="form-label">Quartos</label>
-                                        <input type="number" class="form-control" name="numero_quartos">
-                                    </div>
-                                    <div class="col-md-4 mb-3">
-                                        <label class="form-label">Banheiros</label>
-                                        <input type="number" class="form-control" name="numero_banheiros">
-                                    </div>
-                                    <div class="col-md-4 mb-3">
-                                        <label class="form-label">Vagas Garagem</label>
-                                        <input type="number" class="form-control" name="numero_vagas_garagem">
-                                    </div>
-                                </div>
-                                <div class="mb-3">
-                                    <div class="form-check">
-                                        <input class="form-check-input" type="checkbox" name="alugado" id="alugado-novo">
-                                        <label class="form-check-label" for="alugado-novo">
-                                            Alugado
-                                        </label>
-                                    </div>
-                                </div>
-                                <div class="mb-3">
-                                    <label class="form-label">Data Cadastro</label>
-                                    <input type="date" class="form-control" name="data_cadastro">
-                                </div>
-                            </div>
-                            <div class="modal-footer">
-                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                                <button type="submit" class="btn btn-success">Salvar</button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Modal de Edición de Imóvel -->
-            <div class="modal fade" id="edit-imovel-modal" tabindex="-1" aria-labelledby="editImovelModalLabel">
-                <div class="modal-dialog">
-                    <div class="modal-content">
-                        <div class="modal-header bg-warning text-dark">
-                            <h5 class="modal-title" id="editImovelModalLabel"><i class="fas fa-edit me-2"></i>Editar Imóvel</h5>
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="novo-imovel-modal-title">Novo Imóvel</h5>
                             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                         </div>
-                        <form id="form-edit-imovel">
-                            <div class="modal-body">
-                                <div class="mb-3">
-                                    <label class="form-label">Nome do Imóvel *</label>
-                                    <input type="text" class="form-control" name="nome" required>
-                                </div>
-                                <div class="mb-3">
-                                    <label class="form-label">Endereço</label>
-                                    <input type="text" class="form-control" name="endereco" required>
-                                </div>
-                                <div class="mb-3">
-                                    <label class="form-label">Tipo</label>
-                                    <input type="text" class="form-control" name="tipo_imovel">
-                                </div>
-                                <div class="row">
-                                    <div class="col-md-6 mb-3">
-                                        <label class="form-label">Área Total (m²)</label>
-                                        <input type="number" step="0.01" class="form-control" name="area_total">
-                                    </div>
-                                    <div class="col-md-6 mb-3">
-                                        <label class="form-label">Área Construída (m²)</label>
-                                        <input type="number" step="0.01" class="form-control" name="area_construida">
+                        <div class="modal-body" style="font-size: 0.8rem; padding: 1rem;">
+                            <form id="form-novo-imovel">
+                                <div class="row" style="margin-bottom: 0.25rem;">
+                                    <div class="col-md-12 mb-1">
+                                        <label for="imovel-nome" class="form-label" style="font-size: 0.85rem; margin-bottom: 0.1rem;">Nome do Imóvel *</label>
+                                        <input type="text" class="form-control form-control-sm" id="imovel-nome" name="nome" required style="font-size: 0.8rem; padding: 0.25rem 0.5rem;">
                                     </div>
                                 </div>
-                                <div class="row">
-                                    <div class="col-md-6 mb-3">
-                                        <label class="form-label">Valor Cadastral</label>
-                                        <input type="number" step="0.01" class="form-control" name="valor_cadastral">
+                                <div class="mb-1">
+                                    <label for="imovel-endereco" class="form-label" style="font-size: 0.85rem; margin-bottom: 0.1rem;">Endereço *</label>
+                                    <input type="text" class="form-control form-control-sm" id="imovel-endereco" name="endereco" required style="font-size: 0.8rem; padding: 0.25rem 0.5rem;">
+                                </div>
+                                <div class="mb-1">
+                                    <label for="imovel-tipo" class="form-label" style="font-size: 0.85rem; margin-bottom: 0.1rem;">Tipo</label>
+                                    <input type="text" class="form-control form-control-sm" id="imovel-tipo" name="tipo_imovel" style="font-size: 0.8rem; padding: 0.25rem 0.5rem;">
+                                </div>
+                                <div class="row" style="margin-bottom: 0.25rem;">
+                                    <div class="col-md-6 mb-1">
+                                        <label for="imovel-area-total" class="form-label" style="font-size: 0.85rem; margin-bottom: 0.1rem;">Área Total (m²)</label>
+                                        <input type="number" step="0.01" class="form-control form-control-sm" id="imovel-area-total" name="area_total" style="font-size: 0.8rem; padding: 0.25rem 0.5rem;">
                                     </div>
-                                    <div class="col-md-6 mb-3">
-                                        <label class="form-label">Valor Mercado</label>
-                                        <input type="number" step="0.01" class="form-control" name="valor_mercado">
+                                    <div class="col-md-6 mb-1">
+                                        <label for="imovel-area-construida" class="form-label" style="font-size: 0.85rem; margin-bottom: 0.1rem;">Área Construída (m²)</label>
+                                        <input type="number" step="0.01" class="form-control form-control-sm" id="imovel-area-construida" name="area_construida" style="font-size: 0.8rem; padding: 0.25rem 0.5rem;">
                                     </div>
                                 </div>
-                                <div class="row">
-                                    <div class="col-md-6 mb-3">
-                                        <label class="form-label">IPTU Mensal</label>
-                                        <input type="number" step="0.01" class="form-control" name="iptu_mensal">
+                                <div class="row" style="margin-bottom: 0.25rem;">
+                                    <div class="col-md-6 mb-1">
+                                        <label for="imovel-valor-cadastral" class="form-label" style="font-size: 0.85rem; margin-bottom: 0.1rem;">Valor Cadastral</label>
+                                        <input type="number" step="0.01" class="form-control form-control-sm" id="imovel-valor-cadastral" name="valor_cadastral" style="font-size: 0.8rem; padding: 0.25rem 0.5rem;">
                                     </div>
-                                    <div class="col-md-6 mb-3">
-                                        <label class="form-label">Condomínio Mensal</label>
-                                        <input type="number" step="0.01" class="form-control" name="condominio_mensal">
-                                    </div>
-                                </div>
-                                <div class="row">
-                                    <div class="col-md-4 mb-3">
-                                        <label class="form-label">Quartos</label>
-                                        <input type="number" class="form-control" name="numero_quartos">
-                                    </div>
-                                    <div class="col-md-4 mb-3">
-                                        <label class="form-label">Banheiros</label>
-                                        <input type="number" class="form-control" name="numero_banheiros">
-                                    </div>
-                                    <div class="col-md-4 mb-3">
-                                        <label class="form-label">Vagas Garagem</label>
-                                        <input type="number" class="form-control" name="numero_vagas_garagem">
+                                    <div class="col-md-6 mb-1">
+                                        <label for="imovel-valor-mercado" class="form-label" style="font-size: 0.85rem; margin-bottom: 0.1rem;">Valor Mercado</label>
+                                        <input type="number" step="0.01" class="form-control form-control-sm" id="imovel-valor-mercado" name="valor_mercado" style="font-size: 0.8rem; padding: 0.25rem 0.5rem;">
                                     </div>
                                 </div>
-                                <div class="mb-3">
+                                <div class="row" style="margin-bottom: 0.25rem;">
+                                    <div class="col-md-6 mb-1">
+                                        <label for="imovel-iptu" class="form-label" style="font-size: 0.85rem; margin-bottom: 0.1rem;">IPTU Mensal</label>
+                                        <input type="number" step="0.01" class="form-control form-control-sm" id="imovel-iptu" name="iptu_mensal" style="font-size: 0.8rem; padding: 0.25rem 0.5rem;">
+                                    </div>
+                                    <div class="col-md-6 mb-1">
+                                        <label for="imovel-condominio" class="form-label" style="font-size: 0.85rem; margin-bottom: 0.1rem;">Condomínio Mensal</label>
+                                        <input type="number" step="0.01" class="form-control form-control-sm" id="imovel-condominio" name="condominio_mensal" style="font-size: 0.8rem; padding: 0.25rem 0.5rem;">
+                                    </div>
+                                </div>
+                                <div class="row" style="margin-bottom: 0.25rem;">
+                                    <div class="col-md-4 mb-1">
+                                        <label for="imovel-quartos" class="form-label" style="font-size: 0.85rem; margin-bottom: 0.1rem;">Quartos</label>
+                                        <input type="number" class="form-control form-control-sm" id="imovel-quartos" name="numero_quartos" style="font-size: 0.8rem; padding: 0.25rem 0.5rem;">
+                                    </div>
+                                    <div class="col-md-4 mb-1">
+                                        <label for="imovel-banheiros" class="form-label" style="font-size: 0.85rem; margin-bottom: 0.1rem;">Banheiros</label>
+                                        <input type="number" class="form-control form-control-sm" id="imovel-banheiros" name="numero_banheiros" style="font-size: 0.8rem; padding: 0.25rem 0.5rem;">
+                                    </div>
+                                    <div class="col-md-4 mb-1">
+                                        <label for="imovel-vagas" class="form-label" style="font-size: 0.85rem; margin-bottom: 0.1rem;">Vagas Garagem</label>
+                                        <input type="number" class="form-control form-control-sm" id="imovel-vagas" name="numero_vagas_garagem" style="font-size: 0.8rem; padding: 0.25rem 0.5rem;">
+                                    </div>
+                                </div>
+                                <div class="mb-1">
                                     <div class="form-check">
-                                        <input class="form-check-input" type="checkbox" name="alugado" id="alugado-edit">
-                                        <label class="form-check-label" for="alugado-edit">
+                                        <input class="form-check-input" type="checkbox" name="alugado" id="imovel-alugado">
+                                        <label class="form-check-label" for="imovel-alugado" style="font-size: 0.85rem;">
                                             Alugado
                                         </label>
                                     </div>
                                 </div>
-                                <div class="mb-3">
-                                    <label class="form-label">Data Cadastro</label>
-                                    <input type="date" class="form-control" name="data_cadastro">
+                                <div class="mb-1">
+                                    <label for="imovel-data-cadastro" class="form-label" style="font-size: 0.85rem; margin-bottom: 0.1rem;">Data Cadastro</label>
+                                    <input type="date" class="form-control form-control-sm" id="imovel-data-cadastro" name="data_cadastro" style="font-size: 0.8rem; padding: 0.25rem 0.5rem;">
                                 </div>
-                            </div>
-                            <div class="modal-footer">
-                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                                <button type="submit" class="btn btn-warning">Salvar Alterações</button>
-                            </div>
-                        </form>
+                                <div class="modal-footer" style="padding: 0.25rem;">
+                                    <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancelar</button>
+                                    <button type="submit" class="btn btn-primary btn-sm" id="btn-salvar-imovel">Salvar</button>
+                                </div>
+                            </form>
+                        </div>
                     </div>
                 </div>
             </div>

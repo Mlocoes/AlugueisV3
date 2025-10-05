@@ -31,7 +31,7 @@ class ImoveisModule {
                     : document.getElementById('imoveis-table-body');
                 
                 if (this.container) {
-                    this.modalManager = new ModalManager('novo-imovel-modal', 'edit-imovel-modal');
+                    this.modalManager = new ModalManager('novo-imovel-modal');
                     this.bindPageEvents();
                     this.bindContainerEvents();
                     this.loadImoveis();
@@ -40,7 +40,7 @@ class ImoveisModule {
             return;
         }
 
-        this.modalManager = new ModalManager('novo-imovel-modal', 'edit-imovel-modal');
+        this.modalManager = new ModalManager('novo-imovel-modal');
         this.bindPageEvents();
         this.bindContainerEvents();
         this.loadImoveis();
@@ -72,16 +72,11 @@ class ImoveisModule {
             formNovo.addEventListener('submit', (e) => {
                 e.preventDefault();
                 const data = Object.fromEntries(new FormData(formNovo).entries());
-                this.handleCreate(data, formNovo);
-            });
-        }
-
-        const formEdit = document.getElementById('form-edit-imovel');
-        if (formEdit) {
-            formEdit.addEventListener('submit', (e) => {
-                e.preventDefault();
-                const data = Object.fromEntries(new FormData(formEdit).entries());
-                this.handleUpdate(data);
+                if (this.currentEditId) {
+                    this.handleUpdate(data);
+                } else {
+                    this.handleCreate(data, formNovo);
+                }
             });
         }
     }
@@ -339,7 +334,8 @@ class ImoveisModule {
         this.currentEditId = null;
         const form = document.getElementById('form-novo-imovel');
         if (form) form.reset();
-        this.modalManager.show('novo-imovel-modal');
+        this.modalManager.setTitle('Novo Imóvel');
+        this.modalManager.show();
     }
 
     async handleCreate(data, formElement) {
@@ -350,7 +346,7 @@ class ImoveisModule {
         );
         
         if (result) {
-            this.modalManager.hide('novo-imovel-modal');
+            this.modalManager.hide();
             formElement.reset();
             
             // Invalidar cache de imoveis para forzar refresh
@@ -371,17 +367,26 @@ class ImoveisModule {
         }
 
         this.currentEditId = id;
-        const form = document.getElementById('form-edit-imovel');
+        const form = document.getElementById('form-novo-imovel');
         if (!form) return;
 
         Object.keys(imovel).forEach(key => {
             const input = form.querySelector(`[name="${key}"]`);
             if (input) {
-                input.value = imovel[key] || '';
+                if (input.type === 'checkbox') {
+                    input.checked = imovel[key] === true || imovel[key] === 'true';
+                } else if (input.type === 'date' && imovel[key]) {
+                    // Converter data para formato YYYY-MM-DD
+                    const date = new Date(imovel[key]);
+                    input.value = date.toISOString().split('T')[0];
+                } else {
+                    input.value = imovel[key] || '';
+                }
             }
         });
 
-        this.modalManager.show('edit-imovel-modal');
+        this.modalManager.setTitle('Editar Imóvel');
+        this.modalManager.show();
     }
 
     async handleUpdate(data) {
@@ -394,7 +399,7 @@ class ImoveisModule {
         );
 
         if (result) {
-            this.modalManager.hide('edit-imovel-modal');
+            this.modalManager.hide();
             
             // Invalidar cache de imoveis para forzar refresh
             if (this.cacheService) {
