@@ -210,20 +210,8 @@ class ViewManager {
         // Obtener template responsivo
         const template = this.getResponsiveTemplate(view);
         
-        console.log('[ViewManager] updateContent para view:', view.id);
-        
         // Actualizar contenido de forma segura
         window.SecurityUtils.setSafeHTML(this.contentContainer, template);
-        
-        // Debug: verificar se modals de imóveis foram injetados
-        if (view.id === 'imoveis') {
-            setTimeout(() => {
-                console.log('[ViewManager] Verificando modals de imóveis no DOM:');
-                console.log('[ViewManager] novo-imovel-modal:', !!document.getElementById('novo-imovel-modal'));
-                console.log('[ViewManager] edit-imovel-modal:', !!document.getElementById('edit-imovel-modal'));
-                console.log('[ViewManager] form-novo-imovel:', !!document.getElementById('form-novo-imovel'));
-            }, 100);
-        }
         
         // Aplicar configuraciones específicas del dispositivo
         this.applyDeviceSpecificConfig(view);
@@ -1040,6 +1028,100 @@ class ViewManager {
                                 <div class="modal-footer" style="padding: 0.25rem;">
                                     <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancelar</button>
                                     <button type="submit" class="btn btn-primary btn-sm" id="btn-salvar-imovel">Salvar</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modal de Edição de Imóvel -->
+            <div class="modal fade" id="edit-imovel-modal" tabindex="-1" aria-labelledby="editImovelModalLabel">
+                <div class="modal-dialog modal-lg">
+                    <div class="modal-content">
+                        <div class="modal-header" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+                            <h5 class="modal-title" id="edit-imovel-modal-title">Editar Imóvel</h5>
+                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body" style="font-size: 0.8rem; padding: 1rem;">
+                            <form id="form-edit-imovel">
+                                <div class="row" style="margin-bottom: 0.25rem;">
+                                    <div class="col-md-12 mb-1">
+                                        <label for="edit-imovel-nome" class="form-label" style="font-size: 0.85rem; margin-bottom: 0.1rem;">Nome do Imóvel *</label>
+                                        <input type="text" class="form-control form-control-sm" id="edit-imovel-nome" name="nome" required style="font-size: 0.8rem; padding: 0.25rem 0.5rem;">
+                                    </div>
+                                </div>
+                                <div class="mb-1">
+                                    <label for="edit-imovel-endereco" class="form-label" style="font-size: 0.85rem; margin-bottom: 0.1rem;">Endereço *</label>
+                                    <input type="text" class="form-control form-control-sm" id="edit-imovel-endereco" name="endereco" required style="font-size: 0.8rem; padding: 0.25rem 0.5rem;">
+                                </div>
+                                <div class="mb-1">
+                                    <label for="edit-imovel-tipo" class="form-label" style="font-size: 0.85rem; margin-bottom: 0.1rem;">Tipo</label>
+                                    <input type="text" class="form-control form-control-sm" id="edit-imovel-tipo" name="tipo_imovel" style="font-size: 0.8rem; padding: 0.25rem 0.5rem;">
+                                </div>
+                                <div class="row" style="margin-bottom: 0.25rem;">
+                                    <div class="col-md-6 mb-1">
+                                        <label for="edit-imovel-area-total" class="form-label" style="font-size: 0.85rem; margin-bottom: 0.1rem;">Área Total (m²)</label>
+                                        <input type="number" step="0.01" class="form-control form-control-sm" id="edit-imovel-area-total" name="area_total" style="font-size: 0.8rem; padding: 0.25rem 0.5rem;">
+                                    </div>
+                                    <div class="col-md-6 mb-1">
+                                        <label for="edit-imovel-area-construida" class="form-label" style="font-size: 0.85rem; margin-bottom: 0.1rem;">Área Construída (m²)</label>
+                                        <input type="number" step="0.01" class="form-control form-control-sm" id="edit-imovel-area-construida" name="area_construida" style="font-size: 0.8rem; padding: 0.25rem 0.5rem;">
+                                    </div>
+                                </div>
+                                <div class="row" style="margin-bottom: 0.25rem;">
+                                    <div class="col-md-6 mb-1">
+                                        <label for="edit-imovel-valor-cadastral" class="form-label" style="font-size: 0.85rem; margin-bottom: 0.1rem;">Valor Cadastral</label>
+                                        <input type="number" step="0.01" class="form-control form-control-sm" id="edit-imovel-valor-cadastral" name="valor_cadastral" style="font-size: 0.8rem; padding: 0.25rem 0.5rem;">
+                                    </div>
+                                    <div class="col-md-6 mb-1">
+                                        <label for="edit-imovel-valor-mercado" class="form-label" style="font-size: 0.85rem; margin-bottom: 0.1rem;">Valor Mercado</label>
+                                        <input type="number" step="0.01" class="form-control form-control-sm" id="edit-imovel-valor-mercado" name="valor_mercado" style="font-size: 0.8rem; padding: 0.25rem 0.5rem;">
+                                    </div>
+                                </div>
+                                <div class="row" style="margin-bottom: 0.25rem;">
+                                    <div class="col-md-6 mb-1">
+                                        <label for="edit-imovel-iptu" class="form-label" style="font-size: 0.85rem; margin-bottom: 0.1rem;">IPTU Mensal</label>
+                                        <input type="number" step="0.01" class="form-control form-control-sm" id="edit-imovel-iptu" name="iptu_mensal" style="font-size: 0.8rem; padding: 0.25rem 0.5rem;">
+                                    </div>
+                                    <div class="col-md-6 mb-1">
+                                        <label for="edit-imovel-condominio" class="form-label" style="font-size: 0.85rem; margin-bottom: 0.1rem;">Condomínio Mensal</label>
+                                        <input type="number" step="0.01" class="form-control form-control-sm" id="edit-imovel-condominio" name="condominio_mensal" style="font-size: 0.8rem; padding: 0.25rem 0.5rem;">
+                                    </div>
+                                </div>
+                                <div class="row" style="margin-bottom: 0.25rem;">
+                                    <div class="col-md-4 mb-1">
+                                        <label for="edit-imovel-quartos" class="form-label" style="font-size: 0.85rem; margin-bottom: 0.1rem;">Quartos</label>
+                                        <input type="number" class="form-control form-control-sm" id="edit-imovel-quartos" name="numero_quartos" style="font-size: 0.8rem; padding: 0.25rem 0.5rem;">
+                                    </div>
+                                    <div class="col-md-4 mb-1">
+                                        <label for="edit-imovel-banheiros" class="form-label" style="font-size: 0.85rem; margin-bottom: 0.1rem;">Banheiros</label>
+                                        <input type="number" class="form-control form-control-sm" id="edit-imovel-banheiros" name="numero_banheiros" style="font-size: 0.8rem; padding: 0.25rem 0.5rem;">
+                                    </div>
+                                    <div class="col-md-4 mb-1">
+                                        <label for="edit-imovel-vagas" class="form-label" style="font-size: 0.85rem; margin-bottom: 0.1rem;">Vagas Garagem</label>
+                                        <input type="number" class="form-control form-control-sm" id="edit-imovel-vagas" name="numero_vagas_garagem" style="font-size: 0.8rem; padding: 0.25rem 0.5rem;">
+                                    </div>
+                                </div>
+                                <div class="mb-1">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" name="alugado" id="edit-imovel-alugado">
+                                        <label class="form-check-label" for="edit-imovel-alugado" style="font-size: 0.85rem;">
+                                            Alugado
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="mb-1">
+                                    <label for="edit-imovel-data-cadastro" class="form-label" style="font-size: 0.85rem; margin-bottom: 0.1rem;">Data Cadastro</label>
+                                    <input type="date" class="form-control form-control-sm" id="edit-imovel-data-cadastro" name="data_cadastro" style="font-size: 0.8rem; padding: 0.25rem 0.5rem;">
+                                </div>
+                                <div class="mb-1">
+                                    <label for="edit-imovel-observacoes" class="form-label" style="font-size: 0.85rem; margin-bottom: 0.1rem;">Observações</label>
+                                    <textarea class="form-control form-control-sm" id="edit-imovel-observacoes" name="observacoes" rows="2" style="font-size: 0.8rem; padding: 0.25rem 0.5rem;"></textarea>
+                                </div>
+                                <div class="modal-footer" style="padding: 0.25rem;">
+                                    <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancelar</button>
+                                    <button type="submit" class="btn btn-primary btn-sm" id="btn-salvar-edit-imovel">Salvar</button>
                                 </div>
                             </form>
                         </div>

@@ -42,11 +42,6 @@ class ImoveisModule {
 
         this.modalManager = new ModalManager('novo-imovel-modal');
         
-        // Debug: verificar se o modal existe no DOM após inicialização
-        console.log('[ImoveisModule] Após criar ModalManager:');
-        console.log('[ImoveisModule] Modal no DOM:', !!document.getElementById('novo-imovel-modal'));
-        console.log('[ImoveisModule] Form no DOM:', !!document.getElementById('form-novo-imovel'));
-        
         this.bindPageEvents();
         this.bindContainerEvents();
         this.loadImoveis();
@@ -69,10 +64,8 @@ class ImoveisModule {
 
     bindPageEvents() {
         const btnNovo = document.getElementById('btn-novo-imovel');
-        console.log('[ImoveisModule] bindPageEvents - btnNovo encontrado:', !!btnNovo);
         if (btnNovo) {
             btnNovo.addEventListener('click', () => {
-                console.log('[ImoveisModule] Botão Novo Imóvel clicado');
                 this.showNewModal();
             });
         }
@@ -271,13 +264,9 @@ class ImoveisModule {
     }
 
     showNewModal() {
-        console.log('[ImoveisModule] showNewModal chamado');
-        console.log('[ImoveisModule] modalManager existe:', !!this.modalManager);
-        this.currentEditId = null;
         const form = document.getElementById('form-novo-imovel');
         if (form) form.reset();
         this.modalManager.setTitle('Novo Imóvel');
-        console.log('[ImoveisModule] Chamando modalManager.show()');
         this.modalManager.show();
     }
 
