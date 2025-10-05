@@ -328,6 +328,9 @@ body.device-mobile .alugueis-container-mobile > .card:first-child {
     top: 0;
     z-index: 100;
     background-color: #fff;
+    margin-left: -1rem;
+    margin-right: -1rem;
+    margin-top: -1rem;
 }
 
 /* Reduce font size for Ano and Mês labels and selects */
