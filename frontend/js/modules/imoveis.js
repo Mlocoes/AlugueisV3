@@ -41,6 +41,12 @@ class ImoveisModule {
         }
 
         this.modalManager = new ModalManager('novo-imovel-modal');
+        
+        // Debug: verificar se o modal existe no DOM após inicialização
+        console.log('[ImoveisModule] Após criar ModalManager:');
+        console.log('[ImoveisModule] Modal no DOM:', !!document.getElementById('novo-imovel-modal'));
+        console.log('[ImoveisModule] Form no DOM:', !!document.getElementById('form-novo-imovel'));
+        
         this.bindPageEvents();
         this.bindContainerEvents();
         this.loadImoveis();

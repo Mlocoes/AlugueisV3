@@ -210,8 +210,20 @@ class ViewManager {
         // Obtener template responsivo
         const template = this.getResponsiveTemplate(view);
         
+        console.log('[ViewManager] updateContent para view:', view.id);
+        
         // Actualizar contenido de forma segura
         window.SecurityUtils.setSafeHTML(this.contentContainer, template);
+        
+        // Debug: verificar se modals de imóveis foram injetados
+        if (view.id === 'imoveis') {
+            setTimeout(() => {
+                console.log('[ViewManager] Verificando modals de imóveis no DOM:');
+                console.log('[ViewManager] novo-imovel-modal:', !!document.getElementById('novo-imovel-modal'));
+                console.log('[ViewManager] edit-imovel-modal:', !!document.getElementById('edit-imovel-modal'));
+                console.log('[ViewManager] form-novo-imovel:', !!document.getElementById('form-novo-imovel'));
+            }, 100);
+        }
         
         // Aplicar configuraciones específicas del dispositivo
         this.applyDeviceSpecificConfig(view);
