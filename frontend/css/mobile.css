@@ -391,19 +391,18 @@ body.device-mobile .bottom-nav-items {
    Alugueis Mobile Styles
    ========================================================================== */
 
-/* Container needs to allow scrolling */
+/* Container with padding top to accommodate fixed filters */
 body.device-mobile .alugueis-container-mobile {
     position: relative;
-    display: flex;
-    flex-direction: column;
-    height: 100%;
-    overflow: visible;
+    padding-top: 140px; /* Space for the fixed filters card */
 }
 
-/* Make the search filters sticky when scrolling */
+/* Make the search filters fixed at the top */
 body.device-mobile .alugueis-container-mobile .sticky-filters-card {
-    position: sticky;
+    position: fixed;
     top: 0;
+    left: 0;
+    right: 0;
     z-index: 1000;
     background-color: #fff;
     margin: 0;
@@ -411,7 +410,7 @@ body.device-mobile .alugueis-container-mobile .sticky-filters-card {
     border-left: none;
     border-right: none;
     border-top: none;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.1) !important;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15) !important;
 }
 
 /* Reduce font size for Ano and Mês labels and selects */
@@ -432,7 +431,5 @@ body.device-mobile .alugueis-container-mobile .sticky-filters-card .card-body {
 
 /* List container with bottom padding */
 body.device-mobile .alugueis-container-mobile #alugueis-list-mobile {
-    flex: 1;
-    overflow-y: auto;
     padding-bottom: 2rem;
 }
