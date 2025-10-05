@@ -284,69 +284,90 @@ body.device-mobile #edit-imovel-modal .row > [class*="col-"] {
 body.device-mobile #edit-participacao-modal .modal-dialog,
 body.device-mobile #nova-versao-modal .modal-dialog {
     max-width: 100%;
-    margin: 0.5rem;
+    margin: 0.25rem;
 }
 
 body.device-mobile #edit-participacao-modal .modal-content,
 body.device-mobile #nova-versao-modal .modal-content {
-    max-height: 95vh;
+    max-height: 98vh;
     overflow-y: auto;
 }
 
 body.device-mobile #edit-participacao-modal .modal-body,
 body.device-mobile #nova-versao-modal .modal-body {
-    padding: 0.75rem;
-    max-height: calc(95vh - 120px);
+    padding: 0.5rem;
+    max-height: calc(98vh - 100px);
     overflow-y: auto;
 }
 
 body.device-mobile #edit-participacao-modal .mb-2,
 body.device-mobile #nova-versao-modal .mb-2 {
-    margin-bottom: 0.5rem !important;
+    margin-bottom: 0.35rem !important;
 }
 
 body.device-mobile #edit-participacao-modal .mb-3,
 body.device-mobile #nova-versao-modal .mb-3 {
-    margin-bottom: 0.75rem !important;
+    margin-bottom: 0.5rem !important;
+}
+
+body.device-mobile #edit-participacao-modal .mt-3,
+body.device-mobile #nova-versao-modal .mt-3 {
+    margin-top: 0.5rem !important;
 }
 
 body.device-mobile #edit-participacao-modal .form-label,
 body.device-mobile #nova-versao-modal .form-label {
-    margin-bottom: 0.25rem;
-    font-size: 0.9rem;
+    margin-bottom: 0.15rem;
+    font-size: 0.8rem;
 }
 
 body.device-mobile #edit-participacao-modal .form-control,
 body.device-mobile #nova-versao-modal .form-control {
-    padding: 0.5rem;
-    font-size: 0.95rem;
+    padding: 0.35rem 0.5rem;
+    font-size: 0.85rem;
+    height: auto;
 }
 
 body.device-mobile #edit-participacao-modal h5,
 body.device-mobile #nova-versao-modal h5 {
-    font-size: 1rem;
-    margin-bottom: 0.5rem;
+    font-size: 0.9rem;
+    margin-bottom: 0.25rem;
 }
 
 body.device-mobile #edit-participacao-modal .modal-header,
 body.device-mobile #nova-versao-modal .modal-header {
-    padding: 0.75rem;
+    padding: 0.5rem;
 }
 
 body.device-mobile #edit-participacao-modal .modal-footer,
 body.device-mobile #nova-versao-modal .modal-footer {
-    padding: 0.5rem 0.75rem;
+    padding: 0.4rem 0.5rem;
 }
 
 body.device-mobile #edit-participacao-modal .fw-bold,
 body.device-mobile #nova-versao-modal .fw-bold {
-    font-size: 0.95rem;
+    font-size: 0.85rem;
 }
 
 body.device-mobile #edit-participacao-modal .modal-title,
 body.device-mobile #nova-versao-modal .modal-title {
-    font-size: 1rem;
-    line-height: 1.3;
+    font-size: 0.9rem;
+    line-height: 1.2;
+}
+
+/* Botões específicos dos modais de participação - mais compactos */
+body.device-mobile #edit-participacao-modal .btn,
+body.device-mobile #nova-versao-modal .btn {
+    padding: 0.5rem 0.75rem;
+    font-size: 0.85rem;
+}
+
+body.device-mobile #edit-participacao-modal .btn-close,
+body.device-mobile #nova-versao-modal .btn-close {
+    width: 0.8rem;
+    height: 0.8rem;
+    padding: 0.25rem;
+    font-size: 0.7rem;
 }
 
 /* Estilos para botões para serem mais fáceis de tocar */
