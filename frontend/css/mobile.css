@@ -280,6 +280,75 @@ body.device-mobile #edit-imovel-modal .row > [class*="col-"] {
     padding-right: 0;
 }
 
+/* Ajustar modais de participação para mobile */
+body.device-mobile #edit-participacao-modal .modal-dialog,
+body.device-mobile #nova-versao-modal .modal-dialog {
+    max-width: 100%;
+    margin: 0.5rem;
+}
+
+body.device-mobile #edit-participacao-modal .modal-content,
+body.device-mobile #nova-versao-modal .modal-content {
+    max-height: 95vh;
+    overflow-y: auto;
+}
+
+body.device-mobile #edit-participacao-modal .modal-body,
+body.device-mobile #nova-versao-modal .modal-body {
+    padding: 0.75rem;
+    max-height: calc(95vh - 120px);
+    overflow-y: auto;
+}
+
+body.device-mobile #edit-participacao-modal .mb-2,
+body.device-mobile #nova-versao-modal .mb-2 {
+    margin-bottom: 0.5rem !important;
+}
+
+body.device-mobile #edit-participacao-modal .mb-3,
+body.device-mobile #nova-versao-modal .mb-3 {
+    margin-bottom: 0.75rem !important;
+}
+
+body.device-mobile #edit-participacao-modal .form-label,
+body.device-mobile #nova-versao-modal .form-label {
+    margin-bottom: 0.25rem;
+    font-size: 0.9rem;
+}
+
+body.device-mobile #edit-participacao-modal .form-control,
+body.device-mobile #nova-versao-modal .form-control {
+    padding: 0.5rem;
+    font-size: 0.95rem;
+}
+
+body.device-mobile #edit-participacao-modal h5,
+body.device-mobile #nova-versao-modal h5 {
+    font-size: 1rem;
+    margin-bottom: 0.5rem;
+}
+
+body.device-mobile #edit-participacao-modal .modal-header,
+body.device-mobile #nova-versao-modal .modal-header {
+    padding: 0.75rem;
+}
+
+body.device-mobile #edit-participacao-modal .modal-footer,
+body.device-mobile #nova-versao-modal .modal-footer {
+    padding: 0.5rem 0.75rem;
+}
+
+body.device-mobile #edit-participacao-modal .fw-bold,
+body.device-mobile #nova-versao-modal .fw-bold {
+    font-size: 0.95rem;
+}
+
+body.device-mobile #edit-participacao-modal .modal-title,
+body.device-mobile #nova-versao-modal .modal-title {
+    font-size: 1rem;
+    line-height: 1.3;
+}
+
 /* Estilos para botões para serem mais fáceis de tocar */
 body.device-mobile .btn {
     padding: 0.75rem 1rem;
