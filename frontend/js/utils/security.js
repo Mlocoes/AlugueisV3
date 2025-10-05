@@ -82,8 +82,22 @@ function setSafeHTML(element, htmlString, data = {}) {
         });
     }
     
-    // Sanitiza a string HTML final com DOMPurify para remover qualquer XSS.
-    const cleanHtml = DOMPurify.sanitize(finalHtml);
+    // Configuração do DOMPurify para permitir modals e forms Bootstrap
+    const config = {
+        ADD_TAGS: ['form'], // Permitir tags <form>
+        ADD_ATTR: ['data-bs-toggle', 'data-bs-target', 'data-bs-dismiss', 'aria-labelledby', 'aria-hidden', 'tabindex'], // Permitir atributos Bootstrap
+        ALLOW_DATA_ATTR: true, // Permitir atributos data-*
+        KEEP_CONTENT: true // Manter conteúdo de elementos removidos
+    };
+    
+    // Sanitiza a string HTML final com DOMPurify usando a config personalizada
+    const cleanHtml = DOMPurify.sanitize(finalHtml, config);
+
+    // Debug: verificar se modals foram removidos
+    if (htmlString.includes('id="novo-imovel-modal"')) {
+        console.log('[SecurityUtils] HTML contém novo-imovel-modal:', htmlString.includes('id="novo-imovel-modal"'));
+        console.log('[SecurityUtils] HTML limpo contém novo-imovel-modal:', cleanHtml.includes('id="novo-imovel-modal"'));
+    }
 
     // Insere o HTML limpo no elemento.
     element.innerHTML = cleanHtml;
