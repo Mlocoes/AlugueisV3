@@ -861,22 +861,17 @@ class ExtrasManager {
         // Configurar event listener do formulário (apenas se não foi configurado ainda)
         if (form && !form.dataset.submitListenerAttached) {
             form.dataset.submitListenerAttached = 'true';
-            console.log('[DEBUG] Configurando event listener para form-transferencias no showModal');
             form.addEventListener('submit', (e) => {
-                console.log('[DEBUG] Event submit disparado para form-transferencias');
                 e.preventDefault();
-                console.log('[DEBUG] preventDefault() chamado');
                 
                 // Pega o botão de submit a partir do evento ou do form
                 const submitButton = e.submitter || form.querySelector('button[type="submit"]');
                 
                 // Proteção contra cliques múltiplos
                 if (submitButton && submitButton.disabled) {
-                    console.log('[DEBUG] Botão já está desabilitado, ignorando');
                     return;
                 }
                 
-                console.log('[DEBUG] Chamando salvarTransferencias()');
                 this.salvarTransferencias();
             });
         }
