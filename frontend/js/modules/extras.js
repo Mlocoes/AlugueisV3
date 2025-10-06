@@ -59,24 +59,7 @@ class ExtrasManager {
             this.salvarAlias();
         });
 
-        // Formulário de transferências - configurar apenas uma vez
-        const formTransferencias = document.getElementById('form-transferencias');
-        if (formTransferencias && !formTransferencias.dataset.submitListenerAttached) {
-            formTransferencias.dataset.submitListenerAttached = 'true';
-            formTransferencias.addEventListener('submit', (e) => {
-                e.preventDefault();
-                
-                // Pega o botão de submit a partir do evento ou do form
-                const submitButton = e.submitter || formTransferencias.querySelector('button[type="submit"]');
-                
-                // Proteção contra cliques múltiplos
-                if (submitButton && submitButton.disabled) {
-                    return;
-                }
-                
-                this.salvarTransferencias();
-            });
-        }
+        // Formulário de transferências será configurado dinamicamente no showTransferenciasModal
 
         document.addEventListener('DOMContentLoaded', () => {
         });
@@ -874,6 +857,29 @@ class ExtrasManager {
             // O Bootstrap lida com aria-hidden automaticamente
             modal.removeAttribute('aria-modal');
         }, { once: true });
+
+        // Configurar event listener do formulário (apenas se não foi configurado ainda)
+        if (form && !form.dataset.submitListenerAttached) {
+            form.dataset.submitListenerAttached = 'true';
+            console.log('[DEBUG] Configurando event listener para form-transferencias no showModal');
+            form.addEventListener('submit', (e) => {
+                console.log('[DEBUG] Event submit disparado para form-transferencias');
+                e.preventDefault();
+                console.log('[DEBUG] preventDefault() chamado');
+                
+                // Pega o botão de submit a partir do evento ou do form
+                const submitButton = e.submitter || form.querySelector('button[type="submit"]');
+                
+                // Proteção contra cliques múltiplos
+                if (submitButton && submitButton.disabled) {
+                    console.log('[DEBUG] Botão já está desabilitado, ignorando');
+                    return;
+                }
+                
+                console.log('[DEBUG] Chamando salvarTransferencias()');
+                this.salvarTransferencias();
+            });
+        }
 
         // Mostrar modal
         bootstrapModal.show();
