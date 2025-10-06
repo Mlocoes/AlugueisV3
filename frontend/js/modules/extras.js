@@ -61,12 +61,21 @@ class ExtrasManager {
 
         // Formulário de transferências - configurar apenas uma vez
         const formTransferencias = document.getElementById('form-transferencias');
-        if (formTransferencias && !formTransferencias.hasTransferenciasListener) {
+        if (formTransferencias && !formTransferencias.dataset.submitListenerAttached) {
+            formTransferencias.dataset.submitListenerAttached = 'true';
             formTransferencias.addEventListener('submit', (e) => {
                 e.preventDefault();
+                
+                // Pega o botão de submit a partir do evento ou do form
+                const submitButton = e.submitter || formTransferencias.querySelector('button[type="submit"]');
+                
+                // Proteção contra cliques múltiplos
+                if (submitButton && submitButton.disabled) {
+                    return;
+                }
+                
                 this.salvarTransferencias();
             });
-            formTransferencias.hasTransferenciasListener = true;
         }
 
         document.addEventListener('DOMContentLoaded', () => {
@@ -1030,7 +1039,13 @@ class ExtrasManager {
      * Salvar transferências
      */
     async salvarTransferencias() {
-    try {
+        // Obter e desabilitar o botão de submit
+        const submitButton = document.getElementById('btn-salvar-transferencias');
+        if (submitButton) {
+            submitButton.disabled = true;
+        }
+        
+        try {
             const aliasId = document.getElementById('transferencia-alias').value;
             const nomeTransferencia = document.getElementById('transferencia-nome').value.trim();
             const dataCriacao = document.getElementById('transferencia-data-criacao').value;
@@ -1038,22 +1053,26 @@ class ExtrasManager {
             
             if (!aliasId) {
                 this.showAlert('Selecione um alias', 'danger', 'transferencia-alerts');
+                if (submitButton) submitButton.disabled = false;
                 return;
             }
 
             if (!nomeTransferencia) {
                 this.showAlert('Digite o nome da transferência', 'danger', 'transferencia-alerts');
+                if (submitButton) submitButton.disabled = false;
                 return;
             }
 
             if (!dataCriacao) {
                 this.showAlert('Selecione a data de criação', 'danger', 'transferencia-alerts');
+                if (submitButton) submitButton.disabled = false;
                 return;
             }
 
             // Validar que data_fim seja posterior à data_criacao (se informada)
             if (dataFim && dataCriacao && new Date(dataFim) < new Date(dataCriacao)) {
                 this.showAlert('Data de fim deve ser posterior à data de criação', 'danger', 'transferencia-alerts');
+                if (submitButton) submitButton.disabled = false;
                 return;
             }
 
@@ -1076,6 +1095,7 @@ class ExtrasManager {
 
             if (!hasValue) {
                 this.showAlert('Informe pelo menos um valor de transferência diferente de zero', 'danger', 'transferencia-alerts');
+                if (submitButton) submitButton.disabled = false;
                 return;
             }
 
@@ -1116,6 +1136,11 @@ class ExtrasManager {
         } catch (error) {
             console.error('Erro ao salvar transferência:', error);
             this.showAlert('Erro ao salvar transferência: ' + error.message, 'danger', 'transferencia-alerts');
+        } finally {
+            // Re-habilitar o botão de submit
+            if (submitButton) {
+                submitButton.disabled = false;
+            }
         }
     }
 
