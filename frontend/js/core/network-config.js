@@ -85,9 +85,8 @@ class NetworkConfig {
      * Obtener URL base da API
      */
     getBaseURL() {
-        // Usar el subdominio original
-        // Usar HTTPS con certificado auto-firmado
-        return 'https://aluguel.kronos.cloudns.ph';
+        // Usar el mismo dominio a través de Traefik
+        return `https://aluguel.kronos.cloudns.ph`;
     }
 
     /**
