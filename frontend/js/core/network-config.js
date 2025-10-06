@@ -85,7 +85,9 @@ class NetworkConfig {
      * Obtener URL base da API
      */
     getBaseURL() {
-        return `http://${this.serverIP}:${this.serverPort}`;
+        // Usar el subdominio original
+        // Usar HTTPS con certificado auto-firmado
+        return 'https://aluguel.kronos.cloudns.ph';
     }
 
     /**

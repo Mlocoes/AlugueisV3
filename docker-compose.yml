@@ -35,14 +35,18 @@ services:
     environment:
       ADMINER_DEFAULT_SERVER: postgres
       ADMINER_DESIGN: pepa-linha
-    ports:
-      - "8080:8080"
     networks:
       - alugueis_network
+      - kronos-net
     depends_on:
       postgres:
         condition: service_healthy
     restart: unless-stopped
+    dns:
+      - 172.20.0.2  # Usa Pi-hole como DNS
+    labels:
+      # Adminer deshabilitado en Traefik - Solo acceso interno si es necesario
+      - "traefik.enable=false"
 
   # Backend FastAPI
   backend:
@@ -61,21 +65,18 @@ services:
     # CORS_ALLOW_ORIGINS: ${CORS_ALLOW_ORIGINS}
     volumes:
       - ./backend:/app
-    ports:
-      - "8000:8000"
     networks:
       - alugueis_network
+      - kronos-net
     depends_on:
       postgres:
         condition: service_healthy
     restart: unless-stopped
+    dns:
+      - 172.20.0.2  # Usa Pi-hole como DNS
     labels:
-      # Labels para Traefik (solo activos si USE_TRAEFIK=true)
-      - "traefik.enable=${USE_TRAEFIK:-false}"
-      - "traefik.http.routers.alugueis-backend.rule=Host(`${BACKEND_DOMAIN:-api.alugueis.local}`) && PathPrefix(`/api`)"
-      - "traefik.http.routers.alugueis-backend.entrypoints=websecure"
-      - "traefik.http.routers.alugueis-backend.tls.certresolver=cloudflare"
-      - "traefik.http.services.alugueis-backend.loadbalancer.server.port=8000"
+      # Backend deshabilitado en Traefik - nginx maneja las peticiones API internamente
+      - "traefik.enable=false"
 
   # Frontend Optimizado
   frontend:
@@ -88,15 +89,18 @@ services:
       - "3000:80"
     networks:
       - alugueis_network
+      - kronos-net
+    dns:
+      - 172.20.0.2  # Usa Pi-hole como DNS
     depends_on:
       - backend
     restart: unless-stopped
     labels:
-      # Labels para Traefik (solo activos si USE_TRAEFIK=true)
-      - "traefik.enable=${USE_TRAEFIK:-false}"
-      - "traefik.http.routers.alugueis-frontend.rule=Host(`${FRONTEND_DOMAIN:-alugueis.local}`)"
-      - "traefik.http.routers.alugueis-frontend.entrypoints=websecure"
-      - "traefik.http.routers.alugueis-frontend.tls.certresolver=cloudflare"
+      - "traefik.enable=true"
+      - "traefik.http.routers.alugueis-frontend-secure.entrypoints=https"
+      - "traefik.http.routers.alugueis-frontend-secure.rule=Host(`${FRONTEND_DOMAIN}`)"
+      - "traefik.http.routers.alugueis-frontend-secure.tls=true"
+      - "traefik.http.routers.alugueis-frontend-secure.service=alugueis-frontend"
       - "traefik.http.services.alugueis-frontend.loadbalancer.server.port=80"
 
 volumes:
@@ -106,3 +110,5 @@ volumes:
 networks:
   alugueis_network:
     driver: bridge
+  kronos-net:
+    external: true
