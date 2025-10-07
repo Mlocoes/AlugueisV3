@@ -560,9 +560,7 @@
                     window.participacoesModule = new ParticipacoesModule();
                 }
 
-                if (typeof ImportacaoModule !== 'undefined') {
-                    window.importacaoModule = new ImportacaoModule();
-                }
+                // ImportacaoModule instantiation moved to UI Manager (lazy loading on tab switch)
 
                 if (typeof AlugueisModule !== 'undefined') {
                     window.alugueisModule = new AlugueisModule();

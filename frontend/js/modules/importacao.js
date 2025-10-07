@@ -14,7 +14,16 @@ class ImportacaoModule {
         formTypes.forEach(type => {
             const form = document.getElementById(`importar-form-${type}${suffix}`);
             if (form) {
-                form.addEventListener('submit', (e) => this.handleImport(e, type));
+                // Remove existing listener if any to prevent duplicates
+                const oldHandler = form._importHandler;
+                if (oldHandler) {
+                    form.removeEventListener('submit', oldHandler);
+                }
+                
+                // Create and store new handler
+                const handler = (e) => this.handleImport(e, type);
+                form._importHandler = handler;
+                form.addEventListener('submit', handler);
             }
         });
 
@@ -199,4 +208,5 @@ class ImportacaoModule {
     }
 }
 
-window.importacaoModule = new ImportacaoModule();
+// Export class for global use - instantiation handled by UI Manager
+window.ImportacaoModule = ImportacaoModule;
