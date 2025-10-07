@@ -6,8 +6,6 @@ class ImportacaoModule {
     }
 
     init() {
-        if (this.initialized) return;
-
         const suffix = this.isMobile ? '-mobile' : '';
         const formTypes = ['proprietarios', 'imoveis', 'participacoes', 'alugueis'];
 
