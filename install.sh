@@ -273,6 +273,11 @@ else
     log_info "Usando arquivo .env existente..."
 fi
 
+# Gerar docker-compose.yml a partir do template
+log_info "Gerando docker-compose.yml..."
+cp docker-compose.template.yml docker-compose.yml
+sed -i "s|\${TRAEFIK_NETWORK}:|$TRAEFIK_NETWORK:|g" docker-compose.yml
+
 # Atualizar network-config.js
 log_info "Configurando frontend..."
 sed -i "s|https://.*\..*\..*|https://\${APP_URL}|g" frontend/js/core/network-config.js

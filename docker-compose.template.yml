@@ -73,10 +73,10 @@ services:
     labels:
       - "traefik.enable=true"
       # Router HTTP para API
-      - "traefik.http.routers.alugueis-backend.entrypoints=http"
-      - "traefik.http.routers.alugueis-backend.rule=Host(`${APP_URL}`) && PathPrefix(`/api`)"
-      - "traefik.http.routers.alugueis-backend.service=alugueis-backend"
-      - "traefik.http.routers.alugueis-backend.priority=300"
+#      - "traefik.http.routers.alugueis-backend.entrypoints=http"
+#      - "traefik.http.routers.alugueis-backend.rule=Host(`${APP_URL}`) && PathPrefix(`/api`)"
+#      - "traefik.http.routers.alugueis-backend.service=alugueis-backend"
+#      - "traefik.http.routers.alugueis-backend.priority=300"
       # Router HTTPS para API
       - "traefik.http.routers.alugueis-backend-secure.entrypoints=https"
       - "traefik.http.routers.alugueis-backend-secure.rule=Host(`${APP_URL}`) && PathPrefix(`/api`)"
@@ -107,9 +107,9 @@ services:
     labels:
       - "traefik.enable=true"
       # Router Frontend HTTP
-      - "traefik.http.routers.alugueis-frontend.entrypoints=http"
-      - "traefik.http.routers.alugueis-frontend.rule=Host(`${APP_URL}`)"
-      - "traefik.http.routers.alugueis-frontend.priority=100"
+#      - "traefik.http.routers.alugueis-frontend.entrypoints=http"
+#      - "traefik.http.routers.alugueis-frontend.rule=Host(`${APP_URL}`)"
+#      - "traefik.http.routers.alugueis-frontend.priority=100"
       # Router Frontend HTTPS
       - "traefik.http.routers.alugueis-frontend-secure.entrypoints=https"
       - "traefik.http.routers.alugueis-frontend-secure.rule=Host(`${APP_URL}`)"
