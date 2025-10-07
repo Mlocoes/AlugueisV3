@@ -51,8 +51,8 @@ if ! command -v docker &> /dev/null; then
 fi
 
 # Verificar Docker Compose
-if ! command -v docker-compose &> /dev/null; then
-    log_error "Docker Compose não está instalado"
+if ! docker compose version &> /dev/null; then
+    log_error "Docker Compose (docker compose) não está instalado ou não funciona."
     exit 1
 fi
 
@@ -223,9 +223,9 @@ echo
 log_info "Iniciando instalação..."
 
 # Parar serviços existentes se estiverem rodando
-if docker-compose ps -q | grep -q .; then
+if docker compose ps -q | grep -q .; then
     log_info "Parando serviços existentes..."
-    docker-compose down
+    docker compose down
 fi
 
 # Remover volume da base de dados baseado na escolha do usuário
@@ -304,7 +304,7 @@ EOF
 
 # Iniciar serviços
 log_info "Iniciando serviços..."
-docker-compose up -d
+docker compose up -d
 
 # Aguardar serviços ficarem prontos
 log_info "Aguardando serviços ficarem prontos..."
@@ -402,9 +402,9 @@ else
 fi
 echo
 echo -e "${BLUE}🔧 COMANDOS ÚTEIS:${NC}"
-echo -e "   Ver logs: ${YELLOW}docker-compose logs -f${NC}"
-echo -e "   Parar: ${YELLOW}docker-compose down${NC}"
-echo -e "   Reiniciar: ${YELLOW}docker-compose restart${NC}"
+echo -e "   Ver logs: ${YELLOW}docker compose logs -f${NC}"
+echo -e "   Parar: ${YELLOW}docker compose down${NC}"
+echo -e "   Reiniciar: ${YELLOW}docker compose restart${NC}"
 echo
 echo -e "${BLUE}📊 MONITORAMENTO:${NC}"
 echo -e "   API Health: ${YELLOW}https://$APP_URL/api/health${NC}"

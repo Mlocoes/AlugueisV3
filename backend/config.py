@@ -17,11 +17,14 @@ from fastapi.middleware.cors import CORSMiddleware
 ENV = os.getenv("ENV", "development").lower()
 
 # Configuração do banco de dados
-DATABASE_URL = os.getenv("DATABASE_URL")
+# Modificado para usar SQLite para testes locais sem Docker
+DATABASE_URL = "sqlite:///./alugueis.db"
 
 # SQLAlchemy setup
 engine = create_engine(
     DATABASE_URL,
+    # O check_same_thread é necessário apenas para SQLite
+    connect_args={"check_same_thread": False},
     pool_pre_ping=True
 )
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)

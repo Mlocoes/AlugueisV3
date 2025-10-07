@@ -1,41 +1,59 @@
-from playwright.sync_api import sync_playwright, expect
+from playwright.sync_api import sync_playwright, Page, expect
+import re
 
-def run(playwright):
-    browser = playwright.chromium.launch(headless=True)
-    context = browser.new_context()
-    page = context.new_page()
+# --- Configurações ---
+BASE_URL = "http://127.0.0.1:3001"
+ADMIN_USERNAME = "admin"
+ADMIN_PASSWORD = "admin00"
+SCREENSHOT_PATH = "jules-scratch/verification/verification.png"
 
-    try:
-        # Navigate to the login page
-        page.goto("http://localhost:3000")
+def run_verification(page: Page):
+    """
+    Executa a verificação de login e captura a tela do dashboard.
+    """
+    print("Iniciando verificação do frontend...")
 
-        # Wait for the login form to be visible
-        expect(page.locator("#login-form")).to_be_visible()
+    # 1. Acessar a página de login
+    print(f"Navegando para {BASE_URL}...")
+    page.goto(BASE_URL)
 
-        # Fill in the login form
-        page.fill("input[name='usuario']", "testuser")
-        page.fill("input[name='senha']", "test123")
+    # 2. Verificar se a página de login está visível
+    expect(page.locator('h4:has-text("Sistema de Aluguéis")')).to_be_visible(timeout=10000)
+    print("Página de login carregada.")
 
-        # Click the login button
-        page.click("button[type='submit']")
+    # 3. Preencher o formulário de login
+    print("Preenchendo credenciais...")
+    page.fill("input#login-usuario", ADMIN_USERNAME)
+    page.fill("input#login-senha", ADMIN_PASSWORD)
 
-        # Wait for a specific, visible element on the dashboard
-        dashboard_heading = page.get_by_role("heading", name="Evolução de Receitas")
-        expect(dashboard_heading).to_be_visible(timeout=15000)
+    # 4. Clicar no botão de login
+    print("Realizando login...")
+    page.click("button#login-submit")
 
-        # Take a screenshot of the dashboard
-        page.screenshot(path="jules-scratch/verification/dashboard_screenshot.png")
-        print("Screenshot saved to jules-scratch/verification/dashboard_screenshot.png")
+    # 5. Verificar se o login foi bem-sucedido e o dashboard está visível
+    print("Verificando o dashboard...")
+    dashboard_title = page.locator("#page-title")
+    expect(dashboard_title).to_have_text("Dashboard", timeout=15000)
 
-    except Exception as e:
-        print(f"An error occurred: {e}")
-        page.screenshot(path="jules-scratch/verification/error_screenshot.png")
-        raise e
+    user_info = page.locator("div#header-user-info")
+    expect(user_info).to_be_visible()
+    print("Login bem-sucedido. Dashboard visível.")
 
-    finally:
-        # Clean up
-        context.close()
-        browser.close()
+    # 6. Tirar a screenshot da página principal
+    print(f"Capturando tela e salvando em {SCREENSHOT_PATH}...")
+    page.screenshot(path=SCREENSHOT_PATH)
+    print("Screenshot capturada com sucesso.")
 
-with sync_playwright() as playwright:
-    run(playwright)
+def main():
+    with sync_playwright() as p:
+        browser = p.chromium.launch(headless=True)
+        page = browser.new_page()
+        try:
+            run_verification(page)
+        except Exception as e:
+            print(f"Ocorreu um erro durante a verificação: {e}")
+        finally:
+            browser.close()
+
+if __name__ == "__main__":
+    main()
