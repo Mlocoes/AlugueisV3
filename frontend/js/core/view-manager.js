@@ -450,14 +450,41 @@ class ViewManager {
         }
         
         for (const moduleName of view.requiredModules) {
-            let retries = 0;
             let moduleInstance = window[`${moduleName}Module`];
-            while (!moduleInstance && retries < 5) {
-                // Esperar 100ms y reintentar
-                await new Promise(res => setTimeout(res, 100));
-                moduleInstance = window[`${moduleName}Module`];
-                retries++;
+            
+            // Create module instance if it doesn't exist
+            if (!moduleInstance) {
+                // Try to find and instantiate the module class
+                let moduleClass = null;
+                
+                // Check for specific known class names first
+                if (moduleName === 'importacao') {
+                    moduleClass = window.ImportacaoModule;
+                } else if (moduleName === 'usuarioManager') {
+                    moduleClass = window.UsuarioManager;
+                } else {
+                    // Try standard naming convention: capitalize first letter + 'Module'
+                    const className = moduleName.charAt(0).toUpperCase() + moduleName.slice(1) + 'Module';
+                    moduleClass = window[className];
+                }
+                
+                if (moduleClass) {
+                    moduleInstance = new moduleClass();
+                    window[`${moduleName}Module`] = moduleInstance;
+                }
             }
+            
+            // If still not found, wait and retry
+            if (!moduleInstance) {
+                let retries = 0;
+                while (!moduleInstance && retries < 5) {
+                    // Esperar 100ms y reintentar
+                    await new Promise(res => setTimeout(res, 100));
+                    moduleInstance = window[`${moduleName}Module`];
+                    retries++;
+                }
+            }
+            
             try {
                 if (moduleInstance) {
                     if (typeof moduleInstance.load === 'function') {
@@ -465,7 +492,7 @@ class ViewManager {
                     } else {
                     }
                 } else {
-                    console.error(`❌ Módulo ${moduleName} não encontrado em window.${moduleName}Module após ${retries} tentativas.`);
+                    console.error(`❌ Módulo ${moduleName} não encontrado em window.${moduleName}Module após tentativas.`);
                 }
             } catch (error) {
                 console.error(`❌ Erro inicializando módulo ${moduleName}:`, error);
