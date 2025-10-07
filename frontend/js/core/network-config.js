@@ -85,8 +85,18 @@ class NetworkConfig {
      * Obtener URL base da API
      */
     getBaseURL() {
-        // Usar el mismo dominio a través de Traefik
-        return `https://aluguel.kronos.cloudns.ph`;
+        // URL será definida durante a instalação
+        // Detectar automaticamente o domínio atual
+        const currentHost = window.location.hostname;
+        const protocol = window.location.protocol;
+        
+        // Se executando localmente, usar configuração específica
+        if (currentHost === 'localhost' || currentHost === '127.0.0.1') {
+            return `http://${currentHost}:8000`;
+        }
+        
+        // Para produção, usar o mesmo domínio com HTTPS
+        return `${protocol}//${currentHost}`;
     }
 
     /**

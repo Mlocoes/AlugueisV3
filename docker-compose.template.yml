@@ -4,9 +4,9 @@ services:
     image: postgres:15
     container_name: alugueis_postgres
     environment:
-      POSTGRES_DB: alugueisv3_db
-      POSTGRES_USER: alugueisv3_usuario
-      POSTGRES_PASSWORD: alugueisv3_senha
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_INITDB_ARGS: "--encoding=UTF8 --locale=C"
     volumes:
       - postgres_data:/var/lib/postgresql/data
@@ -16,7 +16,7 @@ services:
       - alugueis_network
     restart: unless-stopped
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U alugueisv3_usuario -d alugueisv3_db"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -53,9 +53,9 @@ services:
     env_file:
       - ./.env
     environment:
-      DATABASE_URL: postgresql://alugueisv3_usuario:alugueisv3_senha@alugueis_postgres:5432/alugueisv3_db
-      SECRET_KEY: afefb65b3b8a948b1d0a2afedf18caaa71c09c459cad3a2b7f3279d0ac174651
-      CSRF_SECRET_KEY: ab8cab9c68f8f14752efdf98887382dc2da5aeb1d7b9a7c20f396e8f210973fc
+      DATABASE_URL: ${DATABASE_URL}
+      SECRET_KEY: ${SECRET_KEY}
+      CSRF_SECRET_KEY: ${CSRF_SECRET_KEY}
       DEBUG: ${DEBUG:-false}
       CORS_ALLOW_CREDENTIALS: ${CORS_ALLOW_CREDENTIALS:-true}
     volumes:
@@ -63,7 +63,7 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock:ro
     networks:
       - alugueis_network
-      - kronos-net
+      - ${TRAEFIK_NETWORK}
     depends_on:
       postgres:
         condition: service_healthy
@@ -74,19 +74,19 @@ services:
       - "traefik.enable=true"
       # Router HTTP para API
       - "traefik.http.routers.alugueis-backend.entrypoints=http"
-      - "traefik.http.routers.alugueis-backend.rule=Host(`aluguel.kronos.cloudns.ph`) && PathPrefix(`/api`)"
+      - "traefik.http.routers.alugueis-backend.rule=Host(`${APP_URL}`) && PathPrefix(`/api`)"
       - "traefik.http.routers.alugueis-backend.service=alugueis-backend"
       - "traefik.http.routers.alugueis-backend.priority=300"
       # Router HTTPS para API
       - "traefik.http.routers.alugueis-backend-secure.entrypoints=https"
-      - "traefik.http.routers.alugueis-backend-secure.rule=Host(`aluguel.kronos.cloudns.ph`) && PathPrefix(`/api`)"
+      - "traefik.http.routers.alugueis-backend-secure.rule=Host(`${APP_URL}`) && PathPrefix(`/api`)"
       - "traefik.http.routers.alugueis-backend-secure.service=alugueis-backend"
       - "traefik.http.routers.alugueis-backend-secure.priority=300"
       - "traefik.http.routers.alugueis-backend-secure.tls=true"
       - "traefik.http.routers.alugueis-backend-secure.tls.certresolver=myresolver"
       # Serviço
       - "traefik.http.services.alugueis-backend.loadbalancer.server.port=8000"
-      - "traefik.docker.network=kronos-net"
+      - "traefik.docker.network=${TRAEFIK_NETWORK}"
 
   # Frontend Nginx
   frontend:
@@ -98,7 +98,7 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock:ro
     networks:
       - alugueis_network
-      - kronos-net
+      - ${TRAEFIK_NETWORK}
     dns:
       - 172.20.0.2  # Pi-hole DNS
     depends_on:
@@ -108,18 +108,18 @@ services:
       - "traefik.enable=true"
       # Router Frontend HTTP
       - "traefik.http.routers.alugueis-frontend.entrypoints=http"
-      - "traefik.http.routers.alugueis-frontend.rule=Host(`aluguel.kronos.cloudns.ph`)"
+      - "traefik.http.routers.alugueis-frontend.rule=Host(`${APP_URL}`)"
       - "traefik.http.routers.alugueis-frontend.priority=100"
       # Router Frontend HTTPS
       - "traefik.http.routers.alugueis-frontend-secure.entrypoints=https"
-      - "traefik.http.routers.alugueis-frontend-secure.rule=Host(`aluguel.kronos.cloudns.ph`)"
+      - "traefik.http.routers.alugueis-frontend-secure.rule=Host(`${APP_URL}`)"
       - "traefik.http.routers.alugueis-frontend-secure.priority=100"
       - "traefik.http.routers.alugueis-frontend-secure.tls=true"
       - "traefik.http.routers.alugueis-frontend-secure.tls.certresolver=myresolver"
       - "traefik.http.routers.alugueis-frontend-secure.service=alugueis-frontend"
       # Serviço
       - "traefik.http.services.alugueis-frontend.loadbalancer.server.port=80"
-      - "traefik.docker.network=kronos-net"
+      - "traefik.docker.network=${TRAEFIK_NETWORK}"
 
 volumes:
   postgres_data:
@@ -128,5 +128,5 @@ volumes:
 networks:
   alugueis_network:
     driver: bridge
-  kronos-net:
+  ${TRAEFIK_NETWORK}:
     external: true
