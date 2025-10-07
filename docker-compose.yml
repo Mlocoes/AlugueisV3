@@ -4,9 +4,9 @@ services:
     image: postgres:15
     container_name: alugueis_postgres
     environment:
-      POSTGRES_DB: alugueisv3_db
-      POSTGRES_USER: alugueisv3_usuario
-      POSTGRES_PASSWORD: alugueisv3_senha
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_INITDB_ARGS: "--encoding=UTF8 --locale=C"
     volumes:
       - postgres_data:/var/lib/postgresql/data
@@ -53,9 +53,9 @@ services:
     env_file:
       - ./.env
     environment:
-      DATABASE_URL: postgresql://alugueisv3_usuario:alugueisv3_senha@alugueis_postgres:5432/alugueisv3_db
-      SECRET_KEY: afefb65b3b8a948b1d0a2afedf18caaa71c09c459cad3a2b7f3279d0ac174651
-      CSRF_SECRET_KEY: ab8cab9c68f8f14752efdf98887382dc2da5aeb1d7b9a7c20f396e8f210973fc
+      DATABASE_URL: ${DATABASE_URL}
+      SECRET_KEY: ${SECRET_KEY}
+      CSRF_SECRET_KEY: ${CSRF_SECRET_KEY}
       DEBUG: ${DEBUG:-false}
       CORS_ALLOW_CREDENTIALS: ${CORS_ALLOW_CREDENTIALS:-true}
     volumes:
