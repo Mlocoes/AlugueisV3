@@ -177,6 +177,9 @@ class RelatoriosModule {
     async loadRelatoriosData() {
         if (!this.anoSelect || !this.mesSelect || !this.proprietarioSelect) return;
 
+        // Clear cache to ensure fresh transfer data is fetched
+        this.transferenciasCache.clear();
+
         const params = new URLSearchParams();
         if (this.anoSelect.value) params.append('ano', this.anoSelect.value);
         if (this.mesSelect.value) params.append('mes', this.mesSelect.value);
