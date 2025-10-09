@@ -376,9 +376,8 @@ class ImoveisModule {
                 if (input.type === 'checkbox') {
                     input.checked = imovel[key] === true || imovel[key] === 'true';
                 } else if (input.type === 'date' && imovel[key]) {
-                    // Converter data para formato YYYY-MM-DD
-                    const date = new Date(imovel[key]);
-                    input.value = date.toISOString().split('T')[0];
+                    // Extract date portion directly to avoid timezone conversion
+                    input.value = imovel[key].split('T')[0];
                 } else {
                     input.value = imovel[key] || '';
                 }
