@@ -9,6 +9,41 @@ Este roteador é o coração da segurança da aplicação, responsável por toda
 3.  **Autorização Baseada em Papéis (RBAC)**: Define dependências (`is_admin`, `is_user_or_admin`) que são usadas para proteger endpoints, garantindo que apenas usuários com o tipo (papel) correto possam acessá-los.
 4.  **Setup Inicial**: Fornece um mecanismo para a criação segura do primeiro usuário administrador do sistema.
 
+## Configuração JWT
+
+O tempo de expiração do token JWT é configurável através da variável de ambiente `JWT_EXPIRATION_MINUTES`:
+
+-   **Variável de Ambiente**: `JWT_EXPIRATION_MINUTES`
+-   **Padrão**: 30 minutos
+-   **Recomendado para Produção**: 30 minutos (maior segurança)
+-   **Recomendado para Desenvolvimento**: 60-120 minutos (menos interrupções)
+
+### Como Configurar
+
+Edite o arquivo `.env` ou `backend/.env` e adicione/modifique:
+
+```env
+JWT_EXPIRATION_MINUTES=30
+```
+
+### Exemplos de Configuração
+
+```env
+# Segurança máxima - sessão de 15 minutos
+JWT_EXPIRATION_MINUTES=15
+
+# Padrão recomendado - sessão de 30 minutos
+JWT_EXPIRATION_MINUTES=30
+
+# Para desenvolvimento - sessão de 2 horas
+JWT_EXPIRATION_MINUTES=120
+
+# Sessão longa - 8 horas (não recomendado para produção)
+JWT_EXPIRATION_MINUTES=480
+```
+
+**Importante**: Após alterar este valor, reinicie o servidor backend para que a mudança tenha efeito.
+
 ## Funções de Segurança e Dependências
 
 -   `get_password_hash(password)`: Gera um hash bcrypt de uma senha.
