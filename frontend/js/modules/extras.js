@@ -1302,15 +1302,15 @@ class ExtrasManager {
                         if (transferencia.data_criacao) {
                             const dataCriacaoInput = document.getElementById('transferencia-data-criacao');
                             if (dataCriacaoInput) {
-                                const data = new Date(transferencia.data_criacao);
-                                dataCriacaoInput.value = data.toISOString().split('T')[0];
+                                // Extract date portion directly to avoid timezone conversion
+                                dataCriacaoInput.value = transferencia.data_criacao.split('T')[0];
                             }
                         }
                         if (transferencia.data_fim) {
                             const dataFimInput = document.getElementById('transferencia-data-fim');
                             if (dataFimInput) {
-                                const data = new Date(transferencia.data_fim);
-                                dataFimInput.value = data.toISOString().split('T')[0];
+                                // Extract date portion directly to avoid timezone conversion
+                                dataFimInput.value = transferencia.data_fim.split('T')[0];
                             }
                         }
                         this.carregarProprietariosAlias(transferencia.alias_id);
