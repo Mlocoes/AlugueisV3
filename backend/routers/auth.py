@@ -12,7 +12,7 @@ from datetime import datetime, timedelta
 from typing import Optional
 import jwt
 from passlib.context import CryptContext
-from config import get_db, SECRET_KEY, ENV
+from config import get_db, SECRET_KEY, ENV, JWT_EXPIRATION_MINUTES
 from models_final import Usuario
 
 router = APIRouter(prefix="/api/auth", tags=["authentication"])
@@ -41,7 +41,7 @@ async def get_setup_status(db: Session = Depends(get_db)):
 
 # Configuração de Segurança
 ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 480  # 8 horas
+ACCESS_TOKEN_EXPIRE_MINUTES = JWT_EXPIRATION_MINUTES  # Usando configuração do ambiente
 
 # Configuração Passlib
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")

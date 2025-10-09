@@ -10,9 +10,12 @@ Este documento descreve as políticas e práticas de segurança implementadas no
 
 #### JWT (JSON Web Tokens)
 - **Algoritmo**: HS256
-- **Expiração**: 8 horas (480 minutos)
+- **Expiração**: Configurável via `JWT_EXPIRATION_MINUTES` (padrão: 30 minutos)
 - **Payload**: Contém `sub` (usuário), `tipo` (nível de acesso)
 - **Refresh Tokens**: Não implementado (recomendado para produção)
+- **Configuração**: Defina `JWT_EXPIRATION_MINUTES` no arquivo `.env`
+  - Desenvolvimento: 60-120 minutos recomendado
+  - Produção: 15-30 minutos recomendado
 
 #### Níveis de Usuário
 - **Administrador**: Acesso completo ao sistema
