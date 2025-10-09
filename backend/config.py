@@ -92,6 +92,10 @@ if not SECRET_KEY:
 # DEBUG é falso por padrão. Para habilitar, defina a variável de ambiente DEBUG="true"
 DEBUG = os.getenv("DEBUG", "false").lower() == "true"
 
+# Configurações JWT
+# Tempo de expiração do token de acesso em minutos (padrão: 30 minutos)
+JWT_EXPIRATION_MINUTES = int(os.getenv("JWT_EXPIRATION_MINUTES", "30"))
+
 # Configurações de upload seguras com tempfile
 UPLOAD_DIR = tempfile.mkdtemp(prefix="alugueis_uploads_")
 STORAGE_DIR = tempfile.mkdtemp(prefix="alugueis_storage_")
