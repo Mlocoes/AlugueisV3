@@ -225,7 +225,7 @@ class AlugueisModule {
                     const valor = linha.valores[imovel.nome] || 0;
                     return { proprietario, valor };
                 })
-                .filter(item => item.valor > 0);
+                .filter(item => item.valor !== 0); // Mostrar valores diferentes de zero (incluindo negativos)
 
             const totalImovel = alugueisDoImovel.reduce((sum, item) => sum + item.valor, 0);
 
@@ -320,10 +320,11 @@ class AlugueisModule {
                 totalImovel += valor;
                 totaisPorProprietario[prop.proprietario_id] += valor;
 
-                const displayVal = valor > 0 
+                const displayVal = valor !== 0 
                     ? `R$ ${valor.toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2})}` 
                     : '-';
-                cellsHtml += `<td class="text-end">${displayVal}</td>`;
+                const cellClass = valor < 0 ? 'text-danger' : ''; // Destacar valores negativos em vermelho
+                cellsHtml += `<td class="text-end ${cellClass}">${displayVal}</td>`;
             });
 
             granTotal += totalImovel;

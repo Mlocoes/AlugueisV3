@@ -274,10 +274,15 @@ class FileProcessor:
                     # Validar conteúdo antes de processar
                     validate_excel_content(df)
 
-                    # Debug: verificar tipos de dados das colunas (apenas em desenvolvimento)
-                    import os
-                    if os.getenv("DEBUG") == "true":
-                        print(f"Debug: Sheet {sheet_name}, dtypes: {df.dtypes.to_dict()}")
+                    # Debug: verificar tipos de dados das colunas (sempre ativo para debugging)
+                    print(f"Debug: Sheet {sheet_name}, dtypes: {df.dtypes.to_dict()}")
+                    print(f"Debug: Primeras filas del DataFrame:")
+                    print(df.head())
+                    print(f"Debug: Valores únicos em columnas numéricas:")
+                    for col in df.columns:
+                        if df[col].dtype in ['float64', 'int64', 'object']:
+                            unique_vals = df[col].dropna().unique()[:10]  # Primeros 10 valores únicos
+                            print(f"  {col}: {unique_vals}")
 
                     # Información básica de la hoja
                     sheet_info = {
@@ -394,19 +399,7 @@ class FileProcessor:
             elif data_type == "participacoes":
                 validation_results[sheet_name] = self.validate_participacoes(df)
             elif data_type == "alugueis":
-                # Verificar se é formato matricial ou tabular
-                proprietario_nomes_conhecidos = ['Jandira', 'Manoel', 'Fabio', 'Carla', 'Armando', 'Suely', 'Felipe', 'Adriana', 'Regina', 'Mario']
-                proprietario_columns_reais = [col for col in df.columns if any(str(nome) in str(col) for nome in proprietario_nomes_conhecidos)]
-                
-                if len(proprietario_columns_reais) >= 3:  # Formato matricial
-                    validation_results[sheet_name] = {"valid": True, "errors": [], "total_rows": len(df)}
-                else:  # Formato tabular
-                    validation_results[sheet_name] = self.validate_alquileres(df)
-            else:
-                validation_results[sheet_name] = {
-                    "valid": False,
-                    "errors": [f"Tipo de dados não reconhecido na planilha '{sheet_name}'"]
-                }
+                validation_results[sheet_name] = self.validate_alquileres(df)
         
         return validation_results
     
@@ -416,7 +409,7 @@ class FileProcessor:
         warnings = []
         required_columns = ['nome', 'sobrenome']
         
-        df_columns_lower = [col.lower() for col in df.columns]
+        df_columns_lower = [str(col).lower() for col in df.columns]
         missing_columns = [col for col in required_columns if col not in df_columns_lower]
         
         if missing_columns:
@@ -426,12 +419,12 @@ class FileProcessor:
         email_regex = r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$"
 
         for idx, row in df.iterrows():
-            nome_col = next((col for col in df.columns if col.lower() in ['nome', 'nombre']), None)
-            sobrenome_col = next((col for col in df.columns if col.lower() in ['sobrenome', 'apellido']), None)
-            email_col = next((col for col in df.columns if col.lower() in ['email', 'e-mail', 'correo']), None)
-            documento_col = next((col for col in df.columns if col.lower() in ['documento']), None)
-            tipo_documento_col = next((col for col in df.columns if col.lower() in ['tipo_documento']), None)
-            telefone_col = next((col for col in df.columns if col.lower() in ['telefone', 'telefono']), None)
+            nome_col = next((col for col in df.columns if str(col).lower() in ['nome', 'nombre']), None)
+            sobrenome_col = next((col for col in df.columns if str(col).lower() in ['sobrenome', 'apellido']), None)
+            email_col = next((col for col in df.columns if str(col).lower() in ['email', 'e-mail', 'correo']), None)
+            documento_col = next((col for col in df.columns if str(col).lower() in ['documento']), None)
+            tipo_documento_col = next((col for col in df.columns if str(col).lower() in ['tipo_documento']), None)
+            telefone_col = next((col for col in df.columns if str(col).lower() in ['telefone', 'telefono']), None)
 
             if nome_col and (pd.isna(row.get(nome_col, '')) or str(row.get(nome_col, '')).strip() == ''):
                 errors.append(f"Linha {idx + 2}: Nome vazio")
@@ -546,7 +539,7 @@ class FileProcessor:
         errors = []
         required_columns = ['imovel_id', 'proprietario_id', 'porcentagem']
         
-        df_columns_lower = [col.lower() for col in df.columns]
+        df_columns_lower = [str(col).lower() for col in df.columns]
         missing_columns = [col for col in required_columns if col not in df_columns_lower]
         
         if missing_columns:
@@ -610,7 +603,7 @@ class FileProcessor:
         errors = []
         required_columns = ['mes', 'ano', 'valor_aluguel_propietario', 'inmueble_id', 'proprietario_id']
         
-        df_columns_lower = [col.lower() for col in df.columns]
+        df_columns_lower = [str(col).lower() for col in df.columns]
         missing_columns = [col for col in required_columns if col not in df_columns_lower]
         
         if missing_columns:
@@ -732,6 +725,7 @@ async def upload_file(file: UploadFile = File(...), admin_user: Usuario = Depend
 @router.post("/process/{file_id}")
 async def process_file(file_id: str, db: Session = Depends(get_db)):
     """Procesar archivo subido"""
+    print(f"🔍 Iniciando processamento do arquivo: {file_id}")
     try:
         # Verificar que el archivo existe
         if file_id not in uploaded_files:
@@ -824,8 +818,12 @@ async def import_data(file_id: str, db: Session = Depends(get_db)):
         processor = FileProcessor(file_path, db)
         processor.read_excel_file()
         
+        print(f"🔄 Iniciando processamento de {len(processor.sheets_data)} planilhas")
+        
         for sheet_name, df in processor.sheets_data.items():
+            print(f"🔄 Procesando hoja: {sheet_name}")
             data_type = processor.detect_data_type(df, sheet_name)
+            print(f"  Data type detectado: {data_type}")
             
             if data_type == "proprietarios":
                 count = await import_propietarios(df, db)
@@ -844,13 +842,17 @@ async def import_data(file_id: str, db: Session = Depends(get_db)):
                 proprietario_nomes_conhecidos = ['Jandira', 'Manoel', 'Fabio', 'Carla', 'Armando', 'Suely', 'Felipe', 'Adriana', 'Regina', 'Mario']
                 proprietario_columns_reais = [col for col in df.columns if any(str(nome) in str(col) for nome in proprietario_nomes_conhecidos)]
                 
+                print(f"🔄 Procesando hoja: {sheet_name}, data_type: {data_type}")
+                
                 if len(proprietario_columns_reais) >= 3:  # Formato matricial
+                    print(f"  📊 Importando em formato matricial")
                     # Adicionar nome da planilha aos atributos do DataFrame
                     df.attrs['sheet_name'] = sheet_name
                     count = await import_alquileres_matricial(df, db)
                 else:  # Formato tabular
+                    print(f"  📋 Importando em formato tabular")
                     count = await import_alquileres(df, db)
-                records_imported["alugueis"] = count
+                records_imported["alugueis"] = records_imported.get("alugueis", 0) + count
         
         # Commit final
         db.commit()
@@ -1016,11 +1018,11 @@ async def import_propietarios(df: pd.DataFrame, db: Session) -> int:
             continue
     
     if new_proprietarios:
-        db.bulk_insert_mappings(Propietario, new_proprietarios)
+        db.bulk_insert_mappings(Propietario, new_proprietores)
         count += len(new_proprietarios)
 
     if updated_proprietarios:
-        db.bulk_update_mappings(Propietario, updated_proprietarios)
+        db.bulk_update_mappings(Propietario, updated_proprietores)
         count += len(updated_proprietarios)
     
     return count
@@ -1453,9 +1455,6 @@ async def import_alquileres_matricial(df: pd.DataFrame, db: Session) -> int:
             
             # Para cada coluna de proprietário, criar um registro de aluguel
             for col_name in df.columns[1:]:  # Pular a primeira coluna (endereço)
-                if col_name in ['Valor Total', 'Taxa de Administração']:
-                    continue
-                    
                 # Verificar se é uma coluna de proprietário
                 proprietario_nome = None
                 for nome in proprietario_nomes:
@@ -1465,7 +1464,11 @@ async def import_alquileres_matricial(df: pd.DataFrame, db: Session) -> int:
                 
                 if proprietario_nome and proprietario_nome in proprietario_map:
                     valor = row[col_name]
-                    if pd.notna(valor) and valor != 0:
+                    print(f"  Raw valor de {col_name}: '{valor}' (tipo: {type(valor)}, pd.notna: {pd.notna(valor)})")
+                    if pd.notna(valor):
+                        es_negativo = isinstance(valor, (int, float)) and float(valor) < 0
+                        if es_negativo:
+                            print(f"  🔴 VALOR NEGATIVO DETECTADO: {proprietario_nome} = {valor}")
                         # Verificar se já existe um registro para esta combinação
                         existing = db.query(AluguelSimples).filter(
                             AluguelSimples.imovel_id == imovel.id,
@@ -1475,14 +1478,18 @@ async def import_alquileres_matricial(df: pd.DataFrame, db: Session) -> int:
                         ).first()
                         
                         if not existing:
-                            new_alugueis.append({
-                                "mes": mes,
-                                "ano": ano,
-                                "valor_liquido_proprietario": float(valor),
-                                "imovel_id": imovel.id,
-                                "proprietario_id": proprietario_map[proprietario_nome]
-                            })
-                            print(f"  Aluguel criado: {proprietario_nome} - R$ {valor}")
+                            try:
+                                valor_float = float(valor)
+                                new_alugueis.append({
+                                    "mes": mes,
+                                    "ano": ano,
+                                    "valor_liquido_proprietario": valor_float,
+                                    "imovel_id": imovel.id,
+                                    "proprietario_id": proprietario_map[proprietario_nome]
+                                })
+                                print(f"  ✅ Aluguel criado: {proprietario_nome} - R$ {valor_float}")
+                            except ValueError as e:
+                                print(f"  ❌ Erro convertendo valor '{valor}' para float: {e}")
                         else:
                             print(f"  Aluguel já existe: {proprietario_nome} - ignorando")
                 else:
@@ -1496,5 +1503,6 @@ async def import_alquileres_matricial(df: pd.DataFrame, db: Session) -> int:
         db.bulk_insert_mappings(AluguelSimples, new_alugueis)
         count += len(new_alugueis)
         print(f"Importados {count} registros de aluguel da planilha {sheet_name}")
+
     
     return count

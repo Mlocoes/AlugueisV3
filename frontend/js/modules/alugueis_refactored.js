@@ -211,7 +211,7 @@ class AlugueisModule {
                     const valor = linha.valores[imovel.nome] || 0;
                     return { proprietario, valor };
                 })
-                .filter(item => item.valor > 0);
+                .filter(item => item.valor !== 0); // Mostrar valores diferentes de zero (incluindo negativos)
 
             const totalImovel = alugueisDoImovel.reduce((sum, item) => sum + item.valor, 0);
 

@@ -158,7 +158,7 @@ class AlugueisModule {
                     proprietario: this.proprietarios.find(p => p.proprietario_id === linha.proprietario_id),
                     valor: linha.valores[imovel.nome] || 0
                 }))
-                .filter(item => item.valor > 0);
+                .filter(item => item.valor !== 0); // Mostrar valores diferentes de zero (incluindo negativos)
 
             if (alugueisDoImovel.length === 0) return '';
 
@@ -218,7 +218,7 @@ class AlugueisModule {
                 const linha = this.matriz.find(l => l.proprietario_id === prop.proprietario_id);
                 const valor = (linha && linha.valores[imovel.nome]) || 0;
                 totalImovel += valor;
-                rowHtml += `<td class="text-end">${valor > 0 ? `R$ ${valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}` : '-'}</td>`;
+                rowHtml += `<td class="text-end">${valor !== 0 ? `R$ ${valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}` : '-'}</td>`;
             });
             rowHtml += `<td class="text-end"><strong>R$ ${totalImovel.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</strong></td></tr>`;
             tableBody.innerHTML += rowHtml;
