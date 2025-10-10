@@ -122,30 +122,45 @@ class DashboardModule {
     }
 
     createCharts() {
+        // Ensure all charts are destroyed before creating new ones
         this.destroyAllCharts();
-        this.createIncomeChart();
+        
+        // Small delay to ensure DOM is ready
+        setTimeout(() => {
+            if (this.isViewActive) {
+                this.createIncomeChart();
+            }
+        }, 50);
     }
 
     destroyAllCharts() {
         for (const chartKey in this.charts) {
             if (this.charts[chartKey]) {
-                this.charts[chartKey].destroy();
+                try {
+                    this.charts[chartKey].destroy();
+                } catch (error) {
+                    console.warn(`Error destroying chart ${chartKey}:`, error);
+                }
                 this.charts[chartKey] = null;
             }
         }
+        // Clear the charts object completely
+        this.charts = {};
     }
 
     createIncomeChart() {
-        if (!this.isViewActive) {
+        if (!this.isViewActive || !this.summaryData) {
             return;
         }
 
         const waitForCanvas = (retries = 0) => {
             const canvas = document.getElementById('ingresosChart');
-            if (canvas && canvas.offsetParent !== null) {
+            if (canvas && canvas.offsetParent !== null && canvas.getContext) {
                 this.renderIncomeChart(canvas);
             } else if (retries < 10) {
                 setTimeout(() => waitForCanvas(retries + 1), 100);
+            } else {
+                console.warn("Canvas 'ingresosChart' not available after 10 retries");
             }
         };
         waitForCanvas();
@@ -158,11 +173,24 @@ class DashboardModule {
             return;
         }
 
+        // Destroy existing chart if it exists
+        if (this.charts.income) {
+            try {
+                this.charts.income.destroy();
+            } catch (error) {
+                console.warn("Error destroying existing income chart:", error);
+            }
+            this.charts.income = null;
+        }
+
         const ctx = canvas.getContext('2d');
         if (!ctx) {
             console.error("Não foi possível obter o contexto 2D do canvas.");
             return;
         }
+
+        // Clear the canvas completely
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
 
         this.charts.income = new Chart(ctx, {
             type: 'line',
