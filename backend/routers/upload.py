@@ -324,7 +324,9 @@ class FileProcessor:
         columns_text = ' '.join(columns)
         
         # Verificar se tem nomes de proprietários conhecidos (indica aluguéis matriciais)
-        proprietario_nomes_conhecidos = ['Jandira', 'Manoel', 'Fabio', 'Carla', 'Armando', 'Suely', 'Felipe', 'Adriana', 'Regina', 'Mario']
+        # Carregar proprietários ativos da base de dados
+        proprietarios_db = self.db.query(Propietario).filter(Propietario.ativo == True).all()
+        proprietario_nomes_conhecidos = [prop.nome for prop in proprietarios_db]
         proprietario_columns_reais = [col for col in df.columns if any(str(nome) in str(col) for nome in proprietario_nomes_conhecidos)]
         
         # Verificar se tem colunas que parecem valores (float64)
@@ -631,9 +633,11 @@ class FileProcessor:
                 errors.append(f"Coluna obrigatória faltante: {col}")
         
         # Verificar se há colunas de proprietário (Nnnn* ou nomes reais)
-        nnnn_columns = [col for col in df.columns if col.startswith('Nnnn')]
-        proprietario_nomes_conhecidos = ['Jandira', 'Manoel', 'Fabio', 'Carla', 'Armando', 'Suely', 'Felipe', 'Adriana', 'Regina', 'Mario']
-        proprietario_columns_reais = [col for col in df.columns if any(nome in col for nome in proprietario_nomes_conhecidos)]
+        nnnn_columns = [col for col in df.columns if str(col).startswith('Nnnn')]
+        # Carregar proprietários ativos da base de dados
+        proprietarios_db = self.db.query(Propietario).filter(Propietario.ativo == True).all()
+        proprietario_nomes_conhecidos = [prop.nome for prop in proprietarios_db]
+        proprietario_columns_reais = [col for col in df.columns if any(str(nome) in str(col) for nome in proprietario_nomes_conhecidos)]
         
         if len(nnnn_columns) == 0 and len(proprietario_columns_reais) == 0:
             errors.append("Nenhuma coluna de proprietário encontrada (Nnnn* ou nomes reais)")
@@ -839,7 +843,9 @@ async def import_data(file_id: str, db: Session = Depends(get_db)):
                 records_imported["participacoes"] = count
             elif data_type == "alugueis":
                 # Verificar se é formato matricial ou tabular
-                proprietario_nomes_conhecidos = ['Jandira', 'Manoel', 'Fabio', 'Carla', 'Armando', 'Suely', 'Felipe', 'Adriana', 'Regina', 'Mario']
+                # Carregar proprietários ativos da base de dados
+                proprietarios_db = db.query(Propietario).filter(Propietario.ativo == True).all()
+                proprietario_nomes_conhecidos = [prop.nome for prop in proprietarios_db]
                 proprietario_columns_reais = [col for col in df.columns if any(str(nome) in str(col) for nome in proprietario_nomes_conhecidos)]
                 
                 print(f"🔄 Procesando hoja: {sheet_name}, data_type: {data_type}")
@@ -1162,9 +1168,11 @@ async def import_participacoes_matricial(df: pd.DataFrame, db: Session) -> int:
     existing_imoveis = {i.nome: i for i in db.query(Inmueble).filter(Inmueble.nome.in_(nomes_imoveis)).all()}
     
     # Detectar formato: Nnnn* ou nomes reais
-    nnnn_columns = [col for col in df.columns if col.startswith('Nnnn')]
-    proprietario_nomes_conhecidos = ['Jandira', 'Manoel', 'Fabio', 'Carla', 'Armando', 'Suely', 'Felipe', 'Adriana', 'Regina', 'Mario']
-    proprietario_columns_reais = [col for col in df.columns if any(nome in col for nome in proprietario_nomes_conhecidos)]
+    nnnn_columns = [col for col in df.columns if str(col).startswith('Nnnn')]
+    # Carregar proprietários ativos da base de dados
+    proprietarios_db = db.query(Propietario).filter(Propietario.ativo == True).all()
+    proprietario_nomes_conhecidos = [prop.nome for prop in proprietarios_db]
+    proprietario_columns_reais = [col for col in df.columns if any(str(nome) in str(col) for nome in proprietario_nomes_conhecidos)]
     
     if len(nnnn_columns) > 0:
         # Formato Nnnn*: usar mapeamento ordinal
@@ -1409,18 +1417,14 @@ async def import_alquileres_matricial(df: pd.DataFrame, db: Session) -> int:
     
     print(f"Mês: {mes}, Ano: {ano}")
     
-    # Lista de proprietários conhecidos
-    proprietario_nomes = ['Jandira', 'Manoel', 'Fabio', 'Carla', 'Armando', 'Suely', 'Felipe', 'Adriana', 'Regina', 'Mario Angelo']
+    # Carregar todos os proprietários ativos da base de dados
+    proprietarios_db = db.query(Propietario).filter(Propietario.ativo == True).all()
+    proprietario_nomes = [prop.nome for prop in proprietarios_db]
+    
+    print(f"Proprietários carregados da BD: {len(proprietario_nomes)} - {proprietario_nomes}")
     
     # Mapear nomes de proprietários para IDs
-    proprietario_map = {}
-    for nome in proprietario_nomes:
-        proprietario = db.query(Propietario).filter(Propietario.nome.ilike(f'%{nome}%')).first()
-        if proprietario:
-            proprietario_map[nome] = proprietario.id
-            print(f"Proprietário encontrado: {nome} -> ID {proprietario.id}")
-    
-    print(f"Proprietários mapeados: {len(proprietario_map)}")
+    proprietario_map = {prop.nome: prop.id for prop in proprietarios_db}
     
     new_alugueis = []
     
