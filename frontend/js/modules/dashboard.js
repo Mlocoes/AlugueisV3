@@ -198,28 +198,25 @@ class DashboardModule {
             return;
         }
 
-        // Double-check: destroy any existing chart on this canvas
-        if (this.charts.income) {
-            try {
-                this.charts.income.destroy();
-            } catch (error) {
-                console.warn("Error destroying existing income chart:", error);
-            }
-            this.charts.income = null;
-        }
-
-        // Check Chart.js global instances for this canvas
-        const chartInstances = Chart.instances;
-        for (const instanceId in chartInstances) {
-            const chart = chartInstances[instanceId];
-            if (chart.canvas && chart.canvas.id === 'ingresosChart') {
-                try {
-                    chart.destroy();
-                    console.log(`Destroyed global Chart.js instance ${instanceId} for ingresosChart`);
-                } catch (error) {
-                    console.warn(`Error destroying global chart instance ${instanceId}:`, error);
-                }
-            }
+        // Most aggressive approach: recreate the canvas element completely
+        const canvasContainer = canvas.parentElement;
+        if (canvasContainer) {
+            // Remove the old canvas
+            canvasContainer.removeChild(canvas);
+            
+            // Create a new canvas with the same attributes
+            const newCanvas = document.createElement('canvas');
+            newCanvas.id = 'ingresosChart';
+            newCanvas.className = canvas.className;
+            newCanvas.style.cssText = canvas.style.cssText;
+            newCanvas.width = canvas.width;
+            newCanvas.height = canvas.height;
+            
+            // Insert the new canvas
+            canvasContainer.appendChild(newCanvas);
+            
+            // Update the canvas reference
+            canvas = newCanvas;
         }
 
         const ctx = canvas.getContext('2d');
@@ -228,10 +225,7 @@ class DashboardModule {
             return;
         }
 
-        // Clear the canvas completely
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-        // Add a small delay before creating the new chart
+        // Create the chart with error handling
         setTimeout(() => {
             try {
                 this.charts.income = new Chart(ctx, {
@@ -292,7 +286,7 @@ class DashboardModule {
             } catch (error) {
                 console.error("Error creating income chart:", error);
             }
-        }, 50);
+        }, 100);  // Increased delay to ensure canvas recreation is complete
     }
 
     async refresh() {
