@@ -309,9 +309,9 @@ ALTER TABLE participacoes DROP CONSTRAINT IF EXISTS participacoes_porcentagem_ch
 ALTER TABLE participacoes ADD CONSTRAINT participacoes_porcentagem_check CHECK (porcentagem >= 0::numeric AND porcentagem <= 100::numeric);
 
 -- Permissões
-GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO alugueisv2_usuario;
-GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public TO alugueisv2_usuario;
-GRANT EXECUTE ON ALL FUNCTIONS IN SCHEMA public TO alugueisv2_usuario;
+GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO alugueisv3_usuario;
+GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public TO alugueisv3_usuario;
+GRANT EXECUTE ON ALL FUNCTIONS IN SCHEMA public TO alugueisv3_usuario;
 
 -- Índices
 CREATE INDEX IF NOT EXISTS idx_proprietarios_nome ON proprietarios(nome);
