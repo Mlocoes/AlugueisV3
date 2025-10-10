@@ -299,9 +299,8 @@ class AluguelService:
         Returns:
             Tupla (válido, mensagem_erro)
         """
-        # Validar valor
-        if valor <= 0:
-            return False, "Valor do aluguel deve ser positivo"
+        # Não validar valor - pode ser negativo se o imóvel não está alugado
+        # e há taxas de administração ou impostos
         
         # Validar data
         if data_referencia > date.today():
