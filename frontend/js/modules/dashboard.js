@@ -32,7 +32,7 @@ class DashboardModule {
         window.addEventListener('navigate', (e) => {
             if (this.isViewActive && e.detail.view !== 'dashboard') {
                 this.isViewActive = false;
-                this.destroyAllCharts();
+                this.forceDestroyAllCharts();
             }
         });
 
