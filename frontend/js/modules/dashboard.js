@@ -122,18 +122,19 @@ class DashboardModule {
     }
 
     createCharts() {
-        // Ensure all charts are destroyed before creating new ones
-        this.destroyAllCharts();
+        // More aggressive chart destruction
+        this.forceDestroyAllCharts();
         
-        // Small delay to ensure DOM is ready
+        // Wait for next tick to ensure destruction is complete
         setTimeout(() => {
             if (this.isViewActive) {
                 this.createIncomeChart();
             }
-        }, 50);
+        }, 100);
     }
 
-    destroyAllCharts() {
+    forceDestroyAllCharts() {
+        // First, destroy all tracked charts
         for (const chartKey in this.charts) {
             if (this.charts[chartKey]) {
                 try {
@@ -141,11 +142,35 @@ class DashboardModule {
                 } catch (error) {
                     console.warn(`Error destroying chart ${chartKey}:`, error);
                 }
-                this.charts[chartKey] = null;
             }
         }
-        // Clear the charts object completely
+        
+        // Clear the charts object
         this.charts = {};
+        
+        // Force destroy any Chart.js instances on the ingresosChart canvas
+        const canvas = document.getElementById('ingresosChart');
+        if (canvas) {
+            // Get all Chart.js instances
+            const chartInstances = Chart.instances;
+            for (const instanceId in chartInstances) {
+                const chart = chartInstances[instanceId];
+                if (chart.canvas && chart.canvas.id === 'ingresosChart') {
+                    try {
+                        chart.destroy();
+                        console.log(`Force destroyed Chart.js instance ${instanceId}`);
+                    } catch (error) {
+                        console.warn(`Error force destroying chart instance ${instanceId}:`, error);
+                    }
+                }
+            }
+            
+            // Clear canvas context
+            const ctx = canvas.getContext('2d');
+            if (ctx) {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+            }
+        }
     }
 
     createIncomeChart() {
@@ -173,7 +198,7 @@ class DashboardModule {
             return;
         }
 
-        // Destroy existing chart if it exists
+        // Double-check: destroy any existing chart on this canvas
         if (this.charts.income) {
             try {
                 this.charts.income.destroy();
@@ -181,6 +206,20 @@ class DashboardModule {
                 console.warn("Error destroying existing income chart:", error);
             }
             this.charts.income = null;
+        }
+
+        // Check Chart.js global instances for this canvas
+        const chartInstances = Chart.instances;
+        for (const instanceId in chartInstances) {
+            const chart = chartInstances[instanceId];
+            if (chart.canvas && chart.canvas.id === 'ingresosChart') {
+                try {
+                    chart.destroy();
+                    console.log(`Destroyed global Chart.js instance ${instanceId} for ingresosChart`);
+                } catch (error) {
+                    console.warn(`Error destroying global chart instance ${instanceId}:`, error);
+                }
+            }
         }
 
         const ctx = canvas.getContext('2d');
@@ -192,61 +231,68 @@ class DashboardModule {
         // Clear the canvas completely
         ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-        this.charts.income = new Chart(ctx, {
-            type: 'line',
-            data: {
-                labels: income_chart_data.labels,
-                datasets: [{
-                    label: 'Receitas (R$)',
-                    data: income_chart_data.values,
-                    borderColor: '#36A2EB',
-                    backgroundColor: 'rgba(54, 162, 235, 0.1)',
-                    borderWidth: 3,
-                    fill: true,
-                    tension: 0.4,
-                    pointBackgroundColor: '#36A2EB',
-                    pointBorderColor: '#ffffff',
-                    pointBorderWidth: 2,
-                    pointRadius: 6,
-                    pointHoverRadius: 8
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: { display: false },
-                    tooltip: {
-                        backgroundColor: 'rgba(0, 0, 0, 0.8)',
-                        titleColor: 'white',
-                        bodyColor: 'white',
-                        borderColor: '#36A2EB',
-                        borderWidth: 1
-                    }
-                },
-                scales: {
-                    x: { 
-                        grid: { display: false },
-                        ticks: { color: '#000000' }
+        // Add a small delay before creating the new chart
+        setTimeout(() => {
+            try {
+                this.charts.income = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: income_chart_data.labels,
+                        datasets: [{
+                            label: 'Receitas (R$)',
+                            data: income_chart_data.values,
+                            borderColor: '#36A2EB',
+                            backgroundColor: 'rgba(54, 162, 235, 0.1)',
+                            borderWidth: 3,
+                            fill: true,
+                            tension: 0.4,
+                            pointBackgroundColor: '#36A2EB',
+                            pointBorderColor: '#ffffff',
+                            pointBorderWidth: 2,
+                            pointRadius: 6,
+                            pointHoverRadius: 8
+                        }]
                     },
-                    y: {
-                        beginAtZero: true,
-                        grid: { 
-                            borderDash: [5, 5],
-                            color: 'rgba(0, 0, 0, 0.1)'
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { display: false },
+                            tooltip: {
+                                backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                                titleColor: 'white',
+                                bodyColor: 'white',
+                                borderColor: '#36A2EB',
+                                borderWidth: 1
+                            }
                         },
-                        ticks: {
-                            color: '#000000',
-                            callback: value => `R$ ${value.toLocaleString('pt-BR')}`
-                        }
+                        scales: {
+                            x: { 
+                                grid: { display: false },
+                                ticks: { color: '#000000' }
+                            },
+                            y: {
+                                beginAtZero: true,
+                                grid: { 
+                                    borderDash: [5, 5],
+                                    color: 'rgba(0, 0, 0, 0.1)'
+                                },
+                                ticks: {
+                                    color: '#000000',
+                                    callback: value => `R$ ${value.toLocaleString('pt-BR')}`
+                                }
+                            }
+                        },
+                        layout: {
+                            padding: 10
+                        },
+                        backgroundColor: '#ffffff'
                     }
-                },
-                layout: {
-                    padding: 10
-                },
-                backgroundColor: '#ffffff'
+                });
+            } catch (error) {
+                console.error("Error creating income chart:", error);
             }
-        });
+        }, 50);
     }
 
     async refresh() {
