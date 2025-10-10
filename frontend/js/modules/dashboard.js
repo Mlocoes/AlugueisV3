@@ -22,6 +22,8 @@ class DashboardModule {
                 if (!this.dataLoaded) {
                     this.load();
                 } else {
+                    // Se os dados já foram carregados mas a view não estava ativa,
+                    // criar os gráficos agora
                     this.createCharts();
                 }
             }
@@ -228,9 +230,14 @@ class DashboardModule {
 }
 
 // Inicialização do módulo
+// A inicialização agora é feita pelo app.js durante initializeModules()
+// para garantir a ordem correta e evitar sobrescrever a instância
 document.addEventListener('DOMContentLoaded', () => {
-    window.dashboardModule = new DashboardModule();
-    window.dashboardModule.init();
+    // Se o módulo ainda não foi inicializado (fallback para testes standalone)
+    if (!window.dashboardModule) {
+        window.dashboardModule = new DashboardModule();
+        window.dashboardModule.init();
+    }
 });
 
 // Exportar classe globalmente para o app.js
