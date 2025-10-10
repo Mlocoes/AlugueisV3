@@ -617,7 +617,8 @@ class FileProcessor:
             errors.append(f"Colunas faltantes: {missing_columns}")
         
         for idx, row in df.iterrows():
-            if pd.isna(row.get('valor_aluguel_propietario', 0)) or row.get('valor_aluguel_propietario', 0) == 0:
+            # Permite valores negativos - o aluguel líquido pode ser negativo se o imóvel não está alugado
+            if pd.isna(row.get('valor_aluguel_propietario')):
                 errors.append(f"Fila {idx + 2}: Valor de aluguel inválido")
         
         return {

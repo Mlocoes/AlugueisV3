@@ -397,7 +397,7 @@ class AluguelSimplesSchema(BaseModel):
     ano: int = Field(..., ge=2020, le=2060, description="Ano (2020-2060)")
     taxa_administracao_total: Optional[float] = Field(default=0, ge=0, description="Taxa de administração total")
     taxa_administracao_proprietario: Optional[float] = Field(default=0, ge=0, description="Taxa de administração do proprietário")
-    valor_liquido_proprietario: Optional[float] = Field(default=0, ge=0, description="Valor líquido para o proprietário")
+    valor_liquido_proprietario: Optional[float] = Field(default=0, description="Valor líquido para o proprietário (pode ser negativo)")
     proprietario_id: Optional[int] = Field(default=None, gt=0, description="ID do proprietário")
     imovel_id: Optional[int] = Field(default=None, gt=0, description="ID do imóvel")
     
@@ -429,7 +429,8 @@ class AluguelSimplesValidator:
     
     @staticmethod
     def validar_valor(valor: float) -> bool:
-        return valor >= 0
+        # Permite valores negativos - o aluguel líquido pode ser negativo
+        return True
     
     @staticmethod
     def calcular_valor_liquido(valor_aluguel: float, taxa_admin: float) -> float:
