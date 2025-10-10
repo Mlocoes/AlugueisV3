@@ -168,6 +168,10 @@ class SistemaAlugueisApp {
         if (typeof window.DashboardModule !== 'undefined') {
             this.modules.dashboard = new window.DashboardModule();
             window.dashboardModule = this.modules.dashboard;
+            // Garantir que init() seja chamado para configurar os event listeners
+            if (typeof this.modules.dashboard.init === 'function') {
+                this.modules.dashboard.init();
+            }
         }
 
         if (typeof ProprietariosModule !== 'undefined') {
