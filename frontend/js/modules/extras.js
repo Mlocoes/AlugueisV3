@@ -471,7 +471,7 @@ class ExtrasManager {
      * Renderizar cards móveis para transferências
      */
     renderTransferenciasMobile(transferencias) {
-        const tbody = document.getElementById('transferencias-table-body');
+                             const tbody = document.getElementById('transferencias-table-body');
         if (!tbody) return;
 
         if (!transferencias || transferencias.length === 0) {
@@ -772,7 +772,7 @@ class ExtrasManager {
             });
             return;
         }
-        // Mostrar integrantes si hay alias seleccionado y cargar propietarios
+        // Mostrar integrantes si hay alias seleccionado y cargar proprietários
         setTimeout(() => {
             const aliasSelect = document.getElementById('transferencia-alias');
             const container = document.getElementById('transferencia-proprietarios-container');
@@ -784,7 +784,7 @@ class ExtrasManager {
                 }
             }
         }, 300);
-        // Si estamos em modo criação e já hay um alias seleccionado, cargar propietarios igual que en edição
+        // Si estamos em modo criação e já hay um alias seleccionado, cargar proprietários igual que em edição
         if (!this.currentTransferencia) {
             const aliasSelect = document.getElementById('transferencia-alias');
             if (aliasSelect && aliasSelect.value) {
@@ -887,441 +887,87 @@ class ExtrasManager {
         try {
             const response = await this.apiService.get('/api/extras/?ativo=true');
             const aliasSelect = document.getElementById('transferencia-alias');
-            if (response && response.success && Array.isArray(response.data)) {
+
+            if (response && response.success && Array.isArray(response.data) && aliasSelect) {
                 aliasSelect.innerHTML = '<option value="">Selecione um alias...</option>';
                 response.data.forEach(alias => {
                     const option = document.createElement('option');
                     option.value = alias.id;
                     option.textContent = alias.alias;
-                    option.dataset.proprietarios = alias.id_proprietarios;
                     aliasSelect.appendChild(option);
                 });
-                // Seleccionar automáticamente si solo hay un alias
-                if (response.data.length === 1) {
-                    aliasSelect.value = response.data[0].id;
-                    if (typeof this.carregarProprietariosAlias === 'function') {
-                        this.carregarProprietariosAlias(aliasSelect.value);
-                    }
-                }
-            } else {
-                console.warn('[DEBUG] No se recibieron alias válidos de la API');
+
+                // Configurar evento de mudança
+                aliasSelect.onchange = () => this.atualizarProprietariosTransferencia(aliasSelect.value);
             }
         } catch (error) {
-            console.error('[DEBUG] Erro ao carregar aliases:', error);
-            this.showError('Erro ao carregar aliases: ' + error.message);
+            console.error('Erro ao carregar aliases:', error);
         }
     }
 
     /**
-     * Carregar proprietários do alias selecionado
+     * Atualizar proprietários da transferência baseado no alias selecionado
      */
-    async carregarProprietariosAlias(aliasId) {
+    async atualizarProprietariosTransferencia(aliasId) {
         const container = document.getElementById('transferencia-proprietarios-container');
-        const tableBody = document.getElementById('transferencia-proprietarios-table');
-    // ...
-    // ...existing code...
-        if (!aliasId) {
-            container.style.display = 'none';
+        const tbody = document.getElementById('transferencia-proprietarios-table');
+
+        if (!aliasId || !container || !tbody) {
+            if (container) container.style.display = 'none';
             return;
         }
+
         try {
-            const aliasSelect = document.getElementById('transferencia-alias');
-            const selectedOption = aliasSelect.querySelector(`option[value="${aliasId}"]`);
-            if (selectedOption && selectedOption.dataset.proprietarios) {
-                const proprietarioIds = JSON.parse(selectedOption.dataset.proprietarios);
-                tableBody.innerHTML = '';
-                for (const id of proprietarioIds) {
-                    const proprietario = this.allProprietarios.find(p => p.id === parseInt(id));
-                    if (proprietario) {
-                        let valorSalvo = '';
-                        if (this.currentTransferencia && this.currentTransferencia.id_proprietarios) {
-                            try {
-                                const proprietariosSalvos = JSON.parse(this.currentTransferencia.id_proprietarios);
-                                const proprietarioSalvo = proprietariosSalvos.find(p => p.id === proprietario.id);
-                                if (proprietarioSalvo) {
-                                    valorSalvo = proprietarioSalvo.valor || '';
-                                }
-                            } catch (error) {
-                                // ...existing code...
-                            }
-                        }
-                        const row = document.createElement('tr');
-                        row.innerHTML = `
-                            <td>
-                                <strong>${proprietario.nome} ${proprietario.sobrenome || ''}</strong>
-                            </td>
-                            <td>
-                                <div class="input-group">
-                                    <span class="input-group-text" style="font-size:0.80rem;">R$</span>
-                                    <input type="number" class="form-control" style="font-size:0.80rem;" 
-                                           name="transferencia_${proprietario.id}" 
-                                           step="0.01" placeholder="0,00"
-                                           value="${valorSalvo}">
-                                </div>
-                            </td>
-                        `;
-                        tableBody.appendChild(row);
-                    }
+            // Carregar dados do alias
+            const aliasResponse = await this.apiService.get(`/api/extras/${aliasId}`);
+            if (!aliasResponse || !aliasResponse.success) {
+                container.style.display = 'none';
+                return;
+            }
+
+            const alias = aliasResponse.data;
+            let proprietariosIds = [];
+
+            // Parse IDs dos proprietários
+            if (Array.isArray(alias.id_proprietarios)) {
+                proprietariosIds = alias.id_proprietarios.map(id => parseInt(id));
+            } else if (typeof alias.id_proprietarios === 'string') {
+                try {
+                    const parsed = JSON.parse(alias.id_proprietarios);
+                    proprietariosIds = Array.isArray(parsed) ? parsed.map(id => parseInt(id)) : [];
+                } catch (e) {
+                    proprietariosIds = alias.id_proprietarios.split(',').map(id => parseInt(id.trim()));
                 }
-                container.style.display = proprietarioIds.length > 0 ? 'block' : 'none';
+            }
+
+            if (proprietariosIds.length === 0) {
+                container.style.display = 'none';
+                return;
+            }
+
+            // Carregar proprietários
+            const propResponse = await this.apiService.get('/api/proprietarios/');
+            if (propResponse && propResponse.success && Array.isArray(propResponse.data)) {
+                const proprietarios = propResponse.data.filter(p => proprietariosIds.includes(p.id));
+
+                // Preencher tabela
+                tbody.innerHTML = '';
+                proprietarios.forEach(proprietario => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${proprietario.nome}</td>
+                        <td><input type="number" class="form-control form-control-sm" step="0.01" min="0" placeholder="0.00"></td>
+                    `;
+                    tbody.appendChild(row);
+                });
+
+                container.style.display = 'block';
             } else {
                 container.style.display = 'none';
             }
         } catch (error) {
-            // debugDiv.innerHTML += `<br>Erro ao carregar proprietarios: ${error}`;
-        }
-    }
-
-    /**
-     * Salvar alias
-     */
-    async salvarAlias() {
-        try {
-            const formData = new FormData(document.getElementById('form-alias'));
-            
-            // Obter proprietários selecionados
-            const proprietariosSelect = document.getElementById('alias-proprietarios');
-            const proprietariosSelecionados = Array.from(proprietariosSelect.selectedOptions)
-                .map(option => parseInt(option.value))
-                .filter(id => !isNaN(id));
-
-            const aliasData = {
-                alias: formData.get('alias-nome').trim(),
-                id_proprietarios: proprietariosSelecionados.length > 0 ? JSON.stringify(proprietariosSelecionados) : null
-            };
-
-            // Validações básicas
-            if (!aliasData.alias) {
-                this.showAlert('Nome do alias é obrigatório', 'danger', 'alias-alerts');
-                return;
-            }
-
-            if (proprietariosSelecionados.length === 0) {
-                this.showAlert('Selecione pelo menos um proprietário', 'danger', 'alias-alerts');
-                return;
-            }
-
-            let response;
-            if (this.currentExtra) {
-                // Editar
-                response = await this.apiService.put(`/api/extras/${this.currentExtra.id}`, aliasData);
-            } else {
-                // Criar
-                response = await this.apiService.post('/api/extras/', aliasData);
-            }
-
-            if (response && response.success) {
-                this.showSuccess(this.currentExtra ? 'Alias atualizado com sucesso!' : 'Alias criado com sucesso!');
-                // Fechar modal de forma segura para acessibilidade
-                this.safeCloseModal('modal-alias', 'btn-salvar-alias');
-                // Recargar la lista de aliases para mostrar el nuevo alias
-                await this.loadExtras();
-            }
-
-        } catch (error) {
-            console.error('Erro ao salvar alias:', error);
-            
-            // Tratamento específico para erro de duplicação
-            let errorMessage = error.message;
-            if (errorMessage.includes('Já existe um alias com este nome')) {
-                errorMessage = 'Este nome de alias já existe. Por favor, escolha outro nome.';
-            } else if (errorMessage.includes('HTTP 400')) {
-                errorMessage = 'Dados inválidos. Verifique as informações e tente novamente.';
-            }
-            
-            this.showAlert('Erro ao salvar alias: ' + errorMessage, 'danger', 'alias-alerts');
-        }
-    }
-
-    /**
-     * Salvar transferências
-     */
-    /**
-     * Salvar transferências
-     */
-    async salvarTransferencias() {
-        // Obter e desabilitar o botão de submit
-        const submitButton = document.getElementById('btn-salvar-transferencias');
-        if (submitButton) {
-            submitButton.disabled = true;
-        }
-        
-        try {
-            const aliasId = document.getElementById('transferencia-alias').value;
-            const nomeTransferencia = document.getElementById('transferencia-nome').value.trim();
-            const dataCriacao = document.getElementById('transferencia-data-criacao').value;
-            const dataFim = document.getElementById('transferencia-data-fim').value;
-            
-            if (!aliasId) {
-                this.showAlert('Selecione um alias', 'danger', 'transferencia-alerts');
-                if (submitButton) submitButton.disabled = false;
-                return;
-            }
-
-            if (!nomeTransferencia) {
-                this.showAlert('Digite o nome da transferência', 'danger', 'transferencia-alerts');
-                if (submitButton) submitButton.disabled = false;
-                return;
-            }
-
-            if (!dataCriacao) {
-                this.showAlert('Selecione a data de criação', 'danger', 'transferencia-alerts');
-                if (submitButton) submitButton.disabled = false;
-                return;
-            }
-
-            // Validar que data_fim seja posterior à data_criacao (se informada)
-            if (dataFim && dataCriacao && new Date(dataFim) < new Date(dataCriacao)) {
-                this.showAlert('Data de fim deve ser posterior à data de criação', 'danger', 'transferencia-alerts');
-                if (submitButton) submitButton.disabled = false;
-                return;
-            }
-
-            // Coletar valores das transferências
-            const proprietarios = [];
-            const inputs = document.querySelectorAll('#transferencia-proprietarios-table input[type="number"]');
-            let hasValue = false;
-
-            inputs.forEach(input => {
-                const proprietarioId = parseInt(input.name.replace('transferencia_', ''));
-                const valor = parseFloat(input.value);
-                if (!isNaN(valor) && valor !== 0) {
-                    proprietarios.push({
-                        id: proprietarioId,
-                        valor: valor
-                    });
-                    hasValue = true;
-                }
-            });
-
-            if (!hasValue) {
-                this.showAlert('Informe pelo menos um valor de transferência diferente de zero', 'danger', 'transferencia-alerts');
-                if (submitButton) submitButton.disabled = false;
-                return;
-            }
-
-            // Calcular valor total
-            const valorTotal = proprietarios.reduce((sum, prop) => sum + prop.valor, 0);
-
-            // Preparar dados para envio
-            const transferenciaData = {
-                alias_id: parseInt(aliasId),
-                nome_transferencia: nomeTransferencia,
-                valor_total: valorTotal,
-                id_proprietarios: JSON.stringify(proprietarios),
-                data_criacao: dataCriacao,
-                data_fim: dataFim || null
-            };
-
-            let response;
-            if (this.currentTransferencia) {
-                // Atualizar transferência existente
-                response = await this.apiService.put(`/api/transferencias/${this.currentTransferencia.id}`, transferenciaData);
-            } else {
-                // Criar nova transferência
-                response = await this.apiService.post('/api/transferencias/', transferenciaData);
-            }
-
-            if (response && (response.id || response.success !== false)) {
-                this.showSuccess(this.currentTransferencia ? 
-                    'Transferência atualizada com sucesso!' : 
-                    'Transferência criada com sucesso!');
-                // Resetar currentTransferencia
-                this.currentTransferencia = null;
-                // Fechar modal de forma segura para acessibilidade
-                this.safeCloseModal('modal-transferencias', 'btn-salvar-transferencia');
-                // Recargar la lista de transferencias para mostrar la nova transferência
-                await this.loadTransferencias();
-            }
-
-        } catch (error) {
-            console.error('Erro ao salvar transferência:', error);
-            this.showAlert('Erro ao salvar transferência: ' + error.message, 'danger', 'transferencia-alerts');
-        } finally {
-            // Re-habilitar o botão de submit
-            if (submitButton) {
-                submitButton.disabled = false;
-            }
-        }
-    }
-
-    /**
-     * Editar alias
-     */
-    async editarAlias(id) {
-        try {
-            const extra = this.allExtras.find(e => e.id === id);
-            if (!extra) {
-                this.showError('Alias não encontrado');
-                return;
-            }
-
-            this.showAliasModal(extra);
-        } catch (error) {
-            console.error('Erro ao carregar alias para edição:', error);
-            this.showError('Erro ao carregar alias: ' + error.message);
-        }
-    }
-
-    /**
-     * Excluir alias
-     */
-    async excluirAlias(id) {
-        try {
-            // Buscar o extra sem operações pesadas (comparando como número)
-            const extra = this.allExtras.find(e => parseInt(e.id) === parseInt(id));
-            if (!extra) {
-                console.error('[DEBUG] Alias não encontrado para exclusão. id:', id, 'allExtras:', this.allExtras);
-                this.showError('Alias não encontrado');
-                return;
-            }
-
-            // Usar uiManager.showConfirm para confirmar exclusão
-            const confirmed = await this.uiManager.showConfirm(
-                'Excluir Alias',
-                `Tem certeza que deseja excluir o alias "${extra.nome || extra.extra_nome}"?`,
-                'danger'
-            );
-
-            if (!confirmed) return;
-
-            // Executar a exclusão
-            await this.executeDeleteAlias(parseInt(id));
-        } catch (error) {
-            console.error('Erro ao excluir alias:', error);
-            this.showError('Erro ao excluir alias: ' + error.message);
-        }
-    }
-
-    /**
-     * Executar exclusão de alias sem bloquear a UI
-     */
-    async executeDeleteAlias(id) {
-        // Evitar operações múltiplas
-        if (this.pendingOperations.has(`delete-alias-${id}`)) {
-            return;
-        }
-
-        const operationId = `delete-alias-${id}`;
-        this.pendingOperations.add(operationId);
-        
-        try {
-
-            // Chamada de API sem bloquear a UI
-            const response = await this.apiService.delete(`/api/extras/${id}`);
-            
-            if (response && response.success) {
-                this.showSuccess('Alias excluído com sucesso!');
-                // Refuerzo: recargar lista completa desde backend e renderizar
-                await this.loadExtras();
-            } else {
-                throw new Error('Resposta inválida do servidor');
-            }
-
-        } catch (error) {
-            console.error('Erro ao excluir alias:', error);
-            this.showError('Erro ao excluir alias: ' + error.message);
-        } finally {
-            this.pendingOperations.delete(operationId);
-        }
-    }
-
-    /**
-     * Mostrar estatísticas
-     */
-    async showEstatisticas() {
-        try {
-            
-            const response = await this.apiService.get('/api/extras/estatisticas');
-            
-            if (response && response.success && response.data) {
-                const stats = response.data;
-                document.getElementById('stat-total-extras').textContent = stats.total_extras || 0;
-                document.getElementById('stat-extras-ativos').textContent = stats.extras_ativos || 0;
-                document.getElementById('stat-extras-inativos').textContent = stats.extras_inativos || 0;
-                document.getElementById('stat-valor-total').textContent = 'R$ ' + this.formatMoney(stats.valor_total_transferencias || 0);
-
-                const modal = new bootstrap.Modal(document.getElementById('modal-estatisticas-extras'));
-                modal.show();
-            }
-        } catch (error) {
-            console.error('Erro ao carregar estatísticas:', error);
-            this.showError('Erro ao carregar estatísticas: ' + error.message);
-        }
-    }
-
-    /**
-     * Formatar valor monetário
-     */
-    formatMoney(value) {
-        if (!value && value !== 0) return '0,00';
-        return parseFloat(value).toLocaleString('pt-BR', {
-            minimumFractionDigits: 2,
-            maximumFractionDigits: 2
-        });
-    }
-
-    /**
-     * Mostrar alerta de sucesso
-     */
-    showSuccess(message) {
-        this.showAlert(message, 'success');
-    }
-
-    /**
-     * Mostrar alerta de erro
-     */
-    showError(message) {
-        this.showAlert(message, 'danger');
-    }
-
-    /**
-     * Editar transferência
-     */
-    async editarTransferencia(id) {
-        try {
-            const transferencia = this.allTransferencias.find(t => t.id === id);
-            if (!transferencia) {
-                this.showError('Transferência não encontrada');
-                return;
-            }
-            this.currentTransferencia = transferencia;
-            this.showTransferenciasModal();
-            requestAnimationFrame(async () => {
-                try {
-                    await this.carregarAliasParaTransferencia();
-                    requestAnimationFrame(() => {
-                        const aliasSelect = document.getElementById('transferencia-alias');
-                        if (aliasSelect) {
-                            aliasSelect.value = transferencia.alias_id;
-                        }
-                        const nomeInput = document.getElementById('transferencia-nome');
-                        if (nomeInput) {
-                            nomeInput.value = transferencia.nome_transferencia || '';
-                        }
-                        if (transferencia.data_criacao) {
-                            const dataCriacaoInput = document.getElementById('transferencia-data-criacao');
-                            if (dataCriacaoInput) {
-                                // Extract date portion directly to avoid timezone conversion
-                                dataCriacaoInput.value = transferencia.data_criacao.split('T')[0];
-                            }
-                        }
-                        if (transferencia.data_fim) {
-                            const dataFimInput = document.getElementById('transferencia-data-fim');
-                            if (dataFimInput) {
-                                // Extract date portion directly to avoid timezone conversion
-                                dataFimInput.value = transferencia.data_fim.split('T')[0];
-                            }
-                        }
-                        this.carregarProprietariosAlias(transferencia.alias_id);
-                    });
-                } catch (error) {
-                    console.error('Erro ao carregar dados para edição:', error);
-                }
-            });
-        } catch (error) {
-            console.error('Erro ao carregar transferência para edição:', error);
-            this.showError('Erro ao carregar transferência: ' + error.message);
+            console.error('Erro ao atualizar proprietários:', error);
+            container.style.display = 'none';
         }
     }
 
@@ -1330,122 +976,555 @@ class ExtrasManager {
      */
     async excluirTransferencia(id) {
         try {
-            // Buscar a transferência sem operações pesadas
-            const transferencia = this.allTransferencias.find(t => t.id == id);
-            if (!transferencia) {
-                this.showError('Transferência não encontrada');
+            console.log(`Excluindo transferência ID: ${id}`);
+
+            // Configurar modal de confirmação
+            const modal = document.getElementById('modal-confirmar-exclusao');
+            const msgElement = document.getElementById('modal-confirmar-exclusao-msg');
+            const confirmBtn = document.getElementById('btn-confirmar-exclusao');
+
+            if (!modal || !msgElement || !confirmBtn) {
+                console.error('Modal de confirmação não encontrado');
                 return;
             }
 
-            // Usar uiManager.showConfirm para confirmar exclusão
-            const confirmed = await this.uiManager.showConfirm(
-                'Excluir Transferência',
-                `Tem certeza que deseja excluir a transferência "${transferencia.alias_nome || 'sem nome'}"?`,
-                'danger'
-            );
+            // Atualizar mensagem
+            msgElement.textContent = 'Tem certeza que deseja excluir esta transferência? Esta ação não pode ser desfeita.';
 
-            if (!confirmed) return;
+            // Configurar evento do botão confirmar
+            const handleConfirm = async () => {
+                try {
+                    // Desabilitar botão
+                    confirmBtn.disabled = true;
+                    confirmBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Excluindo...';
 
-            // Executar a exclusão
-            await this.executeDeleteTransferencia(id);
+                    // Fazer requisição de exclusão
+                    const response = await this.apiService.delete(`/api/transferencias/${id}`);
+
+                    if (response && response.success) {
+                        this.uiManager.showAlert('Transferência excluída com sucesso!', 'success');
+                        
+                        // Fechar modal
+                        const bootstrapModal = bootstrap.Modal.getInstance(modal);
+                        if (bootstrapModal) {
+                            bootstrapModal.hide();
+                        }
+
+                        // Recarregar lista de transferências
+                        await this.carregarTransferencias();
+                    } else {
+                        throw new Error(response?.error || 'Erro ao excluir transferência');
+                    }
+                } catch (error) {
+                    console.error('Erro ao excluir transferência:', error);
+                    this.uiManager.showAlert('Erro ao excluir transferência', 'danger');
+                } finally {
+                    // Reabilitar botão
+                    confirmBtn.disabled = false;
+                    confirmBtn.innerHTML = '<i class="fas fa-trash me-1"></i> Excluir';
+                    
+                    // Remover event listener
+                    confirmBtn.removeEventListener('click', handleConfirm);
+                }
+            };
+
+            // Adicionar event listener
+            confirmBtn.addEventListener('click', handleConfirm);
+
+            // Mostrar modal
+            const bootstrapModal = new bootstrap.Modal(modal);
+            bootstrapModal.show();
+
         } catch (error) {
-            console.error('Erro ao excluir transferência:', error);
-            this.showError('Erro ao excluir transferência: ' + error.message);
+            console.error('Erro ao configurar exclusão:', error);
+            this.uiManager.showAlert('Erro ao configurar exclusão', 'danger');
         }
     }
 
     /**
-     * Executar exclusão de transferência sem bloquear a UI
+     * Carregar transferências
      */
-    async executeDeleteTransferencia(id) {
-        // Evitar operações múltiplas
-        if (this.pendingOperations.has(`delete-transferencia-${id}`)) {
+    async carregarTransferencias() {
+        try {
+            const response = await this.apiService.get('/api/transferencias/');
+            if (response && response.success && Array.isArray(response.data)) {
+                this.allTransferencias = response.data;
+                this.renderTransferenciasTable(this.allTransferencias);
+            } else {
+                throw new Error('Erro ao carregar transferências');
+            }
+        } catch (error) {
+            console.error('Erro ao carregar transferências:', error);
+            this.showError('Erro ao carregar transferências: ' + error.message);
+        }
+    }
+
+    /**
+     * Editar transferência
+     */
+    async editarTransferencia(id) {
+        try {
+            console.log(`Editando transferência ID: ${id}`);
+
+            // Carregar dados da transferência
+            const response = await this.apiService.get(`/api/transferencias/${id}`);
+            if (!response || !response.success) {
+                this.uiManager.showAlert('Erro ao carregar dados da transferência', 'danger');
+                return;
+            }
+
+            const transferencia = response.data;
+            console.log('Dados da transferência:', transferencia);
+
+            // Preencher formulário
+            const form = document.getElementById('form-transferencias');
+            if (form) {
+                form.reset();
+
+                // Preencher campos
+                const nomeInput = document.getElementById('transferencia-nome');
+                const dataCriacaoInput = document.getElementById('transferencia-data-criacao');
+                const dataFimInput = document.getElementById('transferencia-data-fim');
+
+                if (nomeInput) nomeInput.value = transferencia.nome_transferencia || '';
+                if (dataCriacaoInput) dataCriacaoInput.value = this.formatarDataParaInput(transferencia.data_criacao);
+                if (dataFimInput) dataFimInput.value = transferencia.data_fim ? this.formatarDataParaInput(transferencia.data_fim) : '';
+            }
+
+            // Configurar modal para modo edição
+            const modalLabel = document.getElementById('modalTransferenciasLabel');
+            if (modalLabel) {
+                modalLabel.innerHTML = '<i class="fas fa-edit me-2"></i>Editar Transferência';
+            }
+
+            const submitBtn = document.getElementById('btn-salvar-transferencias');
+            if (submitBtn) {
+                submitBtn.innerHTML = 'Salvar Alterações';
+                submitBtn.setAttribute('data-transferencia-id', id);
+            }
+
+            // Mostrar modal
+            const modal = document.getElementById('modal-transferencias');
+            if (modal) {
+                const bootstrapModal = new bootstrap.Modal(modal);
+                bootstrapModal.show();
+            }
+
+        } catch (error) {
+            console.error('Erro ao editar transferência:', error);
+            this.uiManager.showAlert('Erro ao carregar transferência para edição', 'danger');
+        }
+    }
+
+    /**
+     * Formatar data para input HTML (YYYY-MM-DD)
+     */
+    formatarDataParaInput(dataString) {
+        if (!dataString) return '';
+
+        try {
+            const data = new Date(dataString);
+            return data.toISOString().split('T')[0];
+        } catch (error) {
+            console.error('Erro ao formatar data:', error);
+            return '';
+        }
+    }
+
+    /**
+     * Mostrar modal de múltiplas transferências
+     */
+    showMultiplasTransferenciasModal() {
+        const modal = document.getElementById('modal-multiplas-transferencias');
+        if (!modal) {
+            console.error('Modal de múltiplas transferências não encontrado');
             return;
         }
 
-        const operationId = `delete-transferencia-${id}`;
-        this.pendingOperations.add(operationId);
-        
-        try {
+        // Carregar aliases se ainda não foram carregados
+        this.carregarAliasParaMultiplasTransferencias();
 
-            // Chamada de API sem bloquear a UI
-            const response = await this.apiService.delete(`/api/transferencias/${id}`);
-            
-            if (response && (response.message || response.success !== false)) {
-                // Actualizar dados localmente sem renderizar imediatamente
-                this.allTransferencias = this.allTransferencias.filter(t => t.id !== id);
-                
-                // Mostrar sucesso e renderizar no próximo frame
-                this.showSuccess('Transferência excluída com sucesso!');
-                requestAnimationFrame(() => {
-                    this.renderTransferenciasTable(this.allTransferencias);
-                });
-                
-            } else {
-                throw new Error('Resposta inválida do servidor');
-            }
+        // Inicializar Handsontable
+        this.inicializarHandsontable();
 
-        } catch (error) {
-            console.error('Erro ao excluir transferência:', error);
-            this.showError('Erro ao excluir transferência: ' + error.message);
-        } finally {
-            this.pendingOperations.delete(operationId);
+        // Configurar event listener do formulário (apenas se não foi configurado ainda)
+        const form = document.getElementById('form-multiplas-transferencias');
+        if (form && !form.dataset.submitListenerAttached) {
+            form.addEventListener('submit', (e) => {
+                e.preventDefault();
+                this.salvarMultiplasTransferencias();
+            });
+            form.dataset.submitListenerAttached = 'true';
+        }
+
+        // Configurar event listeners dos botões
+        this.configurarBotoesPlanilha();
+
+        // Criar instância do modal
+        const bootstrapModal = new bootstrap.Modal(modal);
+        bootstrapModal.show();
+    }
+
+    /**
+     * Configurar event listeners dos botões da planilha
+     */
+    configurarBotoesPlanilha() {
+        // Botão limpar planilha
+        const btnLimpar = document.getElementById('btn-limpar-planilha');
+        if (btnLimpar && !btnLimpar.dataset.listenerAttached) {
+            btnLimpar.addEventListener('click', () => this.limparPlanilhaTransferencias());
+            btnLimpar.dataset.listenerAttached = 'true';
+        }
+
+        // Botão carregar proprietários
+        const btnCarregar = document.getElementById('btn-carregar-proprietarios');
+        if (btnCarregar && !btnCarregar.dataset.listenerAttached) {
+            btnCarregar.addEventListener('click', () => this.carregarProprietariosNaPlanilha());
+            btnCarregar.dataset.listenerAttached = 'true';
         }
     }
 
     /**
-     * Mostrar alerta
+     * Carregar aliases para o modal de múltiplas transferências
      */
-    showAlert(message, type, containerId = 'extras-alerts') {
-        const alertsContainer = document.getElementById(containerId);
-        if (!alertsContainer) return;
-        
-        const alert = document.createElement('div');
-        alert.className = `alert alert-${type} alert-dismissible fade show`;
-        alert.innerHTML = `
-            ${message}
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        `;
-        
-        alertsContainer.appendChild(alert);
-        
-        // Auto-remover após 5 segundos
-        setTimeout(() => {
-            if (alert && alert.parentNode) {
-                alert.remove();
+    async carregarAliasParaMultiplasTransferencias() {
+        try {
+            console.log('Carregando aliases para múltiplas transferências...');
+            const response = await this.apiService.get('/api/extras/?ativo=true');
+            console.log('Resposta da API:', response);
+
+            const aliasSelect = document.getElementById('multiplas-transferencias-alias');
+            if (!aliasSelect) {
+                console.error('Elemento multiplas-transferencias-alias não encontrado');
+                return;
             }
-        }, 5000);
+
+            if (response && response.success && Array.isArray(response.data)) {
+                console.log(`Carregados ${response.data.length} aliases`);
+                aliasSelect.innerHTML = '<option value="">Selecione um alias...</option>';
+                response.data.forEach(alias => {
+                    const option = document.createElement('option');
+                    option.value = alias.id;
+                    option.textContent = alias.alias;
+                    option.dataset.proprietarios = alias.id_proprietarios;
+                    aliasSelect.appendChild(option);
+                });
+
+                // Configurar evento de mudança do alias
+                aliasSelect.onchange = () => this.carregarProprietariosNaPlanilha();
+            } else {
+                console.error('Resposta inválida da API:', response);
+            }
+        } catch (error) {
+            console.error('Erro ao carregar aliases:', error);
+            this.uiManager.showAlert('Erro ao carregar aliases', 'danger');
+        }
+    }
+
+    /**
+     * Carregar proprietários na planilha
+     */
+    async carregarProprietariosNaPlanilha() {
+        const aliasSelect = document.getElementById('multiplas-transferencias-alias');
+        if (!aliasSelect || !aliasSelect.value) {
+            this.uiManager.showAlert('Selecione um alias primeiro', 'warning');
+            return;
+        }
+
+        try {
+            const response = await this.apiService.get('/api/proprietarios/');
+            if (response && response.success && Array.isArray(response.data)) {
+                this.allProprietarios = response.data;
+                this.preencherPlanilhaComProprietarios();
+                this.uiManager.showAlert('Proprietários carregados na planilha!', 'success');
+            }
+        } catch (error) {
+            console.error('Erro ao carregar proprietários:', error);
+            this.uiManager.showAlert('Erro ao carregar proprietários', 'danger');
+        }
+    }
+
+    /**
+     * Inicializar Handsontable
+     */
+    inicializarHandsontable() {
+        const container = document.getElementById('multiplas-transferencias-handsontable');
+        if (!container) {
+            console.error('Container Handsontable não encontrado');
+            return;
+        }
+
+        // Destruir instância anterior se existir
+        if (this.handsontableInstance) {
+            this.handsontableInstance.destroy();
+        }
+
+        // Dados iniciais
+        const initialData = [
+            ['Nome da Transferência'], // Linha 0
+            ['Data Início'], // Linha 1
+            ['Data Fim'], // Linha 2
+            ['Proprietários'] // Linha 3 (cabeçalho)
+        ];
+
+        // Configuração da tabela
+        const settings = {
+            data: initialData,
+            colHeaders: false,
+            rowHeaders: false,
+            minCols: 5,
+            minRows: 10,
+            maxCols: 20,
+            contextMenu: true,
+            manualColumnResize: true,
+            manualRowResize: true,
+            stretchH: 'all',
+            height: 400,
+            licenseKey: 'non-commercial-and-evaluation',
+            cells: (row, col) => {
+                const cellProperties = {};
+
+                // Linha 0 (nomes das transferências) - editável
+                if (row === 0 && col > 0) {
+                    cellProperties.type = 'text';
+                }
+                // Linha 1 e 2 (datas) - tipo date
+                else if ((row === 1 || row === 2) && col > 0) {
+                    cellProperties.type = 'date';
+                    cellProperties.dateFormat = 'DD/MM/YYYY';
+                }
+                // Linha 3 (cabeçalho proprietários) - readonly
+                else if (row === 3) {
+                    cellProperties.readOnly = true;
+                }
+                // Linhas de proprietários (valores) - tipo numeric
+                else if (row > 3 && col > 0) {
+                    cellProperties.type = 'numeric';
+                    cellProperties.numericFormat = { pattern: '0,00' };
+                }
+                // Coluna A (proprietários) - readonly
+                else if (col === 0 && row > 2) {
+                    cellProperties.readOnly = true;
+                }
+
+                return cellProperties;
+            }
+        };
+
+        this.handsontableInstance = new Handsontable(container, settings);
+    }
+
+    /**
+     * Preencher planilha com proprietários
+     */
+    preencherPlanilhaComProprietarios() {
+        if (!this.handsontableInstance || !this.allProprietarios) {
+            return;
+        }
+
+        const data = [
+            ['Nome da Transferência'], // Linha 0
+            ['Data Início'], // Linha 1
+            ['Data Fim'], // Linha 2
+            ['Proprietários'] // Linha 3 (cabeçalho)
+        ];
+
+        // Adicionar proprietários
+        this.allProprietarios.forEach(proprietario => {
+            data.push([proprietario.nome]);
+        });
+
+        // Adicionar linhas vazias extras
+        for (let i = 0; i < 5; i++) {
+            data.push(['']);
+        }
+
+        this.handsontableInstance.loadData(data);
+    }
+
+    /**
+     * Salvar múltiplas transferências da planilha matricial
+     */
+    async salvarMultiplasTransferencias() {
+        const aliasSelect = document.getElementById('multiplas-transferencias-alias');
+        if (!aliasSelect || !aliasSelect.value) {
+            this.uiManager.showAlert('Selecione um alias primeiro', 'warning');
+            return;
+        }
+
+        const aliasId = aliasSelect.value;
+
+        if (!this.handsontableInstance) {
+            this.uiManager.showAlert('Planilha não inicializada', 'danger');
+            return;
+        }
+
+        // Obter dados da planilha
+        const planilhaData = this.handsontableInstance.getData();
+
+        // Processar cada coluna a partir da coluna B (índice 1)
+        const transferencias = [];
+        let hasErrors = false;
+
+        for (let colIndex = 1; colIndex < planilhaData[0].length; colIndex++) {
+            // Verificar se a coluna tem dados (nome da transferência não vazio)
+            const nomeTransferencia = (planilhaData[0][colIndex] || '').toString().trim();
+            if (!nomeTransferencia) {
+                continue; // Pular colunas vazias
+            }
+
+            // Obter datas de início e fim desta coluna
+            const dataInicio = (planilhaData[1][colIndex] || '').toString().trim();
+            const dataFim = (planilhaData[2][colIndex] || '').toString().trim();
+
+            if (!dataInicio) {
+                hasErrors = true;
+                console.error(`Coluna ${colIndex + 1}: Data de início não informada para transferência "${nomeTransferencia}"`);
+                continue;
+            }
+
+            // Processar cada proprietário a partir da linha 3
+            for (let rowIndex = 3; rowIndex < planilhaData.length; rowIndex++) {
+                const proprietarioNome = (planilhaData[rowIndex][0] || '').toString().trim();
+                const valorStr = (planilhaData[rowIndex][colIndex] || '').toString().trim();
+
+                // Pular linhas sem proprietário ou sem valor
+                if (!proprietarioNome || !valorStr) {
+                    continue;
+                }
+
+                // Validar proprietário
+                const proprietario = this.allProprietarios.find(p => p.nome.toLowerCase() === proprietarioNome.toLowerCase());
+                if (!proprietario) {
+                    hasErrors = true;
+                    console.error(`Linha ${rowIndex + 1}: Proprietário não encontrado: ${proprietarioNome}`);
+                    continue;
+                }
+
+                // Converter valor
+                const valor = parseFloat(valorStr.replace(',', '.'));
+                if (isNaN(valor)) {
+                    hasErrors = true;
+                    console.error(`Linha ${rowIndex + 1}, Coluna ${colIndex + 1}: Valor inválido: ${valorStr}`);
+                    continue;
+                }
+
+                // Criar transferência
+                transferencias.push({
+                    alias_id: parseInt(aliasId),
+                    proprietario_id: proprietario.id,
+                    nome_transferencia: `${nomeTransferencia} - ${proprietario.nome}`,
+                    tipo_transferencia: nomeTransferencia,
+                    data_criacao: this.formatarDataParaAPI(dataInicio),
+                    data_fim: dataFim ? this.formatarDataParaAPI(dataFim) : null,
+                    valor: valor
+                });
+            }
+        }
+
+        if (hasErrors) {
+            this.uiManager.showAlert('Verifique os dados na planilha. Alguns campos são inválidos.', 'warning');
+            return;
+        }
+
+        if (transferencias.length === 0) {
+            this.uiManager.showAlert('Nenhuma transferência válida encontrada na planilha', 'warning');
+            return;
+        }
+
+        try {
+            const submitButton = document.getElementById('btn-salvar-multiplas-transferencias');
+            submitButton.disabled = true;
+            submitButton.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Salvando...';
+
+            console.log(`Salvando ${transferencias.length} transferências...`);
+
+            // Enviar cada transferência individualmente
+            const promises = transferencias.map(transferencia =>
+                this.apiService.post('/api/transferencias/', transferencia)
+            );
+
+            const results = await Promise.allSettled(promises);
+            const successes = results.filter(r => r.status === 'fulfilled' && r.value.success).length;
+            const failures = results.length - successes;
+
+            if (successes > 0) {
+                this.uiManager.showAlert(`${successes} transferência(ões) cadastrada(s) com sucesso!`, 'success');
+                if (failures > 0) {
+                    this.uiManager.showAlert(`${failures} transferência(ões) falharam.`, 'warning');
+                }
+
+                // Fechar modal e limpar planilha
+                const modal = document.getElementById('modal-multiplas-transferencias');
+                bootstrap.Modal.getInstance(modal).hide();
+                this.limparPlanilhaTransferencias();
+
+                // Recarregar transferências se estiver na página de extras
+                if (typeof this.loadTransferencias === 'function') {
+                    this.loadTransferencias();
+                }
+            } else {
+                this.uiManager.showAlert('Erro ao salvar transferências', 'danger');
+            }
+
+        } catch (error) {
+            console.error('Erro ao salvar múltiplas transferências:', error);
+            this.uiManager.showAlert('Erro ao salvar transferências', 'danger');
+        } finally {
+            const submitButton = document.getElementById('btn-salvar-multiplas-transferencias');
+            submitButton.disabled = false;
+            submitButton.innerHTML = '<i class="fas fa-save me-1"></i>Salvar Todas as Transferências';
+        }
+    }
+
+    /**
+     * Limpar a planilha de transferências
+     */
+    limparPlanilhaTransferencias() {
+        if (this.handsontableInstance) {
+            // Limpar dados da planilha
+            const emptyData = [
+                ['Nome da Transferência'], // Linha 0
+                ['Data Início'], // Linha 1
+                ['Data Fim'], // Linha 2
+                ['Proprietários'] // Linha 3 (cabeçalho)
+            ];
+
+            // Adicionar linhas vazias para proprietários
+            if (this.allProprietarios && this.allProprietarios.length > 0) {
+                for (let i = 0; i < this.allProprietarios.length; i++) {
+                    emptyData.push([this.allProprietarios[i].nome]);
+                }
+            }
+
+            this.handsontableInstance.loadData(emptyData);
+        }
+
+        // Limpar seleção de alias
+        const aliasSelect = document.getElementById('multiplas-transferencias-alias');
+        if (aliasSelect) {
+            aliasSelect.value = '';
+        }
+    }
+
+    /**
+     * Formatar data para API (DD/MM/YYYY para YYYY-MM-DD)
+     */
+    formatarDataParaAPI(dataStr) {
+        if (!dataStr) return null;
+
+        // Se já estiver no formato YYYY-MM-DD, retornar como está
+        if (dataStr.match(/^\d{4}-\d{2}-\d{2}$/)) {
+            return dataStr;
+        }
+
+        // Converter de DD/MM/YYYY para YYYY-MM-DD
+        const partes = dataStr.split('/');
+        if (partes.length === 3) {
+            const [dia, mes, ano] = partes;
+            return `${ano}-${mes.padStart(2, '0')}-${dia.padStart(2, '0')}`;
+        }
+
+        return dataStr; // Retornar como está se não conseguir converter
     }
 }
-
-// Inicializar quando o DOM estiver pronto
-document.addEventListener('DOMContentLoaded', function() {
-    window.extrasManager = new ExtrasManager();
-    window.extrasManager.apiService = window.apiService;
-    // Disponibilizar também como extrasModule para o gerenciador de UI
-    window.extrasModule = window.extrasManager;
-});
-
-// Adicionar método applyPermissions à classe ExtrasManager
-ExtrasManager.prototype.applyPermissions = function(isAdmin) {
-
-    const btnNovoAlias = document.getElementById('btn-novo-alias');
-    if (btnNovoAlias) {
-        btnNovoAlias.disabled = !isAdmin;
-        btnNovoAlias.title = isAdmin ? 'Criar novo alias' : 'Apenas administradores podem criar alias';
-    }
-
-    const btnNovasTransferencias = document.getElementById('btn-novas-transferencias');
-    if (btnNovasTransferencias) {
-        btnNovasTransferencias.disabled = !isAdmin;
-        btnNovasTransferencias.title = isAdmin ? 'Criar nova transferência' : 'Apenas administradores podem criar transferências';
-    }
-
-    // Re-renderizar tabelas para atualizar os botões de ação
-    if (this.allExtras) {
-        this.renderExtrasTable(this.allExtras);
-    }
-    if (this.allTransferencias) {
-        this.renderTransferenciasTable(this.allTransferencias);
-    }
-};

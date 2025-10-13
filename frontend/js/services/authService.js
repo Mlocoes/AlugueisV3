@@ -8,8 +8,11 @@ class AuthService {
         this.tipo = null;
         this.token = null;  // Add token property
         
-        // Tentar restaurar sessão do cookie quando a página carrega
-        this.restoreSession();
+        // Tentar restaurar sessão do localStorage quando a página carrega
+        this.restoreFromStorage();
+        
+        // Não chamar restoreSession() automaticamente - será chamado quando necessário
+        // this.restoreSession();
     }
 
     /**
@@ -31,6 +34,9 @@ class AuthService {
                 this.usuario = data.usuario;
                 this.tipo = data.tipo_usuario;
                 this.token = data.access_token;  // Armazenar o token
+
+                // Armazenar no localStorage para persistência
+                this.saveToStorage();
 
                 // Iniciar validação periódica da sessão (se não já estiver rodando)
                 if (!this.sessionCheckInterval) {
@@ -60,19 +66,42 @@ class AuthService {
         this.tipo = null;
         this.token = null;  // Clear token
         
+        // Limpar localStorage
+        this.clearStorage();
+        
         // Parar validação periódica da sessão
         this.stopSessionValidation();
         
     }
 
     /**
-     * Limpar storage local (compatibilidade)
+     * Limpar storage local
      */
     clearStorage() {
         try {
             localStorage.removeItem('sistema_alquileres_token');
             localStorage.removeItem('sistema_alquileres_user');
+            localStorage.removeItem('sistema_alquileres_tipo');
         } catch (error) {
+        }
+    }
+
+    /**
+     * Salvar dados da sessão no localStorage
+     */
+    saveToStorage() {
+        try {
+            if (this.token) {
+                localStorage.setItem('sistema_alquileres_token', this.token);
+            }
+            if (this.usuario) {
+                localStorage.setItem('sistema_alquileres_user', this.usuario);
+            }
+            if (this.tipo) {
+                localStorage.setItem('sistema_alquileres_tipo', this.tipo);
+            }
+        } catch (error) {
+            console.error('Erro ao salvar no localStorage:', error);
         }
     }
 
@@ -93,7 +122,7 @@ class AuthService {
     }
 
     /**
-     * Verifica se o usuário está autenticado na memória.
+     * Verifica se o usuário está autenticado na memória e localStorage.
      */
     isAuthenticated() {
         // Primeiro verificar se há dados na memória
@@ -104,10 +133,6 @@ class AuthService {
         // Verificar se o token está expirado
         if (this.isTokenExpired()) {
             this.clearSession();
-            // Forçar recarga imediata quando detectar token expirado
-            setTimeout(() => {
-                window.location.reload();
-            }, 100);
             return false;
         }
         
@@ -170,6 +195,29 @@ class AuthService {
             } else {
             }
         } catch (error) {
+        }
+   }
+
+    /**
+     * Tentar restaurar sessão do localStorage quando a página carrega
+     */
+    restoreFromStorage() {
+        try {
+            const token = localStorage.getItem('sistema_alquileres_token');
+            const usuario = localStorage.getItem('sistema_alquileres_user');
+            const tipo = localStorage.getItem('sistema_alquileres_tipo');
+
+            if (token) {
+                this.token = token;
+            }
+            if (usuario) {
+                this.usuario = usuario;
+            }
+            if (tipo) {
+                this.tipo = tipo;
+            }
+        } catch (error) {
+            console.error('Erro ao restaurar do localStorage:', error);
         }
     }
 

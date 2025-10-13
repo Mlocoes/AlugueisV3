@@ -263,6 +263,16 @@ class ViewManager {
                 });
             }
             
+            // Registrar evento para el botón de múltiplas transferências
+            const btnMultiplasTransferencias = document.getElementById('btn-multiplas-transferencias');
+            if (btnMultiplasTransferencias) {
+                btnMultiplasTransferencias.addEventListener('click', function() {
+                    if (window.extrasModule && typeof window.extrasModule.showMultiplasTransferenciasModal === 'function') {
+                        window.extrasModule.showMultiplasTransferenciasModal();
+                    }
+                });
+            }
+            
             // Registrar eventos para versões mobile dos botões
             const btnNovoAliasMobile = document.getElementById('btn-novo-alias-mobile');
             if (btnNovoAliasMobile) {
@@ -325,6 +335,19 @@ class ViewManager {
         if (view.id === 'extras') {
             if (window.extrasModule && typeof window.extrasModule.loadExtras === 'function') {
                 window.extrasModule.loadExtras();
+            }
+            if (window.extrasModule && typeof window.extrasModule.loadTransferencias === 'function') {
+                window.extrasModule.loadTransferencias();
+            }
+            
+            // Registrar evento para el botón de múltiplas transferências
+            const btnMultiplasTransferencias = document.getElementById('btn-multiplas-transferencias');
+            if (btnMultiplasTransferencias) {
+                btnMultiplasTransferencias.addEventListener('click', function() {
+                    if (window.extrasModule && typeof window.extrasModule.showMultiplasTransferenciasModal === 'function') {
+                        window.extrasModule.showMultiplasTransferenciasModal();
+                    }
+                });
             }
         }
     }
@@ -1323,7 +1346,7 @@ class ViewManager {
                     <button class="btn btn-primary admin-only" id="btn-novo-imovel">
                         <i class="fas fa-plus me-2"></i>Novo Imóvel
                     </button>
-                </div>
+                               </div>
                 <div class="card-responsive">
                     <div class="card-body-responsive">
                         <div class="table-responsive-custom" style="max-height: 75vh; min-height: 55vh; overflow-y: auto;">
@@ -1553,9 +1576,8 @@ class ViewManager {
                             <p class="text-danger"><strong>Esta ação não pode ser desfeita.</strong></p>
                         </div>
                         <div class="modal-footer">
-                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                                <button type="button" class="btn btn-danger" id="btn-confirmar-exclusao-imovel">Excluir</button>
-                            </div>
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                            <button type="button" class="btn btn-danger" id="btn-confirmar-exclusao-imovel">Excluir</button>
                         </div>
                     </div>
                 </div>
@@ -1735,7 +1757,9 @@ class ViewManager {
     getExtrasTemplate() {
         return `
             <div class="extras-container">
-                <!-- Encabezado eliminado -->
+                <div class="d-flex justify-content-end mb-3">
+                    <button class="btn btn-primary" id="btn-multiplas-transferencias" type="button"><i class="fas fa-table me-2"></i> Cadastrar Múltiplas Transferências</button>
+                </div>
                 <div class="card-responsive">
                     <div class="card-body-responsive">
                         <div class="table-responsive-custom" style="max-height: 10.2rem; min-height: 2.6rem; overflow-y: auto;">
@@ -1831,6 +1855,7 @@ class ViewManager {
                                         <button class="btn btn-primary" style="width:150px" id="btn-alterar-usuario" data-bs-toggle="modal" data-bs-target="#modal-alterar-usuario"><i class="fas fa-user-edit me-2"></i> Alterar Usuário</button>
                                         <button class="btn btn-primary" style="width:150px" id="btn-novo-alias" type="button"><i class="fas fa-user-tag me-2"></i> Novo Alias</button>
                                         <button class="btn btn-primary" style="width:150px" id="btn-novas-transferencias" type="button"><i class="fas fa-exchange-alt me-2"></i> Nova Transferência</button>
+                                        <button class="btn btn-primary" style="width:200px" id="btn-multiplas-transferencias" type="button"><i class="fas fa-table me-2"></i> Cadastrar Múltiplas Transferências</button>
                                     </div>
                                 </div>
                                 ${forms}

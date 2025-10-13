@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Ejemplo Handsontable Hoja de cálculo</title>
+  <!-- Incluye Handsontable desde CDN -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/handsontable@14.0.0/dist/handsontable.full.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/handsontable@14.0.0/dist/handsontable.full.min.js"></script>
+</head>
+<body>
+  <div id="hot"></div>
+  <script>
+    // Crea los datos iniciales: matriz de 6 filas y 10 columnas vacías
+    const data = Array(6).fill().map(() => Array(10).fill(''));
+
+    const container = document.getElementById('hot');
+    const hot = new Handsontable(container, {
+      data: data,                   // Los datos iniciales
+      rowHeaders: true,             // Muestra encabezados de fila
+      colHeaders: true,             // Muestra encabezados de columna (A,B,C...)
+      minRows: 6,
+      minCols: 10,
+      maxRows: 6,                   // Fija a 6 filas
+      maxCols: 10,                  // Fija a 10 columnas
+      licenseKey: 'non-commercial-and-evaluation' // Licencia evaluación/gratis
+    });
+  </script>
+</body>
+</html>
