@@ -1388,6 +1388,10 @@ class ExtrasManager {
                 continue;
             }
 
+            // Coletar todos os proprietários desta transferência
+            const proprietariosTransferencia = [];
+            let valorTotal = 0;
+
             // Processar cada proprietário a partir da linha 3
             for (let rowIndex = 3; rowIndex < planilhaData.length; rowIndex++) {
                 const proprietarioNome = (planilhaData[rowIndex][0] || '').toString().trim();
@@ -1414,13 +1418,23 @@ class ExtrasManager {
                     continue;
                 }
 
-                // Criar transferência
+                // Adicionar proprietário à lista desta transferência
+                proprietariosTransferencia.push({
+                    id: proprietario.id,
+                    valor: valor
+                });
+
+                // Somar ao valor total (valor absoluto)
+                valorTotal += Math.abs(valor);
+            }
+
+            // Criar uma única transferência para esta coluna/tipo
+            if (proprietariosTransferencia.length > 0) {
                 transferencias.push({
                     alias_id: parseInt(aliasId),
-                    nome_transferencia: `${nomeTransferencia} - ${proprietario.nome}`,
-                    valor_total: valor,
-                    id_proprietarios: proprietario.id.toString(),
-                    // origem_id_proprietario e destino_id_proprietario podem ser definidos posteriormente na edição
+                    nome_transferencia: nomeTransferencia,
+                    valor_total: valorTotal,
+                    id_proprietarios: JSON.stringify(proprietariosTransferencia),
                     data_criacao: this.formatarDataParaAPI(dataInicio),
                     data_fim: dataFim ? this.formatarDataParaAPI(dataFim) : null
                 });
