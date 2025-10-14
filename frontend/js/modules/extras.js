@@ -1231,12 +1231,17 @@ class ExtrasManager {
             return;
         }
 
+        const aliasId = aliasSelect.value;
+
         try {
-            const response = await this.apiService.get('/api/proprietarios/');
-            if (response && response.success && Array.isArray(response.data)) {
-                this.allProprietarios = response.data;
+            const response = await this.apiService.get(`/api/extras/${aliasId}/proprietarios`);
+            if (response && response.success && response.data && Array.isArray(response.data.proprietarios)) {
+                this.allProprietarios = response.data.proprietarios;
                 this.preencherPlanilhaComProprietarios();
-                this.uiManager.showAlert('Proprietários carregados na planilha!', 'success');
+                this.uiManager.showAlert('Proprietários do alias carregados na planilha!', 'success');
+            } else {
+                console.error('Resposta inválida da API:', response);
+                this.uiManager.showAlert('Erro ao carregar proprietários do alias', 'danger');
             }
         } catch (error) {
             console.error('Erro ao carregar proprietários:', error);
@@ -1412,12 +1417,12 @@ class ExtrasManager {
                 // Criar transferência
                 transferencias.push({
                     alias_id: parseInt(aliasId),
-                    proprietario_id: proprietario.id,
                     nome_transferencia: `${nomeTransferencia} - ${proprietario.nome}`,
-                    tipo_transferencia: nomeTransferencia,
+                    valor_total: valor,
+                    id_proprietarios: proprietario.id.toString(),
+                    // origem_id_proprietario e destino_id_proprietario podem ser definidos posteriormente na edição
                     data_criacao: this.formatarDataParaAPI(dataInicio),
-                    data_fim: dataFim ? this.formatarDataParaAPI(dataFim) : null,
-                    valor: valor
+                    data_fim: dataFim ? this.formatarDataParaAPI(dataFim) : null
                 });
             }
         }
@@ -1445,7 +1450,7 @@ class ExtrasManager {
             );
 
             const results = await Promise.allSettled(promises);
-            const successes = results.filter(r => r.status === 'fulfilled' && r.value.success).length;
+            const successes = results.filter(r => r.status === 'fulfilled' && r.value && !r.value.detail).length;
             const failures = results.length - successes;
 
             if (successes > 0) {
