@@ -1001,6 +1001,12 @@ class ExtrasManager {
             const bootstrapModal = new bootstrap.Modal(modal);
             bootstrapModal.show();
 
+            // Configurar event listener do formulário (feito aqui pois o modal pode ser recriado)
+            form.addEventListener('submit', (e) => {
+                e.preventDefault();
+                this.salvarTransferencias();
+            });
+
         } catch (error) {
             console.error('Erro ao mostrar modal de transferências:', error);
             this.uiManager.showAlert('Erro ao abrir modal de transferências', 'danger');
@@ -1162,10 +1168,13 @@ class ExtrasManager {
             }
 
             const proprietariosData = this.obterProprietariosDaTabela();
+            console.log('Dados dos proprietários:', proprietariosData);
 
             // Validar lógica da transferência
             const valores = proprietariosData.map(p => parseFloat(p.valor) || 0);
+            console.log('Valores extraídos:', valores);
             const soma = valores.reduce((acc, val) => acc + val, 0);
+            console.log('Soma calculada:', soma);
             const valoresPositivos = valores.filter(v => v > 0);
             const valoresNegativos = valores.filter(v => v < 0);
 
