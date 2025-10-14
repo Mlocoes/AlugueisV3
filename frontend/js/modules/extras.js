@@ -177,6 +177,28 @@ class ExtrasManager {
     }
 
     /**
+     * Mostrar mensagem de erro
+     */
+    showError(message) {
+        if (this.uiManager && this.uiManager.showAlert) {
+            this.uiManager.showAlert(message, 'danger');
+        } else {
+            console.error('UIManager não disponível:', message);
+        }
+    }
+
+    /**
+     * Popular selects de proprietários
+     */
+    populateProprietariosSelects() {
+        // Este método configura selects múltiplos de proprietários quando necessário
+        // Por enquanto, apenas garante que os proprietários estão disponíveis
+        if (this.allProprietarios && this.allProprietarios.length > 0) {
+            console.log(`Proprietários carregados: ${this.allProprietarios.length}`);
+        }
+    }
+
+    /**
      * Renderizar tabela de extras
      */
     renderExtrasTable(extras) {
