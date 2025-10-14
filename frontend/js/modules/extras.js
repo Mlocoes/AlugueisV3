@@ -66,7 +66,7 @@ class ExtrasManager {
 
         // Evento para carregar proprietários do alias selecionado
         document.getElementById('transferencia-alias')?.addEventListener('change', (e) => {
-            this.carregarProprietariosAlias(e.target.value);
+            this.carregarProprietariosTransferencia(e.target.value);
         });
 
         // Limpar currentTransferencia quando o modal fechar
@@ -981,14 +981,14 @@ class ExtrasManager {
                 const aliasSelect = document.getElementById('transferencia-alias');
 
                 if (nomeInput) nomeInput.value = this.currentTransferencia.nome_transferencia || '';
-                if (dataCriacaoInput) dataCriacaoInput.value = this.formatarDataParaInput(this.currentTransferencia.data_criacao);
+                if (dataCriacaoInput) dataCriacaoInput.value = this.currentTransferencia.data_criacao ? this.formatarDataParaInput(this.currentTransferencia.data_criacao) : '';
                 if (dataFimInput) dataFimInput.value = this.currentTransferencia.data_fim ? this.formatarDataParaInput(this.currentTransferencia.data_fim) : '';
                 
                 // Selecionar o alias correto
                 if (aliasSelect && this.currentTransferencia.alias_id) {
                     aliasSelect.value = this.currentTransferencia.alias_id;
-                    // Carregar proprietários do alias selecionado
-                    this.carregarProprietariosAlias(this.currentTransferencia.alias_id);
+                    // Carregar proprietários do alias selecionado com valores da transferência
+                    this.carregarProprietariosTransferencia(this.currentTransferencia.alias_id, this.currentTransferencia.id_proprietarios);
                 }
             }
 
@@ -1085,6 +1085,50 @@ class ExtrasManager {
             }
         } catch (error) {
             console.error('Erro ao carregar proprietários do alias:', error);
+        }
+    }
+
+    /**
+     * Carregar aliases disponíveis para transferências
+     */
+    async carregarAliasParaTransferencia() {
+        try {
+            const response = await this.apiService.get('/api/extras/?ativo=true');
+
+            if (response && response.success && Array.isArray(response.data)) {
+                const aliasSelect = document.getElementById('transferencia-alias');
+                if (!aliasSelect) return;
+
+                // Limpar opções existentes, mantendo apenas a primeira se for placeholder
+                const firstOption = aliasSelect.querySelector('option[value=""]');
+                aliasSelect.innerHTML = '';
+
+                // Adicionar opção padrão se existir
+                if (firstOption) {
+                    aliasSelect.appendChild(firstOption);
+                } else {
+                    const defaultOption = document.createElement('option');
+                    defaultOption.value = '';
+                    defaultOption.textContent = 'Selecione um alias...';
+                    defaultOption.disabled = true;
+                    defaultOption.selected = true;
+                    aliasSelect.appendChild(defaultOption);
+                }
+
+                // Adicionar aliases disponíveis
+                response.data.forEach(alias => {
+                    const option = document.createElement('option');
+                    option.value = alias.id;
+                    option.textContent = alias.alias;
+                    aliasSelect.appendChild(option);
+                });
+
+                console.log(`Carregados ${response.data.length} aliases para transferências`);
+            } else {
+                console.error('Erro ao carregar aliases para transferências:', response);
+            }
+        } catch (error) {
+            console.error('Erro ao carregar aliases para transferências:', error);
         }
     }
 
@@ -1202,6 +1246,95 @@ class ExtrasManager {
         } catch (error) {
             console.error('Erro ao formatar data:', error);
             return '';
+        }
+    }
+
+    /**
+     * Carregar proprietários de um alias para a tabela de transferências
+     */
+    async carregarProprietariosTransferencia(aliasId, transferenciaProprietariosJson = null) {
+        if (!aliasId) {
+            // Se nenhum alias selecionado, ocultar container
+            const container = document.getElementById('transferencia-proprietarios-container');
+            if (container) container.style.display = 'none';
+            return;
+        }
+
+        try {
+            const response = await this.apiService.get(`/api/extras/${aliasId}`);
+            if (response && response.success) {
+                const alias = response.data;
+                let proprietariosIds = [];
+
+                // Parse IDs dos proprietários
+                if (Array.isArray(alias.id_proprietarios)) {
+                    proprietariosIds = alias.id_proprietarios.map(id => parseInt(id));
+                } else if (typeof alias.id_proprietarios === 'string') {
+                    try {
+                        const parsed = JSON.parse(alias.id_proprietarios);
+                        proprietariosIds = Array.isArray(parsed) ? parsed.map(id => parseInt(id)) : [];
+                    } catch (e) {
+                        proprietariosIds = alias.id_proprietarios.split(',').map(id => parseInt(id.trim()));
+                    }
+                }
+
+                // Carregar proprietários se não estiverem carregados
+                if (!this.allProprietarios || this.allProprietarios.length === 0) {
+                    await this.loadProprietarios();
+                }
+
+                // Filtrar proprietários do alias
+                const proprietariosDoAlias = this.allProprietarios.filter(prop => 
+                    proprietariosIds.includes(prop.id)
+                );
+
+                // Parse dados da transferência se fornecidos (para edição)
+                let valoresTransferencia = {};
+                if (transferenciaProprietariosJson) {
+                    try {
+                        const dadosTransferencia = JSON.parse(transferenciaProprietariosJson);
+                        valoresTransferencia = dadosTransferencia.reduce((acc, item) => {
+                            acc[item.id] = item.valor || 0;
+                            return acc;
+                        }, {});
+                    } catch (e) {
+                        console.warn('Erro ao parsear dados da transferência:', e);
+                    }
+                }
+
+                // Popular tabela de transferências
+                const tbody = document.getElementById('transferencia-proprietarios-table');
+                const container = document.getElementById('transferencia-proprietarios-container');
+
+                if (!tbody || !container) return;
+
+                // Limpar tabela
+                tbody.innerHTML = '';
+
+                // Adicionar proprietários à tabela
+                proprietariosDoAlias.forEach(proprietario => {
+                    const valorExistente = valoresTransferencia[proprietario.id] || 0;
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${proprietario.nome}</td>
+                        <td><input type="number" class="form-control form-control-sm" step="0.01" min="0" placeholder="0.00" value="${valorExistente}"></td>
+                    `;
+                    tbody.appendChild(row);
+                });
+
+                // Mostrar container
+                container.style.display = 'block';
+
+                console.log(`Carregados ${proprietariosDoAlias.length} proprietários para transferência`);
+            } else {
+                console.error('Erro ao carregar proprietários do alias:', response);
+                const container = document.getElementById('transferencia-proprietarios-container');
+                if (container) container.style.display = 'none';
+            }
+        } catch (error) {
+            console.error('Erro ao carregar proprietários para transferência:', error);
+            const container = document.getElementById('transferencia-proprietarios-container');
+            if (container) container.style.display = 'none';
         }
     }
 }
