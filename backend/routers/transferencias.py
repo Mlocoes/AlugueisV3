@@ -11,6 +11,7 @@ from sqlalchemy import desc
 from config import get_db
 from models_final import Transferencia, TransferenciaCreate, TransferenciaUpdate, TransferenciaResponse, Alias
 from routers.auth import is_admin, is_user_or_admin
+from utils.transfer_validation import TransferenciaValidator, TransferValidationError
 
 router = APIRouter(
     prefix="/api/transferencias",
@@ -92,6 +93,19 @@ def criar_transferencia(transferencia_data: TransferenciaCreate, db: Session = D
                 detail="Alias não encontrado"
             )
         
+        # Validar dados da transferência
+        try:
+            dados_validados = TransferenciaValidator.validar_transferencia_completa(
+                transferencia_data.nome_transferencia,
+                transferencia_data.id_proprietarios,
+                transferencia_data.alias_id
+            )
+        except TransferValidationError as e:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Dados da transferência inválidos: {str(e)}"
+            )
+        
         # Converter datas se fornecidas como string
         data_criacao = None
         data_fim = None
@@ -123,9 +137,9 @@ def criar_transferencia(transferencia_data: TransferenciaCreate, db: Session = D
         # Criar nova transferência
         nova_transferencia = Transferencia(
             alias_id=transferencia_data.alias_id,
-            nome_transferencia=transferencia_data.nome_transferencia,
-            valor_total=transferencia_data.valor_total or 0.0,
-            id_proprietarios=transferencia_data.id_proprietarios,
+            nome_transferencia=dados_validados['nome_transferencia'],
+            valor_total=transferencia_data.valor_total or 0.0,  # Mantém valor_total como 0.0
+            id_proprietarios=dados_validados['id_proprietarios_json'],
             origem_id_proprietario=transferencia_data.origem_id_proprietario,
             destino_id_proprietario=transferencia_data.destino_id_proprietario,
             data_criacao=data_criacao or datetime.now(),
@@ -172,15 +186,34 @@ def atualizar_transferencia(transferencia_id: int, transferencia_data: Transfere
                     detail="Alias não encontrado"
                 )
         
+        # Validar dados se fornecidos
+        dados_validados = None
+        if transferencia_data.nome_transferencia or transferencia_data.id_proprietarios:
+            try:
+                nome = transferencia_data.nome_transferencia or transferencia.nome_transferencia
+                id_proprietarios = transferencia_data.id_proprietarios if transferencia_data.id_proprietarios is not None else transferencia.id_proprietarios
+                alias_id = transferencia_data.alias_id or transferencia.alias_id
+                
+                dados_validados = TransferenciaValidator.validar_transferencia_completa(
+                    nome,
+                    id_proprietarios,
+                    alias_id
+                )
+            except TransferValidationError as e:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail=f"Dados da transferência inválidos: {str(e)}"
+                )
+        
         # Atualizar campos se fornecidos
         if transferencia_data.alias_id is not None:
             transferencia.alias_id = transferencia_data.alias_id
         if transferencia_data.nome_transferencia is not None:
-            transferencia.nome_transferencia = transferencia_data.nome_transferencia
+            transferencia.nome_transferencia = dados_validados['nome_transferencia'] if dados_validados else transferencia_data.nome_transferencia
         if transferencia_data.valor_total is not None:
             transferencia.valor_total = transferencia_data.valor_total
         if transferencia_data.id_proprietarios is not None:
-            transferencia.id_proprietarios = transferencia_data.id_proprietarios
+            transferencia.id_proprietarios = dados_validados['id_proprietarios_json'] if dados_validados else transferencia_data.id_proprietarios
         if transferencia_data.origem_id_proprietario is not None:
             transferencia.origem_id_proprietario = transferencia_data.origem_id_proprietario
         if transferencia_data.destino_id_proprietario is not None:
@@ -282,4 +315,34 @@ def listar_transferencias_por_alias(alias_id: int, db: Session = Depends(get_db)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Erro ao listar transferências do alias: {str(e)}"
+        )
+
+@router.get("/verificar-consistencia", response_model=List[dict])
+def verificar_consistencia_transferencias(db: Session = Depends(get_db), current_user = Depends(is_admin)):
+    """
+    Verificar consistência dos dados de transferências (apenas administradores)
+    """
+    try:
+        transferencias = db.query(Transferencia).order_by(desc(Transferencia.id)).all()
+        
+        resultados = []
+        for transferencia in transferencias:
+            resultado = TransferenciaValidator.verificar_consistencia_transferencia(
+                float(transferencia.valor_total) if transferencia.valor_total else 0.0,
+                transferencia.id_proprietarios
+            )
+            
+            resultados.append({
+                'id': transferencia.id,
+                'nome_transferencia': transferencia.nome_transferencia,
+                'alias': transferencia.alias.alias if transferencia.alias else None,
+                **resultado
+            })
+        
+        return resultados
+        
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Erro ao verificar consistência: {str(e)}"
         )
