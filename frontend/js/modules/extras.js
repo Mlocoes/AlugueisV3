@@ -1161,12 +1161,32 @@ class ExtrasManager {
                 return;
             }
 
+            const proprietariosData = this.obterProprietariosDaTabela();
+
+            // Validar lógica da transferência
+            const valores = proprietariosData.map(p => parseFloat(p.valor) || 0);
+            const soma = valores.reduce((acc, val) => acc + val, 0);
+            const valoresPositivos = valores.filter(v => v > 0);
+            const valoresNegativos = valores.filter(v => v < 0);
+
+            // Verificar se há pelo menos um valor positivo e um negativo (lógica de transferência)
+            if (valoresPositivos.length === 0 || valoresNegativos.length === 0) {
+                this.uiManager.showAlert('Uma transferência deve ter pelo menos um valor positivo (recebimento) e um negativo (pagamento)', 'warning');
+                return;
+            }
+
+            // Verificar se a soma é próxima de zero (tolerância de 0.01 para erros de arredondamento)
+            if (Math.abs(soma) > 0.01) {
+                this.uiManager.showAlert(`A soma dos valores deve ser zero ou próxima de zero. Soma atual: ${soma.toFixed(2)}`, 'warning');
+                return;
+            }
+
             const transferenciaData = {
                 nome_transferencia: nomeTransferencia,
                 alias_id: aliasId,
                 data_criacao: dataCriacao ? new Date(dataCriacao).toISOString() : null,
                 data_fim: dataFim ? new Date(dataFim).toISOString() : null,
-                id_proprietarios: JSON.stringify(this.obterProprietariosDaTabela())
+                id_proprietarios: JSON.stringify(proprietariosData)
             };
 
             let response;
@@ -1226,10 +1246,14 @@ class ExtrasManager {
             const valor = valorInput ? valorInput.value.trim().replace(',', '.') : '0';
 
             if (nome) {
-                proprietarios.push({
-                    nome,
-                    valor: parseFloat(valor) || 0
-                });
+                // Encontrar o ID do proprietário pelo nome
+                const proprietario = this.allProprietarios.find(p => p.nome === nome);
+                if (proprietario) {
+                    proprietarios.push({
+                        id: proprietario.id,
+                        valor: parseFloat(valor) || 0
+                    });
+                }
             }
         });
 
@@ -1319,7 +1343,7 @@ class ExtrasManager {
                     const row = document.createElement('tr');
                     row.innerHTML = `
                         <td>${proprietario.nome}</td>
-                        <td><input type="number" class="form-control form-control-sm" step="0.01" min="0" placeholder="0.00" value="${valorExistente}"></td>
+                        <td><input type="number" class="form-control form-control-sm" step="0.01" placeholder="0.00" value="${valorExistente}"></td>
                     `;
                     tbody.appendChild(row);
                 });
