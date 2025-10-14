@@ -722,7 +722,7 @@ class ExtrasManager {
             this.currentTransferencia = transferencia;
 
             // Mostrar modal (que irá carregar aliases e configurar formulário)
-            this.showTransferenciasModal();
+            await this.showTransferenciasModal();
 
         } catch (error) {
             console.error('Erro ao editar transferência:', error);
@@ -934,7 +934,7 @@ class ExtrasManager {
     /**
      * Mostrar modal de transferências (criar/editar)
      */
-    showTransferenciasModal() {
+    async showTransferenciasModal() {
         try {
             const modal = document.getElementById('modal-transferencias');
             const form = document.getElementById('form-transferencias');
@@ -978,22 +978,24 @@ class ExtrasManager {
                 const nomeInput = document.getElementById('transferencia-nome');
                 const dataCriacaoInput = document.getElementById('transferencia-data-criacao');
                 const dataFimInput = document.getElementById('transferencia-data-fim');
-                const aliasSelect = document.getElementById('transferencia-alias');
 
                 if (nomeInput) nomeInput.value = this.currentTransferencia.nome_transferencia || '';
                 if (dataCriacaoInput) dataCriacaoInput.value = this.currentTransferencia.data_criacao ? this.formatarDataParaInput(this.currentTransferencia.data_criacao) : '';
                 if (dataFimInput) dataFimInput.value = this.currentTransferencia.data_fim ? this.formatarDataParaInput(this.currentTransferencia.data_fim) : '';
-                
-                // Selecionar o alias correto
-                if (aliasSelect && this.currentTransferencia.alias_id) {
+            }
+
+            // Carregar aliases disponíveis primeiro
+            await this.carregarAliasParaTransferencia();
+
+            // Agora que os aliases estão carregados, definir o valor selecionado se estiver editando
+            if (this.currentTransferencia && this.currentTransferencia.alias_id) {
+                const aliasSelect = document.getElementById('transferencia-alias');
+                if (aliasSelect) {
                     aliasSelect.value = this.currentTransferencia.alias_id;
                     // Carregar proprietários do alias selecionado com valores da transferência
                     this.carregarProprietariosTransferencia(this.currentTransferencia.alias_id, this.currentTransferencia.id_proprietarios);
                 }
             }
-
-            // Carregar aliases disponíveis
-            this.carregarAliasParaTransferencia();
 
             // Mostrar modal
             const bootstrapModal = new bootstrap.Modal(modal);
