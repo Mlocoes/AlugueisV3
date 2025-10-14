@@ -368,6 +368,56 @@ class ExtrasManager {
     }
 
     /**
+     * Editar alias
+     */
+    async editarAlias(aliasId) {
+        try {
+            console.log(`Editando alias ID: ${aliasId}`);
+
+            // Carregar dados do alias
+            const response = await this.apiService.get(`/api/extras/${aliasId}`);
+            if (!response || !response.success) {
+                this.uiManager.showAlert('Erro ao carregar dados do alias', 'danger');
+                return;
+            }
+
+            const alias = response.data;
+            console.log('Dados do alias:', alias);
+
+            // Mostrar modal de edição
+            await this.showAliasModal(alias);
+        } catch (error) {
+            console.error('Erro ao editar alias:', error);
+            this.uiManager.showAlert('Erro ao carregar alias para edição', 'danger');
+        }
+    }
+
+    /**
+     * Excluir alias
+     */
+    async excluirAlias(aliasId) {
+        if (!confirm('Tem certeza que deseja excluir este alias? Esta ação não pode ser desfeita.')) {
+            return;
+        }
+
+        try {
+            console.log(`Excluindo alias ID: ${aliasId}`);
+
+            const response = await this.apiService.delete(`/api/extras/${aliasId}`);
+            if (response && response.success) {
+                this.uiManager.showAlert('Alias excluído com sucesso!', 'success');
+                // Recarregar lista de extras
+                await this.loadExtras();
+            } else {
+                this.uiManager.showAlert('Erro ao excluir alias', 'danger');
+            }
+        } catch (error) {
+            console.error('Erro ao excluir alias:', error);
+            this.uiManager.showAlert('Erro ao excluir alias', 'danger');
+        }
+    }
+
+    /**
      * Carregar transferências cadastradas
      */
     async loadTransferencias() {
@@ -630,134 +680,65 @@ class ExtrasManager {
     }
 
     /**
-     * Popular selects de proprietários para ambos os modais
+     * Salvar alias (criar ou atualizar)
      */
-    populateProprietariosSelects() {
-        // Para o modal de Alias (apenas proprietários pertencentes)
-        const proprietariosSelect = document.getElementById('alias-proprietarios');
-        if (proprietariosSelect) {
-            proprietariosSelect.innerHTML = '';
-            this.allProprietarios.forEach(prop => {
-                const option = document.createElement('option');
-                option.value = prop.id;
-                option.textContent = `${prop.nome} ${prop.sobrenome || ''}`.trim();
-                proprietariosSelect.appendChild(option);
-            });
-        }
+    async salvarAlias() {
+        try {
+            const form = document.getElementById('form-alias');
+            if (!form) {
+                console.error('Formulário de alias não encontrado');
+                return;
+            }
 
-        // Para o modal de Transferências (combo de aliases e outros selects)
-        const aliasCombo = document.getElementById('transferencia-alias');
-        if (aliasCombo) {
-            aliasCombo.innerHTML = '<option value="">Selecione um alias...</option>';
-            // Será preenchido quando os aliases forem carregados
-        }
+            const formData = new FormData(form);
+            const aliasNome = formData.get('alias-nome')?.trim();
+            const proprietariosSelecionados = formData.getAll('proprietarios[]');
 
-        const origemSelect = document.getElementById('transferencia-origem');
-        if (origemSelect) {
-            origemSelect.innerHTML = '<option value="">Selecione proprietário origem...</option>';
-            this.allProprietarios.forEach(prop => {
-                const option = document.createElement('option');
-                option.value = prop.id;
-                option.textContent = `${prop.nome} ${prop.sobrenome || ''}`.trim();
-                origemSelect.appendChild(option);
-            });
-        }
+            if (!aliasNome) {
+                this.uiManager.showAlert('Nome do alias é obrigatório', 'warning');
+                return;
+            }
 
-        const destinoSelect = document.getElementById('transferencia-destino');
-        if (destinoSelect) {
-            destinoSelect.innerHTML = '<option value="">Selecione proprietário destino...</option>';
-            this.allProprietarios.forEach(prop => {
-                const option = document.createElement('option');
-                option.value = prop.id;
-                option.textContent = `${prop.nome} ${prop.sobrenome || ''}`.trim();
-                destinoSelect.appendChild(option);
-            });
-        }
-    }
+            if (proprietariosSelecionados.length === 0) {
+                this.uiManager.showAlert('Selecione pelo menos um proprietário', 'warning');
+                return;
+            }
 
-    /**
-     * Mostrar modal de alias
-     */
-    async showAliasModal(extra = null) { // Added async here
-        this.currentExtra = extra;
-        const modal = document.getElementById('modal-alias');
-        const modalTitle = document.getElementById('modalAliasLabel');
-        const form = document.getElementById('form-alias');
-        
-        if (extra) {
-            modalTitle.innerHTML = '<i class="fas fa-edit me-2"></i>Editar Alias';
-            this.populateAliasForm(extra);
-        } else {
-            modalTitle.innerHTML = '<i class="fas fa-plus me-2"></i>Novo Alias';
-            form.reset();
-            // Cargar lista de proprietários disponibles
-            await this.loadProprietarios();
-        }
+            const aliasData = {
+                alias: aliasNome,
+                id_proprietarios: JSON.stringify(proprietariosSelecionados.map(id => parseInt(id)))
+            };
 
-        // Limpar alertas
-        const alerts = document.getElementById('alias-alerts');
-        if (alerts) alerts.innerHTML = '';
+            let response;
+            if (this.currentExtra && this.currentExtra.id) {
+                // Atualizar alias existente
+                response = await this.apiService.put(`/api/extras/${this.currentExtra.id}`, aliasData);
+            } else {
+                // Criar novo alias
+                response = await this.apiService.post('/api/extras/', aliasData);
+            }
 
-        // Criar instância do modal
-        const bootstrapModal = new bootstrap.Modal(modal);
+            if (response && response.success) {
+                const action = this.currentExtra ? 'atualizado' : 'criado';
+                this.uiManager.showAlert(`Alias ${action} com sucesso!`, 'success');
 
-        const saveBtn = document.getElementById('btn-salvar-alias');
-        if(saveBtn) {
-            const newSaveBtn = saveBtn.cloneNode(true);
-            saveBtn.parentNode.replaceChild(newSaveBtn, saveBtn);
-    
-            newSaveBtn.addEventListener('click', (e) => {
-                e.preventDefault();
-                this.salvarAlias();
-            });
-        }
-
-        // Configurar eventos mais robustos - usando 'once' para evitar acúmulo
-        modal.addEventListener('shown.bs.modal', () => {
-            // Permitir que o Bootstrap termine de configurar o modal primeiro
-            setTimeout(() => {
-                // Focar no primeiro input disponível após o modal ser exibido
-                const firstInput = modal.querySelector('input[type="text"]:not([disabled]), select:not([disabled])');
-                if (firstInput && !firstInput.matches(':focus')) {
-                    firstInput.focus();
+                // Fechar modal
+                const modal = document.getElementById('modal-alias');
+                if (modal) {
+                    const bootstrapModal = bootstrap.Modal.getInstance(modal);
+                    if (bootstrapModal) {
+                        bootstrapModal.hide();
+                    }
                 }
-            }, 200);
-        }, { once: true });
 
-        modal.addEventListener('hide.bs.modal', () => {
-            // Remover foco antes que o modal seja oculto
-            const focusedElement = modal.querySelector(':focus');
-            if (focusedElement) {
-                focusedElement.blur();
+                // Recarregar lista de extras
+                await this.loadExtras();
+            } else {
+                this.uiManager.showAlert('Erro ao salvar alias', 'danger');
             }
-        }, { once: true });
-
-        modal.addEventListener('hidden.bs.modal', () => {
-            // O Bootstrap lida com aria-hidden automaticamente, não precisamos interferir
-            modal.removeAttribute('aria-modal');
-        }, { once: true });
-
-        // Mostrar modal
-        bootstrapModal.show();
-    }
-
-    /**
-     * Popular formulário de alias com dados
-     */
-    populateAliasForm(extra) {
-    document.getElementById('alias-nome').value = extra.alias || '';
-
-        // Selecionar múltiplos proprietários
-        const proprietariosSelect = document.getElementById('alias-proprietarios');
-        if (proprietariosSelect && extra.id_proprietarios) {
-            try {
-                const proprietarioIds = JSON.parse(extra.id_proprietarios);
-                Array.from(proprietariosSelect.options).forEach(option => {
-                    option.selected = proprietarioIds.includes(parseInt(option.value));
-                });
-            } catch (e) {
-                console.warn('Erro ao processar proprietários:', e);
-            }
+        } catch (error) {
+            console.error('Erro ao salvar alias:', error);
+            this.uiManager.showAlert('Erro ao salvar alias', 'danger');
         }
     }
 
