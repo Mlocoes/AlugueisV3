@@ -974,14 +974,7 @@ class ExtrasManager {
                 // Modo edição
                 modalTitle.innerHTML = '<i class="fas fa-edit me-2"></i>Editar Transferência';
                 
-                // Preencher campos com dados da transferência
-                const nomeInput = document.getElementById('transferencia-nome');
-                const dataCriacaoInput = document.getElementById('transferencia-data-criacao');
-                const dataFimInput = document.getElementById('transferencia-data-fim');
-
-                if (nomeInput) nomeInput.value = this.currentTransferencia.nome_transferencia || '';
-                if (dataCriacaoInput) dataCriacaoInput.value = this.currentTransferencia.data_criacao ? this.formatarDataParaInput(this.currentTransferencia.data_criacao) : '';
-                if (dataFimInput) dataFimInput.value = this.currentTransferencia.data_fim ? this.formatarDataParaInput(this.currentTransferencia.data_fim) : '';
+                // Campos serão preenchidos após mostrar o modal
             }
 
             // Carregar aliases disponíveis primeiro
@@ -996,10 +989,6 @@ class ExtrasManager {
                     this.carregarProprietariosTransferencia(this.currentTransferencia.alias_id, this.currentTransferencia.id_proprietarios);
                 }
             }
-
-            // Mostrar modal
-            const bootstrapModal = new bootstrap.Modal(modal);
-            bootstrapModal.show();
 
             // Configurar event listener do formulário (feito aqui pois o modal pode ser recriado)
             form.addEventListener('submit', (e) => {
