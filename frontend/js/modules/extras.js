@@ -1775,7 +1775,19 @@ class ExtrasManager {
         let total = 0;
         
         inputs.forEach(input => {
-            const valor = parseFloat(input.value) || 0;
+            // Normalizar o valor: substituir vírgula por ponto se necessário
+            let valorStr = input.value.trim();
+            
+            // Se contém vírgula como decimal (formato BR), converter para ponto
+            if (valorStr.includes(',') && !valorStr.includes('.')) {
+                valorStr = valorStr.replace(',', '.');
+            }
+            // Se contém ambos (ex: 1.234,56), remover ponto de milhares e trocar vírgula por ponto
+            else if (valorStr.includes('.') && valorStr.includes(',')) {
+                valorStr = valorStr.replace(/\./g, '').replace(',', '.');
+            }
+            
+            const valor = parseFloat(valorStr) || 0;
             total += valor;
         });
         
@@ -1821,7 +1833,21 @@ class ExtrasManager {
             
             inputs.forEach(input => {
                 const id = parseInt(input.dataset.proprietarioId);
-                const valor = parseFloat(input.value) || 0;
+                
+                // Normalizar o valor: substituir vírgula por ponto se necessário
+                let valorStr = input.value.trim();
+                
+                // Se contém vírgula como decimal (formato BR), converter para ponto
+                if (valorStr.includes(',') && !valorStr.includes('.')) {
+                    valorStr = valorStr.replace(',', '.');
+                }
+                // Se contém ambos (ex: 1.234,56), remover ponto de milhares e trocar vírgula por ponto
+                else if (valorStr.includes('.') && valorStr.includes(',')) {
+                    valorStr = valorStr.replace(/\./g, '').replace(',', '.');
+                }
+                
+                const valor = parseFloat(valorStr) || 0;
+                
                 // Aceitar valores positivos e negativos
                 proprietariosComValores.push({ id, valor });
                 valorTotal += valor;
