@@ -346,6 +346,20 @@ class ViewManager {
             if (window.extrasModule && typeof window.extrasModule.loadExtras === 'function') {
                 window.extrasModule.loadExtras();
             }
+            if (window.extrasModule && typeof window.extrasModule.loadTransferencias === 'function') {
+                window.extrasModule.loadTransferencias();
+            }
+            
+            // Registrar evento para o botão de nova transferência na página extras
+            const btnNovasTransferenciasExtras = document.getElementById('btn-novas-transferencias-extras');
+            if (btnNovasTransferenciasExtras) {
+                btnNovasTransferenciasExtras.addEventListener('click', function() {
+                    if (window.extrasModule && typeof window.extrasModule.showTransferenciasModal === 'function') {
+                        window.extrasModule.currentTransferencia = null;
+                        window.extrasModule.showTransferenciasModal();
+                    }
+                });
+            }
         }
     }
 
@@ -1757,7 +1771,8 @@ class ViewManager {
     getExtrasTemplate() {
         return `
             <div class="extras-container">
-                <div class="card-responsive">
+                <!-- Seção de Aliases -->
+                <div class="card-responsive mb-4">
                     <div class="card-body-responsive">
                         <div class="table-responsive-custom" style="max-height: 10.2rem; min-height: 2.6rem; overflow-y: auto;">
                             <table class="table table-striped table-hover table-custom" style="font-size: 0.80rem;">
@@ -1775,6 +1790,41 @@ class ViewManager {
                                                 <span class="visually-hidden">Carregando...</span>
                                             </div>
                                             <br>Carregando aliases...
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Seção de Transferências -->
+                <div class="card-responsive">
+                    <div class="card-header-responsive d-flex justify-content-between align-items-center">
+                        <h5 class="card-title mb-0"><i class="fas fa-exchange-alt me-2"></i>Transferências</h5>
+                        <button class="btn btn-primary btn-sm" id="btn-novas-transferencias-extras" type="button">
+                            <i class="fas fa-plus me-2"></i> Nova Transferência
+                        </button>
+                    </div>
+                    <div class="card-body-responsive">
+                        <div class="table-responsive-custom" style="max-height: 20rem; min-height: 2.6rem; overflow-y: auto;">
+                            <table class="table table-striped table-hover table-custom" style="font-size: 0.80rem;">
+                                <thead class="table-dark">
+                                    <tr>
+                                        <th>Alias</th>
+                                        <th>Nome da Transferência</th>
+                                        <th class="text-center">Data Início</th>
+                                        <th class="text-center">Data Fim</th>
+                                        <th width="120" class="text-center">Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="transferencias-table-body">
+                                    <tr>
+                                        <td colspan="5" class="text-center text-muted py-4">
+                                            <div class="spinner-border" role="status">
+                                                <span class="visually-hidden">Carregando...</span>
+                                            </div>
+                                            <br>Carregando transferências...
                                         </td>
                                     </tr>
                                 </tbody>
