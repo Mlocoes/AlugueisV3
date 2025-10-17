@@ -59,9 +59,12 @@ class ExtrasManager {
             this.salvarAlias();
         });
 
-        document.getElementById('form-transferencias')?.addEventListener('submit', (e) => {
-            e.preventDefault();
-            this.salvarTransferencias();
+        // Event delegation para formulário de transferências (pode não existir no DOM ainda)
+        document.addEventListener('submit', (e) => {
+            if (e.target && e.target.id === 'form-transferencias') {
+                e.preventDefault();
+                this.salvarTransferencias();
+            }
         });
 
         document.addEventListener('DOMContentLoaded', () => {
@@ -1844,15 +1847,14 @@ class ExtrasManager {
             
             console.log('Objeto transferência a enviar:', transferencia);
             
-            // Salvar
+            // Desabilitar botão de salvar (se existir)
             const submitBtn = document.getElementById('btn-salvar-transferencia');
-            if (!submitBtn) {
-                console.error('Botão de salvar não encontrado');
-                throw new Error('Botão de salvar não encontrado');
+            if (submitBtn) {
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Salvando...';
+            } else {
+                console.warn('Botão de salvar não encontrado - continuando sem desabilitar');
             }
-            
-            submitBtn.disabled = true;
-            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Salvando...';
             
             let response;
             if (this.currentTransferencia && this.currentTransferencia.id) {
