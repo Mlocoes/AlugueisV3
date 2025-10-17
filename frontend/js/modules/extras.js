@@ -992,17 +992,17 @@ class ExtrasManager {
                 
                 const dataCriacaoInput = document.getElementById('transferencia-data-criacao');
                 if (dataCriacaoInput && this.currentTransferencia.data_criacao) {
-                    // Formatar data para YYYY-MM-DD
-                    const dataCriacao = new Date(this.currentTransferencia.data_criacao);
-                    const dataFormatada = dataCriacao.toISOString().split('T')[0];
+                    // Usar apenas a parte da data (YYYY-MM-DD) para evitar problemas de fuso horário
+                    const dataString = this.currentTransferencia.data_criacao;
+                    const dataFormatada = dataString.includes('T') ? dataString.split('T')[0] : dataString;
                     dataCriacaoInput.value = dataFormatada;
                 }
                 
                 const dataFimInput = document.getElementById('transferencia-data-fim');
                 if (dataFimInput && this.currentTransferencia.data_fim) {
-                    // Formatar data para YYYY-MM-DD
-                    const dataFim = new Date(this.currentTransferencia.data_fim);
-                    const dataFormatada = dataFim.toISOString().split('T')[0];
+                    // Usar apenas a parte da data (YYYY-MM-DD) para evitar problemas de fuso horário
+                    const dataString = this.currentTransferencia.data_fim;
+                    const dataFormatada = dataString.includes('T') ? dataString.split('T')[0] : dataString;
                     dataFimInput.value = dataFormatada;
                 } else if (dataFimInput) {
                     // Limpar data fim se não existir
