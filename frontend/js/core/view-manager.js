@@ -1482,289 +1482,31 @@ ismiss="modal">Cancelar</button>
         `;
     }
 
-    _createImportarAccordionItem(type, title, icon, accordionId) {
-        const suffix = this.isMobile ? '-mobile' : '';
+    getParticipacoesTemplate() {
         return `
-            <div class="accordion-item">
-                <h2 class="accordion-header" id="heading-${type}${suffix}">
-                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse-${type}${suffix}" aria-expanded="false" aria-controls="collapse-${type}${suffix}">
-                        <i class="fas ${icon} me-2"></i>${title}
-                    </button>
-                </h2>
-                <div id="collapse-${type}${suffix}" class="accordion-collapse collapse" aria-labelledby="heading-${type}${suffix}" data-bs-parent="#${accordionId}">
-                    <div class="accordion-body">
-                        <form id="importar-form-${type}${suffix}" enctype="multipart/form-data">
-                            <div class="input-group">
-                                <input type="file" class="form-control" id="arquivo-${type}${suffix}" accept=".xlsx,.xls" required>
-                                <button class="btn btn-primary" type="submit">Importar</button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            </div>
-        `;
-    }
-
-    getImportarMobileTemplate() {
-        const accordionId = "importar-accordion-mobile";
-        this.isMobile = true; // Forçar sufixo
-        const items = [
-            this._createImportarAccordionItem('proprietarios', 'Proprietários', 'fa-users', accordionId),
-            this._createImportarAccordionItem('imoveis', 'Imóveis', 'fa-building', accordionId),
-            this._createImportarAccordionItem('participacoes', 'Participações', 'fa-chart-pie', accordionId),
-            this._createImportarAccordionItem('alugueis', 'Aluguéis', 'fa-calendar-alt', accordionId)
-        ].join('');
-
-        return `
-            <div class="importar-container-mobile p-3">
-                <div class="mb-3">
-                    <div class="d-grid gap-2">
-                        <button class="btn btn-primary" id="btn-cadastrar-usuario-mobile" data-bs-toggle="modal" data-bs-target="#modal-cadastrar-usuario">
-                            <i class="fas fa-user-plus me-2"></i> Cadastrar Novo Usuário
-                        </button>
-                        <button class="btn btn-primary" id="btn-alterar-usuario-mobile" data-bs-toggle="modal" data-bs-target="#modal-alterar-usuario">
-                            <i class="fas fa-user-edit me-2"></i> Alterar Usuário
-                        </button>
-                        <button class="btn btn-primary" id="btn-novo-alias-mobile" type="button">
-                            <i class="fas fa-user-tag me-2"></i> Novo Alias
-                        </button>
-                        <button class="btn btn-primary" id="btn-novas-transferencias-mobile" type="button">
-                            <i class="fas fa-exchange-alt me-2"></i> Nova Transferência
-                        </button>
-                        <button class="btn btn-primary" id="btn-multiplas-transferencias-mobile" type="button">
-                            <i class="fas fa-table me-2"></i> Cadastrar Múltiplas Transferências
-                        </button>
-                    </div>
-                </div>
-                <div class="accordion" id="${accordionId}">
-                    ${items}
-                </div>
-                <div id="validation-results-container-mobile" class="mt-3"></div>
-            </div>
-
-            <!-- Modales de Usuário -->
-            <!-- Modal Cadastrar Usuário -->
-            <div class="modal fade" id="modal-cadastrar-usuario" tabindex="-1" aria-labelledby="modalCadastrarUsuarioLabel">
-                <div class="modal-dialog">
-                    <div class="modal-content">
-                        <div class="modal-header bg-primary text-white">
-                            <h5 class="modal-title" id="modalCadastrarUsuarioLabel"><i class="fas fa-user-plus me-2"></i>Cadastrar Novo Usuário</h5>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                        </div>
-                        <form id="form-cadastrar-usuario">
-                            <div class="modal-body p-1" style="font-size: 0.80rem; max-height: 50vh; overflow-y: auto;">
-                                <div class="mb-3">
-                                    <label for="novo-usuario" class="form-label">Nome de Usuário *</label>
-                                    <div class="input-group">
-                                        <span class="input-group-text"><i class="fas fa-user"></i></span>
-                                        <input type="text" class="form-control" id="novo-usuario" name="usuario" required placeholder="Digite o nome de usuário" autocomplete="off">
-                                    </div>
-                                    <div class="form-text">Mínimo 3 caracteres, apenas letras, números e underscore</div>
-                                </div>
-                                <div class="mb-3">
-                                    <label for="nova-senha" class="form-label">Senha *</label>
-                                    <div class="input-group">
-                                        <span class="input-group-text"><i class="fas fa-lock"></i></span>
-                                        <input type="password" class="form-control" id="nova-senha" name="senha" required placeholder="Digite a senha" autocomplete="off">
-                                        <button class="btn btn-outline-secondary" type="button" id="toggle-senha"><i class="fas fa-eye"></i></button>
-                                    </div>
-                                    <div class="form-text">Mínimo 6 caracteres</div>
-                                </div>
-                                <div class="mb-3">
-                                    <label for="confirmar-senha" class="form-label">Confirmar Senha *</label>
-                                    <div class="input-group">
-                                        <span class="input-group-text"><i class="fas fa-lock"></i></span>
-                                        <input type="password" class="form-control" id="confirmar-senha" name="confirmar_senha" required placeholder="Confirme a senha" autocomplete="off">
-                                    </div>
-                                </div>
-                                <div class="mb-3">
-                                    <label for="tipo-usuario" class="form-label">Tipo de Usuário *</label>
-                                    <div class="input-group">
-                                        <span class="input-group-text"><i class="fas fa-user-tag"></i></span>
-                                        <select class="form-select" id="tipo-usuario" name="tipo_de_usuario" required>
-                                            <option value="">Selecione o tipo</option>
-                                            <option value="administrador">Administrador</option>
-                                            <option value="usuario">Usuário</option>
-                                        </select>
-                                    </div>
-                                </div>
-                                <div id="erro-cadastro-usuario" class="alert alert-danger d-none"></div>
-                                <div id="sucesso-cadastro-usuario" class="alert alert-success d-none"></div>
-                            </div>
-                            <div class="modal-footer">
-                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                                <button type="submit" class="btn btn-primary" id="btn-confirmar-cadastro">
-                                    <span class="spinner-border spinner-border-sm d-none me-2" id="spinner-cadastro"></span>
-                                    Cadastrar
-                                </button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Modal Alterar Usuário -->
-            <div class="modal fade" id="modal-alterar-usuario" tabindex="-1" aria-labelledby="modalAlterarUsuarioLabel">
-                <div class="modal-dialog">
-                    <div class="modal-content">
-                        <div class="modal-header bg-primary text-white">
-                            <h5 class="modal-title" id="modalAlterarUsuarioLabel"><i class="fas fa-user-edit me-2"></i>Alterar Usuário</h5>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                        </div>
-                        <div class="modal-body">
-                            <div class="mb-3">
-                                <label for="selecionar-usuario" class="form-label">Selecionar Usuário *</label>
-                                <div class="input-group">
-                                    <span class="input-group-text"><i class="fas fa-users"></i></span>
-                                    <select class="form-select" id="selecionar-usuario" required>
-                                        <option value="">Carregando usuários...</option>
-                                    </select>
-                                </div>
-                            </div>
-                            <form id="form-alterar-usuario" style="display: none;">
-                                <div class="mb-3">
-                                    <label for="alterar-nova-senha" class="form-label">Nova Senha (deixe vazio para não alterar)</label>
-                                    <div class="input-group">
-                                        <span class="input-group-text"><i class="fas fa-lock"></i></span>
-                                        <input type="password" class="form-control" id="alterar-nova-senha" name="nova_senha" placeholder="Digite a nova senha" autocomplete="off">
-                                        <button class="btn btn-outline-secondary" type="button" id="toggle-alterar-senha"><i class="fas fa-eye"></i></button>
-                                    </div>
-                                    <div class="form-text">Mínimo 6 caracteres (opcional)</div>
-                                </div>
-                                <div class="mb-3">
-                                    <label for="alterar-confirmar-senha" class="form-label">Confirmar Nova Senha</label>
-                                    <div class="input-group">
-                                    <div class="input-group">
-                                        <span class="input-group-text"><i class="fas fa-lock"></i></span>
-                                        <input type="password" class="form-control" id="alterar-confirmar-senha" name="confirmar_nova_senha" placeholder="Confirme a nova senha" autocomplete="off">
-                                    </div>
-                                </div>
-                                <div class="mb-3">
-                                    <label for="alterar-tipo-usuario" class="form-label">Tipo de Usuário</label>
-                                    <div class="input-group">
-                                        <span class="input-group-text"><i class="fas fa-user-tag"></i></span>
-                                        <select class="form-select" id="alterar-tipo-usuario" name="novo_tipo_usuario">
-                                            <option value="">Não alterar</option>
-                                            <option value="administrador">Administrador</option>
-                                            <option value="usuario">Usuário</option>
-                                        </select>
-                                    </div>
-                                </div>
-                                <div class="d-flex gap-2">
-                                    <button type="submit" class="btn btn-warning flex-fill"><i class="fas fa-save me-1"></i> Alterar Usuário</button>
-                                    <button type="button" class="btn btn-danger" id="btn-excluir-usuario-selecionado"><i class="fas fa-trash me-1"></i> Excluir</button>
-                                </div>
-                            </form>
-                            <div id="erro-alterar-usuario" class="alert alert-danger d-none mt-3"></div>
-                            <div id="sucesso-alterar-usuario" class="alert alert-success d-none mt-3"></div>
-                        </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"><i class="fas fa-times me-1"></i> Fechar</button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Modal Alias -->
-            <div class="modal fade" id="modal-alias" tabindex="-1" aria-labelledby="modalAliasLabel" aria-hidden="true">
-                <div class="modal-dialog">
-                    <div class="modal-content">
-                        <div class="modal-header bg-primary text-white">
-                            <h5 class="modal-title" id="modalAliasLabel"><i class="fas fa-edit me-2"></i>Editar Alias</h5>
-                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-                        </div>
-                        <div class="modal-body p-2" style="font-size: 0.85rem; max-height: 60vh; overflow-y: auto;">
-                            <div id="alias-alerts"></div>
-                            <form id="form-alias">
-                                <div class="mb-3">
-                                    <label for="alias-nome" class="form-label">Nome do Alias</label>
-                                    <input type="text" class="form-control" id="alias-nome" name="alias-nome" required>
-                                </div>
-                                <div class="mb-3">
-                                    <label for="alias-proprietarios" class="form-label">Proprietários</label>
-                                    <select multiple class="form-select" id="alias-proprietarios" name="proprietarios[]"></select>
-                                </div>
-                                <div class="modal-footer">
-                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                                    <button type="submit" class="btn btn-primary" id="btn-salvar-alias">Salvar</button>
-                                </div>
-                            </form>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        `;
-    }
-
-    getRelatoriosTemplate() {
-        return `
-            <div class="relatorios-container">
+            <div class="participacoes-container">
                 <!-- Encabezado eliminado -->
-                <div id="relatorios-alerts"></div>
-                <!-- Filtros sin rectángulo, estilo Participação -->
-                        <div class="d-flex align-items-center mb-4" style="gap: 24px;
- flex-wrap: wrap;">                                                                  
-                            <div class="d-flex align-items-center me-3">                                             <label for="relatorios-ano-select" class="form-label 
-mb-0 me-2" style="min-width: 50px;">Ano</label>                                      
-                                <select id="relatorios-ano-select" class="form-select" style="width: 160px; min-width: 140px;">                                           
-                                    <option value="">Carregando...</option>                                          </select>
+                <div id="participacoes-data-selector" class="mb-3"></div>
+                <div class="row" id="participacoes-container"></div>
+                <div id="participacoes-table-container" style="display: none;">
+                    <div class="card-responsive">
+                        <div class="card-body-responsive">
+                            <div class="table-responsive-custom" style="max-height: 70vh; min-height: 50vh; overflow-y: auto; overflow-x: auto;">                                                         <table class="table table-striped table-hover matriz-table table-custom" id="participacoes-matrix-table" style="font-size: 0.76rem;">     
+                                    <thead class="table-dark" id="participacoes-matrix-head" style="white-space: nowrap;">                                                
+                                        <tr>                                                                                     <th width="120">Ações</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="participacoes-matrix-body" style="white-space: nowrap;">                                                                   
+                                        <tr>                                                                                     <td colspan="1" class="text-center text-m
+uted py-4">                                                                          
+                                                <div class="spinner-border" role="status">                                                                                
+                                                    <span class="visually-hidden">Carregando...</span>                                                                    
+                                                </div>                                                                               <br>Carregando participações...
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
                             </div>
-                            <div class="d-flex align-items-center me-3">
-                                <label for="relatorios-mes-select" class="form-label 
-mb-0 me-2" style="min-width: 50px;">Mês</label>                                      
-                                <select id="relatorios-mes-select" class="form-select" style="width: 160px; min-width: 140px;">                                           
-                                    <option value="">Todos os meses</option>                                             <option value="1">Janeiro</option>
-                                    <option value="2">Fevereiro</option>
-                                    <option value="3">Março</option>
-                                    <option value="4">Abril</option>
-                                    <option value="5">Maio</option>
-                                    <option value="6">Junho</option>
-                                    <option value="7">Julho</option>
-                                    <option value="8">Agosto</option>
-                                    <option value="9">Setembro</option>
-                                    <option value="10">Outubro</option>
-                                    <option value="11">Novembro</option>
-                                    <option value="12">Dezembro</option>
-                                </select>
-                            </div>
-                            <div class="d-flex align-items-center me-3">
-                                <label for="relatorios-proprietario-select" class="fo
-rm-label mb-0 me-2" style="min-width: 80px;">Proprietário</label>                    
-                                <select id="relatorios-proprietario-select" class="form-select" style="width: 200px; min-width: 160px;">                                  
-                                    <option value="">Carregando...</option>                                          </select>
-                            </div>
-                            <div class="d-flex align-items-center">
-                                <input class="form-check-input me-2" type="checkbox" 
-id="relatorios-transferencias-check">                                                
-                                <label class="form-check-label" for="relatorios-transferencias-check">                                                                    
-                                    <i class="fas fa-exchange-alt me-1"></i>Transferências                                                                                
-                                </label>                                                                         </div>
-                        </div>
-                
-                <div class="card-responsive">
-                    <!-- Título eliminado por solicitud del usuario -->
-                    <div class="card-body-responsive">
-                            <div class="table-responsive-custom" style="max-height: 70vh; min-height: 50vh; overflow-y: auto;">                                                                       <table class="table table-striped table-hover table-custom" style="font-size: 0.76rem;">                                                      
-                                <thead class="table-dark">                                                               <tr>
-                                        <th width="50">Nº</th>
-                                        <th>Nome do Proprietário</th>
-                                        <th width="120" class="text-center">Período</
-th>                                                                                  
-                                        <th width="150" class="text-end">Soma dos Aluguéis</th>                                                                           
-                                        <th width="150" class="text-end">Soma das Taxas de Administração</th>                                                             
-                                        <th width="150" class="text-center">Imóveis</th>                                                                                  
-                                    </tr>                                                                            </thead>
-                                <tbody id="relatorios-table-body">
-                                    <tr>
-                                        <td colspan="6" class="text-center text-muted
- py-4">                                                                              
-                                            <div class="spinner-border" role="status">                                                                                    
-                                                <span class="visually-hidden">Carregando...</span>                                                                        
-                                            </div>                                                                               <br>Carregando relatórios...
-                                        </td>
-                                    </tr>
-                                </tbody>
-                            </table>
                         </div>
                     </div>
                 </div>
@@ -1772,77 +1514,51 @@ th>
         `;
     }
 
-    getExtrasTemplate() {
+    getAlugueisTemplate() {
         return `
-            <div class="extras-container">
-                <!-- Seção de Aliases -->
-                <div class="card-responsive mb-4">
-                    <div class="card-body-responsive">
-                        <div class="table-responsive-custom" style="max-height: 10.2r
-em; min-height: 2.6rem; overflow-y: auto;">                                                                      
-                            <table class="table table-striped table-hover table-custo
-m" style="font-size: 0.80rem;">                                                                                      
-                                <thead class="table-dark">
-                                    <tr>
-                                        <th>Alias</th>
-                                        <th>Proprietários Pertenecentes</th>
-                                        <th width="100" class="text-center">Ações</th
->                                                                                                                        
-                                    </tr>
-                                </thead>
-                                <tbody id="extras-table-body">
-                                    <tr>
-                                        <td colspan="3" class="text-center text-muted
- py-4">                                                                                                                      
-                                            <div class="spinner-border" role="status"
->                                                                                                                                    
-                                                <span class="visually-hidden">Carrega
-ndo...</span>                                                                                                                    
-                                            </div>
-                                            <br>Carregando aliases...
-                                        </td>
-                                    </tr>
-                                </tbody>
-                            </table>
+            <div class="alugueis-container">
+                <!-- Encabezado eliminado -->
+                <div class="row mb-3 align-items-center">
+                        <div class="col-md-3 d-flex align-items-center">
+                            <label for="alugueis-ano-select" class="form-label mb-0 m
+e-4" style="min-width: 60px;">Ano</label>                                                                        <select id="alugueis-ano-select" class="form-select">                                    <option value="">Selecione o ano</option>
+                            </select>
                         </div>
+                        <div class="col-md-3 d-flex align-items-center">
+                            <label for="alugueis-mes-select" class="form-label mb-0 m
+e-4" style="min-width: 80px;">Mês</label>                                                                        <select id="alugueis-mes-select" class="form-select" disabled>                                                                                
+                            <option value="">Selecione o mês</option>                                            <option value="1">Janeiro</option>
+                            <option value="2">Fevereiro</option>
+                            <option value="3">Março</option>
+                            <option value="4">Abril</option>
+                            <option value="5">Maio</option>
+                            <option value="6">Junho</option>
+                            <option value="7">Julho</option>
+                            <option value="8">Agosto</option>
+                            <option value="9">Setembro</option>
+                            <option value="10">Outubro</option>
+                            <option value="11">Novembro</option>
+                            <option value="12">Dezembro</option>
+                        </select>
                     </div>
                 </div>
-
-                <!-- Seção de Transferências -->
-                <div class="card-responsive">
-                    <div class="card-header-responsive">
-                        <h5 class="card-title mb-0"><i class="fas fa-exchange-alt me-
-2"></i>Transferências</h5>                                                                               
-                    </div>
-                    <div class="card-body-responsive">
-                        <div class="table-responsive-custom" style="max-height: 20rem
-; min-height: 2.6rem; overflow-y: auto;">                                                                        
-                            <table class="table table-striped table-hover table-custo
-m" style="font-size: 0.80rem;">                                                                                      
-                                <thead class="table-dark">
-                                    <tr>
-                                        <th>Alias</th>
-                                        <th>Nome da Transferência</th>
-                                        <th class="text-center">Data Início</th>
-                                        <th class="text-center">Data Fim</th>
-                                        <th width="120" class="text-center">Ações</th
->                                                                                                                        
-                                    </tr>
-                                </thead>
-                                <tbody id="transferencias-table-body">
-                                    <tr>
-                                        <td colspan="5" class="text-center text-muted
- py-4">                                                                                                                      
-                                            <div class="spinner-border" role="status"
->                                                                                                                                    
-                                                <span class="visually-hidden">Carrega
-ndo...</span>                                                                                                                    
-                                            </div>
-                                            <br>Carregando transferências...
-                                        </td>
-                                    </tr>
-                                </tbody>
-                            </table>
+                <div id="alugueis-table-container" style="display: none;">
+                    <div class="card-responsive">
+                        <div class="card-body-responsive">
+                            <div class="table-responsive-custom" style="max-height: 70vh; min-height: 50vh; overflow-y: auto;">                                                                           <table class="table table-striped table-hover matriz-table table-custom" id="alugueis-matrix-table" style="font-size: 0.76rem;">          
+                                    <thead class="table-dark" id="alugueis-matrix-head">                                                                                  
+                                    </thead>                                                                             <tbody id="alugueis-matrix-body">
+                                        <tr>
+                                            <td colspan="1" class="text-center text-m
+uted py-4">                                                                          
+                                                <div class="spinner-border" role="status">                                                                                
+                                                    <span class="visually-hidden">Carregando...</span>                                                                    
+                                                </div>                                                                               <br>Carregando aluguéis...
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
                         </div>
                     </div>
                 </div>
