@@ -59,7 +59,10 @@ class ExtrasManager {
             this.salvarAlias();
         });
 
-        // Formulário de transferências configurado dinamicamente no showTransferenciasModal
+        document.getElementById('form-transferencias')?.addEventListener('submit', (e) => {
+            e.preventDefault();
+            this.salvarTransferencias();
+        });
 
         document.addEventListener('DOMContentLoaded', () => {
         });
@@ -1045,12 +1048,6 @@ class ExtrasManager {
                 }
             }
 
-            // Configurar event listener do formulário (feito aqui pois o modal pode ser recriado)
-            form.addEventListener('submit', (e) => {
-                e.preventDefault();
-                this.salvarTransferencias();
-            });
-
             // Mostrar modal
             const bootstrapModal = new bootstrap.Modal(modal);
             bootstrapModal.show();
@@ -1849,6 +1846,11 @@ class ExtrasManager {
             
             // Salvar
             const submitBtn = document.getElementById('btn-salvar-transferencia');
+            if (!submitBtn) {
+                console.error('Botão de salvar não encontrado');
+                throw new Error('Botão de salvar não encontrado');
+            }
+            
             submitBtn.disabled = true;
             submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Salvando...';
             
