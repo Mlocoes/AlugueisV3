@@ -1614,6 +1614,18 @@ uted py-4">
         `;
     }
 
+    _createImportForm(type, title, icon) {
+        const suffix = this.isMobile ? '-mobile' : '';
+        return `
+            <form id="importar-form-${type}${suffix}" class="mb-3" enctype="multipart/form-data">
+                <div class="input-group">
+                    <input type="file" class="form-control" id="arquivo-${type}${suffix}" accept=".xlsx,.xls" required>
+                    <button class="btn btn-primary" type="submit" style="width: 260px;"><i class="fas ${icon} me-2"></i> Importar ${title}</button>
+                </div>
+            </form>
+        `;
+    }
+
     getImportarTemplate() {
         this.isMobile = false; // Garantir que o sufixo não seja móvel
         const forms = [
