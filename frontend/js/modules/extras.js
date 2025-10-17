@@ -28,6 +28,10 @@ class ExtrasManager {
         this.currentTransferencia = null;
         this.allExtras = [];
         this.allTransferencias = [];
+        
+        // Detectar locale do navegador/sistema do usuário
+        this.userLocale = navigator.language || navigator.userLanguage || 'pt-BR';
+        console.log('Locale detectado:', this.userLocale);
         this.allProprietarios = [];
         this.initialized = false;
         this.pendingOperations = new Set();
@@ -614,7 +618,7 @@ class ExtrasManager {
                     proprietariosHtml = proprietarios.map(prop => {
                         const proprietario = this.allProprietarios.find(p => p.id === prop.id);
                         const nome = proprietario ? proprietario.nome : `ID:${prop.id}`;
-                        const valor = prop.valor ? parseFloat(prop.valor).toLocaleString('pt-BR', { minimumFractionDigits: 2 }) : '0,00';
+                        const valor = prop.valor ? parseFloat(prop.valor).toLocaleString(this.userLocale, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '0,00';
                         return `
                             <li class="list-group-item d-flex justify-content-between align-items-center py-2">
                                 <span><i class="fas fa-user-circle me-1 text-primary"></i>${nome}</span>
@@ -630,7 +634,7 @@ class ExtrasManager {
             }
 
             const valorTotal = transferencia.valor_total ? 
-                parseFloat(transferencia.valor_total).toLocaleString('pt-BR', { minimumFractionDigits: 2 }) : '0,00';
+                parseFloat(transferencia.valor_total).toLocaleString(this.userLocale, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '0,00';
 
             const row = document.createElement('tr');
             row.style.display = 'block';
@@ -1781,10 +1785,14 @@ class ExtrasManager {
         
         const totalInput = document.getElementById('transferencia-valor-total');
         if (totalInput) {
-            totalInput.value = total.toLocaleString('pt-BR', { minimumFractionDigits: 2 });
+            // Usar locale do usuário para formatação
+            totalInput.value = total.toLocaleString(this.userLocale, { 
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            });
         }
         
-        console.log('Valor total calculado:', total);
+        console.log('Valor total calculado:', total, 'Locale:', this.userLocale);
     }
 
     /**
