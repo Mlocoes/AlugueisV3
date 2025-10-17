@@ -284,25 +284,6 @@ class ViewManager {
                 });
             }
 
-            // Registrar evento de submit do formulário de múltiplas transferências
-            const formMultiplasTransferencias = document.getElementById('form-multiplas-transferencias');
-            if (formMultiplasTransferencias) {
-                // Remover event listener anterior se existir
-                const newForm = formMultiplasTransferencias.cloneNode(true);
-                formMultiplasTransferencias.parentNode.replaceChild(newForm, formMultiplasTransferencias);
-                
-                // Adicionar novo event listener
-                document.getElementById('form-multiplas-transferencias').addEventListener('submit', function(e) {
-                    e.preventDefault();
-                    console.log('Formulário de múltiplas transferências submetido na view Importar');
-                    if (window.extrasModule && typeof window.extrasModule.salvarMultiplasTransferencias === 'function') {
-                        window.extrasModule.salvarMultiplasTransferencias();
-                    } else {
-                        console.error('ExtrasModule ou salvarMultiplasTransferencias não disponível');
-                    }
-                });
-            }
-
             // Inicializar UsuarioManager para los modales de usuario
             if (window.usuarioManager && typeof window.usuarioManager.init === 'function') {
                 window.usuarioManager.init();
@@ -1813,7 +1794,7 @@ uted py-4">
                                 </div>
 
                                 <div class="table-responsive" style="height: 400px; overflow: auto;">
-                                    <div id="multiplas-transferencias-table"></div>
+                                    <div id="multiplas-transferencias-handsontable"></div>
                                 </div>
                                 
                                 <form id="form-multiplas-transferencias">
