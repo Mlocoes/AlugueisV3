@@ -1040,6 +1040,83 @@ class ExtrasManager {
     }
 
     /**
+     * Mostrar modal de múltiplas transferências
+     */
+    async showMultiplasTransferenciasModal() {
+        try {
+            console.log('showMultiplasTransferenciasModal: Iniciando...');
+
+            const modal = document.getElementById('modal-multiplas-transferencias');
+            if (!modal) {
+                console.error('Modal de múltiplas transferências não encontrado');
+                this.uiManager.showAlert('Modal de múltiplas transferências não encontrado', 'danger');
+                return;
+            }
+
+            // Limpar alerts anteriores
+            const alertsContainer = document.getElementById('multiplas-transferencias-alerts');
+            if (alertsContainer) {
+                alertsContainer.innerHTML = '';
+            }
+
+            // Carregar aliases para o select
+            await this.loadAliasesForSelect('multiplas-transferencias-alias');
+
+            // TODO: Inicializar Handsontable para planilha de múltiplas transferências
+            // this.initMultiplasTransferenciasHandsontable();
+
+            // Mostrar modal
+            const modalInstance = bootstrap.Modal.getOrCreateInstance(modal);
+            modalInstance.show();
+
+            console.log('showMultiplasTransferenciasModal: Modal exibido com sucesso');
+
+        } catch (error) {
+            console.error('Erro ao mostrar modal de múltiplas transferências:', error);
+            this.uiManager.showAlert('Erro ao abrir modal de múltiplas transferências', 'danger');
+        }
+    }
+
+    /**
+     * Carregar aliases para um select específico
+     */
+    async loadAliasesForSelect(selectId) {
+        try {
+            const response = await this.apiService.get('/api/extras/?ativo=true');
+
+            if (response && response.success && Array.isArray(response.data)) {
+                const aliasSelect = document.getElementById(selectId);
+                if (!aliasSelect) return;
+
+                // Limpar opções existentes
+                aliasSelect.innerHTML = '';
+
+                // Adicionar opção padrão
+                const defaultOption = document.createElement('option');
+                defaultOption.value = '';
+                defaultOption.textContent = 'Selecione um alias...';
+                defaultOption.disabled = true;
+                defaultOption.selected = true;
+                aliasSelect.appendChild(defaultOption);
+
+                // Adicionar aliases disponíveis
+                response.data.forEach(alias => {
+                    const option = document.createElement('option');
+                    option.value = alias.id;
+                    option.textContent = alias.alias;
+                    aliasSelect.appendChild(option);
+                });
+
+                console.log(`Carregados ${response.data.length} aliases para select ${selectId}`);
+            } else {
+                console.error(`Erro ao carregar aliases para select ${selectId}:`, response);
+            }
+        } catch (error) {
+            console.error(`Erro ao carregar aliases para select ${selectId}:`, error);
+        }
+    }
+
+    /**
      * Preencher select de proprietários
      */
     async preencherSelectProprietarios() {
