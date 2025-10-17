@@ -313,6 +313,16 @@ class ViewManager {
                     }
                 });
             }
+            // Registrar evento para el botón de múltiplas transferências mobile
+            const btnMultiplasTransferenciasMobile = document.getElementById('btn-multiplas-transferencias-mobile');
+            if (btnMultiplasTransferenciasMobile) {
+                btnMultiplasTransferenciasMobile.addEventListener('click', function() {
+                    if (window.extrasModule && typeof window.extrasModule.showMultiplasTransferenciasModal === 'function') {
+                        window.extrasModule.showMultiplasTransferenciasModal();
+                    }
+                });
+            }
+            
             // Registrar evento para el select de alias en transferencias
             setTimeout(() => {
                 const aliasSelect = document.getElementById('transferencia-alias');
@@ -335,19 +345,6 @@ class ViewManager {
         if (view.id === 'extras') {
             if (window.extrasModule && typeof window.extrasModule.loadExtras === 'function') {
                 window.extrasModule.loadExtras();
-            }
-            if (window.extrasModule && typeof window.extrasModule.loadTransferencias === 'function') {
-                window.extrasModule.loadTransferencias();
-            }
-            
-            // Registrar evento para el botón de múltiplas transferências
-            const btnMultiplasTransferencias = document.getElementById('btn-multiplas-transferencias');
-            if (btnMultiplasTransferencias) {
-                btnMultiplasTransferencias.addEventListener('click', function() {
-                    if (window.extrasModule && typeof window.extrasModule.showMultiplasTransferenciasModal === 'function') {
-                        window.extrasModule.showMultiplasTransferenciasModal();
-                    }
-                });
             }
         }
     }
@@ -745,6 +742,9 @@ class ViewManager {
                         </button>
                         <button class="btn btn-primary" id="btn-novas-transferencias-mobile" type="button">
                             <i class="fas fa-exchange-alt me-2"></i> Nova Transferência
+                        </button>
+                        <button class="btn btn-primary" id="btn-multiplas-transferencias-mobile" type="button">
+                            <i class="fas fa-table me-2"></i> Cadastrar Múltiplas Transferências
                         </button>
                     </div>
                 </div>
@@ -1346,7 +1346,7 @@ class ViewManager {
                     <button class="btn btn-primary admin-only" id="btn-novo-imovel">
                         <i class="fas fa-plus me-2"></i>Novo Imóvel
                     </button>
-                               </div>
+                                                                                                                                                                                     </div>
                 <div class="card-responsive">
                     <div class="card-body-responsive">
                         <div class="table-responsive-custom" style="max-height: 75vh; min-height: 55vh; overflow-y: auto;">
@@ -1757,9 +1757,6 @@ class ViewManager {
     getExtrasTemplate() {
         return `
             <div class="extras-container">
-                <div class="d-flex justify-content-end mb-3">
-                    <button class="btn btn-primary" id="btn-multiplas-transferencias" type="button"><i class="fas fa-table me-2"></i> Cadastrar Múltiplas Transferências</button>
-                </div>
                 <div class="card-responsive">
                     <div class="card-body-responsive">
                         <div class="table-responsive-custom" style="max-height: 10.2rem; min-height: 2.6rem; overflow-y: auto;">
@@ -1778,33 +1775,6 @@ class ViewManager {
                                                 <span class="visually-hidden">Carregando...</span>
                                             </div>
                                             <br>Carregando aliases...
-                                        </td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-                <div class="card-responsive mt-4">
-                    <div class="card-body-responsive">
-                        <div class="table-responsive-custom" style="max-height: 80vh; min-height: 50vh; overflow-y: auto;">
-                            <table class="table table-striped table-hover table-custom" style="font-size: 0.80rem;">
-                                <thead class="table-dark">
-                                    <tr>
-                                        <th>Alias</th>
-                                        <th>Nome da Transferência</th>
-                                        <th width="130" class="text-center">Data Criação</th>
-                                        <th width="130" class="text-center">Data Fim</th>
-                                        <th width="100" class="text-center">Ações</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="transferencias-table-body">
-                                    <tr>
-                                        <td colspan="5" class="text-center text-muted py-4">
-                                            <div class="spinner-border" role="status">
-                                                <span class="visually-hidden">Carregando...</span>
-                                            </div>
-                                            <br>Carregando transferências...
                                         </td>
                                     </tr>
                                 </tbody>
@@ -1855,7 +1825,7 @@ class ViewManager {
                                         <button class="btn btn-primary" style="width:150px" id="btn-alterar-usuario" data-bs-toggle="modal" data-bs-target="#modal-alterar-usuario"><i class="fas fa-user-edit me-2"></i> Alterar Usuário</button>
                                         <button class="btn btn-primary" style="width:150px" id="btn-novo-alias" type="button"><i class="fas fa-user-tag me-2"></i> Novo Alias</button>
                                         <button class="btn btn-primary" style="width:150px" id="btn-novas-transferencias" type="button"><i class="fas fa-exchange-alt me-2"></i> Nova Transferência</button>
-                                        <button class="btn btn-primary" style="width:200px" id="btn-multiplas-transferencias" type="button"><i class="fas fa-table me-2"></i> Cadastrar Múltiplas Transferências</button>
+                                        <button class="btn btn-primary" style="width:150px" id="btn-multiplas-transferencias" type="button"><i class="fas fa-table me-2"></i> Cadastrar Múltiplas Transferências</button>
                                     </div>
                                 </div>
                                 ${forms}
@@ -1987,7 +1957,6 @@ class ViewManager {
                         </div>
                     </div>
                 </div>
-
             </div>
         `;
     }
