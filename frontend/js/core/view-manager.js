@@ -911,172 +911,283 @@ class ViewManager {
         `;
     }
 
-    getRelatoriosMobileTemplate() {
+    getRelatoriosTemplate() {
         return `
-            <div class="relatorios-container-mobile">
-                <div class="card mb-3 shadow-sm sticky-filters-card">
-                    <div class="card-body">
-                        <div class="row g-2">
-                            <div class="col-12">
-                                <label for="relatorios-ano-select-mobile" class="form-label">Ano</label>
-                                <select id="relatorios-ano-select-mobile" class="form-select"></select>
+            <div class="relatorios-container">
+                <!-- Encabezado eliminado -->
+                <div id="relatorios-alerts"></div>
+                <!-- Filtros sin rectángulo, estilo Participação -->
+                        <div class="d-flex align-items-center mb-4" style="gap: 24px;
+ flex-wrap: wrap;">                                                                  
+                            <div class="d-flex align-items-center me-3">                                             <label for="relatorios-ano-select" class="form-label 
+mb-0 me-2" style="min-width: 50px;">Ano</label>                                      
+                                <select id="relatorios-ano-select" class="form-select" style="width: 160px; min-width: 140px;">                                           
+                                    <option value="">Carregando...</option>                                          </select>
                             </div>
-                            <div class="col-12">
-                                <label for="relatorios-mes-select-mobile" class="form-label">Mês</label>
-                                <select id="relatorios-mes-select-mobile" class="form-select"></select>
+                            <div class="d-flex align-items-center me-3">
+                                <label for="relatorios-mes-select" class="form-label 
+mb-0 me-2" style="min-width: 50px;">Mês</label>                                      
+                                <select id="relatorios-mes-select" class="form-select" style="width: 160px; min-width: 140px;">                                           
+                                    <option value="">Todos os meses</option>                                             <option value="1">Janeiro</option>
+                                    <option value="2">Fevereiro</option>
+                                    <option value="3">Março</option>
+                                    <option value="4">Abril</option>
+                                    <option value="5">Maio</option>
+                                    <option value="6">Junho</option>
+                                    <option value="7">Julho</option>
+                                    <option value="8">Agosto</option>
+                                    <option value="9">Setembro</option>
+                                    <option value="10">Outubro</option>
+                                    <option value="11">Novembro</option>
+                                    <option value="12">Dezembro</option>
+                                </select>
                             </div>
-                            <div class="col-12">
-                                <label for="relatorios-proprietario-select-mobile" class="form-label">Proprietário</label>
-                                <select id="relatorios-proprietario-select-mobile" class="form-select"></select>
+                            <div class="d-flex align-items-center me-3">
+                                <label for="relatorios-proprietario-select" class="fo
+rm-label mb-0 me-2" style="min-width: 80px;">Proprietário</label>                    
+                                <select id="relatorios-proprietario-select" class="form-select" style="width: 200px; min-width: 160px;">                                  
+                                    <option value="">Carregando...</option>                                          </select>
                             </div>
-                            <div class="col-12">
-                                <div class="form-check mt-2">
-                                    <input class="form-check-input" type="checkbox" id="relatorios-transferencias-check-mobile">
-                                    <label class="form-check-label" for="relatorios-transferencias-check-mobile">
-                                        Transferências
-                                    </label>
-                                </div>
-                            </div>
+                            <div class="d-flex align-items-center">
+                                <input class="form-check-input me-2" type="checkbox" 
+id="relatorios-transferencias-check">                                                
+                                <label class="form-check-label" for="relatorios-transferencias-check">                                                                    
+                                    <i class="fas fa-exchange-alt me-1"></i>Transferências                                                                                
+                                </label>                                                                         </div>
+                        </div>
+                
+                <div class="card-responsive">
+                    <!-- Título eliminado por solicitud del usuario -->
+                    <div class="card-body-responsive">
+                            <div class="table-responsive-custom" style="max-height: 70vh; min-height: 50vh; overflow-y: auto;">                                                                       <table class="table table-striped table-hover table-custom" style="font-size: 0.76rem;">                                                      
+                                <thead class="table-dark">                                                               <tr>
+                                        <th width="50">Nº</th>
+                                        <th>Nome do Proprietário</th>
+                                        <th width="120" class="text-center">Período</
+th>                                                                                  
+                                        <th width="150" class="text-end">Soma dos Aluguéis</th>                                                                           
+                                        <th width="150" class="text-end">Soma das Taxas de Administração</th>                                                             
+                                        <th width="150" class="text-center">Imóveis</th>                                                                                  
+                                    </tr>                                                                            </thead>
+                                <tbody id="relatorios-table-body">
+                                    <tr>
+                                        <td colspan="6" class="text-center text-muted
+ py-4">                                                                              
+                                            <div class="spinner-border" role="status">                                                                                    
+                                                <span class="visually-hidden">Carregando...</span>                                                                        
+                                            </div>                                                                               <br>Carregando relatórios...
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
                         </div>
                     </div>
                 </div>
-                <div id="relatorios-list-mobile" class="px-3">
-                    <!-- Mobile cards will be inserted here -->
-                </div>
             </div>
         `;
     }
 
-    getAlugueisMobileTemplate() {
+    getExtrasTemplate() {
         return `
-            <div class="alugueis-container-mobile">
-                <div class="card mb-3 shadow-sm sticky-filters-card">
-                    <div class="card-body">
-                        <div class="row g-2">
-                            <div class="col-12">
-                                <label for="alugueis-ano-select-mobile" class="form-label">Ano</label>
-                                <select id="alugueis-ano-select-mobile" class="form-select"></select>
-                            </div>
-                            <div class="col-12">
-                                <label for="alugueis-mes-select-mobile" class="form-label">Mês</label>
-                                <select id="alugueis-mes-select-mobile" class="form-select" disabled></select>
-                            </div>
+            <div class="extras-container">
+                <!-- Seção de Aliases -->
+                <div class="card-responsive mb-4">
+                    <div class="card-body-responsive">
+                        <div class="table-responsive-custom" style="max-height: 10.2r
+em; min-height: 2.6rem; overflow-y: auto;">                                                                      
+                            <table class="table table-striped table-hover table-custo
+m" style="font-size: 0.80rem;">                                                                                      
+                                <thead class="table-dark">
+                                    <tr>
+                                        <th>Alias</th>
+                                        <th>Proprietários Pertenecentes</th>
+                                        <th width="100" class="text-center">Ações</th
+>                                                                                                                        
+                                    </tr>
+                                </thead>
+                                <tbody id="extras-table-body">
+                                    <tr>
+                                        <td colspan="3" class="text-center text-muted
+ py-4">                                                                                                                      
+                                            <div class="spinner-border" role="status"
+>                                                                                                                                    
+                                                <span class="visually-hidden">Carrega
+ndo...</span>                                                                                                                    
+                                            </div>
+                                            <br>Carregando aliases...
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
                         </div>
                     </div>
                 </div>
-                <div id="alugueis-list-mobile" class="px-3">
-                    <!-- Mobile cards will be inserted here -->
-                </div>
-            </div>
-        `;
-    }
 
-    getParticipacoesMobileTemplate() {
-        return `
-            <div class="participacoes-container-mobile">
-                <div id="participacoes-list-mobile">
-                    <!-- Mobile cards will be inserted here -->
-                </div>
-            </div>
-        `;
-    }
-
-    getImoveisMobileTemplate() {
-        return `
-            <div class="imoveis-container-mobile">
-                <div id="imoveis-list-mobile">
-                    <!-- Mobile cards will be inserted here -->
-                </div>
-                <!-- Floating Action Button for adding new property -->
-                <button class="btn btn-primary btn-fab admin-only" id="btn-novo-imovel" title="Adicionar Novo Imóvel">
-                    <i class="fas fa-plus"></i>
-                </button>
-            </div>
-
-            <!-- Modal Novo Imóvel -->
-            <div class="modal fade" id="novo-imovel-modal" tabindex="-1" aria-labelledby="novoImovelModalLabel">
-                <div class="modal-dialog modal-lg">
-                    <div class="modal-content">
-                        <div class="modal-header" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
-                            <h5 class="modal-title" id="novo-imovel-modal-title">Novo Imóvel</h5>
-                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                <!-- Seção de Transferências -->
+                <div class="card-responsive">
+                    <div class="card-header-responsive">
+                        <h5 class="card-title mb-0"><i class="fas fa-exchange-alt me-
+2"></i>Transferências</h5>                                                                               
+                    </div>
+                    <div class="card-body-responsive">
+                        <div class="table-responsive-custom" style="max-height: 20rem
+; min-height: 2.6rem; overflow-y: auto;">                                                                        
+                            <table class="table table-striped table-hover table-custo
+m" style="font-size: 0.80rem;">                                                                                      
+                                <thead class="table-dark">
+                                    <tr>
+                                        <th>Alias</th>
+                                        <th>Nome da Transferência</th>
+                                        <th class="text-center">Data Início</th>
+                                        <th class="text-center">Data Fim</th>
+                                        <th width="120" class="text-center">Ações</th
+>                                                                                                                        
+                                    </tr>
+                                </thead>
+                                <tbody id="transferencias-table-body">
+                                    <tr>
+                                        <td colspan="5" class="text-center text-muted
+ py-4">                                                                                                                      
+                                            <div class="spinner-border" role="status"
+>                                                                                                                                    
+                                                <span class="visually-hidden">Carrega
+ndo...</span>                                                                                                                    
+                                            </div>
+                                            <br>Carregando transferências...
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
                         </div>
-                        <div class="modal-body" style="font-size: 0.8rem; padding: 1rem;">
-                            <form id="form-novo-imovel">
-                                <div class="row" style="margin-bottom: 0.25rem;">
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    getImoveisTemplate() {
+        return `
+            <div class="imoveis-container">
+                <div class="d-flex justify-content-end mb-3">
+                    <button class="btn btn-primary admin-only" id="btn-novo-imovel">
+                        <i class="fas fa-plus me-2"></i>Novo Imóvel
+                    </button>
+                                                                                     
+                                                                                     
+           </div>                                                                                    <div class="card-responsive">                                                            <div class="card-body-responsive">
+                        <div class="table-responsive-custom" style="max-height: 75vh;
+ min-height: 55vh; overflow-y: auto;">                                               
+                            <table class="table table-striped table-hover table-custom" id="imoveis-table" style="font-size: 0.8rem;">                                    
+                                <thead class="table-dark">                                                               <tr>
+                                        <th>Nome<br><span style="font-weight: normal;
+ color: inherit; font-size: inherit;">Tipo</span></th>                               
+                                        <th>Endereço</th>                                                                    <th>Área Total<br><span style="font-weight: n
+ormal; color: inherit; font-size: inherit;">Construída</span></th>                   
+                                        <th>Valor Cadastral<br><span style="font-weight: normal; color: inherit; font-size: inherit;">Mercado</span></th>                 
+                                        <th>IPTU<br><span style="font-weight: normal; color: inherit; font-size: inherit;">Condomínio</span></th>                         
+                                        <th>Alugado</th>                                                                     <th>Data Cadastro</th>
+                                        <th width="120">Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="imoveis-table-body">
+                                    <tr>
+                                        <td colspan="8" class="text-center text-muted
+ py-4">                                                                              
+                                            <div class="spinner-border" role="status">                                                                                    
+                                                <span class="visually-hidden">Carregando...                                                                               </span>                                                                              
+                                      </div>                                                                                     <br>Carregando imóveis...
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modal Genérico para Imóvel -->
+            <div class="modal fade" id="novo-imovel-modal" tabindex="-1" aria-labelle
+dby="novoImovelModalLabel">                                                                          <div class="modal-dialog modal-lg">                                                      <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="novo-imovel-modal-title">Novo
+ Imóvel</h5>                                                                         
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>                                                  
+                        </div>                                                                               <div class="modal-body" style="font-size: 0.8rem; padding: 1r
+em;">                                                                                
+                            <form id="form-novo-imovel">                                                             <div class="row" style="margin-bottom: 0.25rem;">
                                     <div class="col-md-12 mb-1">
-                                        <label for="imovel-nome" class="form-label" style="font-size: 0.85rem; margin-bottom: 0.1rem;">Nome do Imóvel *</label>
-                                        <input type="text" class="form-control form-control-sm" id="imovel-nome" name="nome" required style="font-size: 0.8rem; padding: 0.25rem 0.5rem;">
-                                    </div>
-                                </div>
+                                        <label for="imovel-nome" class="form-label" s
+tyle="font-size: 0.85rem; margin-bottom: 0.1rem;">Nome do Imóvel *</label>           
+                                        <input type="text" class="form-control form-control-sm" id="imovel-nome" name="nome" required style="font-size: 0.8rem; padding: 0
+.25rem 0.5rem;">                                                                                                         </div>                                                                           </div>
                                 <div class="mb-1">
-                                    <label for="imovel-endereco" class="form-label" style="font-size: 0.85rem; margin-bottom: 0.1rem;">Endereço *</label>
-                                    <input type="text" class="form-control form-control-sm" id="imovel-endereco" name="endereco" required style="font-size: 0.8rem; padding: 0.25rem 0.5rem;">
-                                </div>
-                                <div class="mb-1">
-                                    <label for="imovel-tipo" class="form-label" style="font-size: 0.85rem; margin-bottom: 0.1rem;">Tipo</label>
-                                    <input type="text" class="form-control form-control-sm" id="imovel-tipo" name="tipo_imovel" style="font-size: 0.8rem; padding: 0.25rem 0.5rem;">
-                                </div>
+                                    <label for="imovel-endereco" class="form-label" s
+tyle="font-size: 0.85rem; margin-bottom: 0.1rem;">Endereço *</label>                 
+                                    <input type="text" class="form-control form-control-sm" id="imovel-endereco" name="endereco" required style="font-size: 0.8rem; paddin
+g: 0.25rem 0.5rem;">                                                                                                 </div>                                                                               <div class="mb-1">
+                                    <label for="imovel-tipo" class="form-label" style
+="font-size: 0.85rem; margin-bottom: 0.1rem;">Tipo</label>                           
+                                    <input type="text" class="form-control form-control-sm" id="imovel-tipo" name="tipo_imovel" style="font-size: 0.8rem; padding: 0.25rem
+ 0.5rem;">                                                                                                           </div>                                                                               <div class="row" style="margin-bottom: 0.25rem;">
+                                    <div class="col-md-6 mb-1">
+                                        <label for="imovel-area-total" class="form-la
+bel" style="font-size: 0.85rem; margin-bottom: 0.1rem;">Área Total (m²)</label>      
+                                        <input type="number" step="0.01" class="form-control form-control-sm" id="imovel-area-total" name="area_total" style="font-size: 0
+.8rem; padding: 0.25rem 0.5rem;">                                                                                        </div>                                                                               <div class="col-md-6 mb-1">
+                                        <label for="imovel-area-construida" class="fo
+rm-label" style="font-size: 0.85rem; margin-bottom: 0.1rem;">Área Construída (m²)</la
+bel>                                                                                                                         <input type="number" step="0.01" class="form-control form-control-sm" id="imovel-area-construida" name="area_construida" style="fo
+nt-size: 0.8rem; padding: 0.25rem 0.5rem;">                                                                              </div>                                                                           </div>
                                 <div class="row" style="margin-bottom: 0.25rem;">
                                     <div class="col-md-6 mb-1">
-                                        <label for="imovel-area-total" class="form-label" style="font-size: 0.85rem; margin-bottom: 0.1rem;">Área Total (m²)</label>
-                                        <input type="number" step="0.01" class="form-control form-control-sm" id="imovel-area-total" name="area_total" style="font-size: 0.8rem; padding: 0.25rem 0.5rem;">
-                                    </div>
-                                    <div class="col-md-6 mb-1">
-                                        <label for="imovel-area-construida" class="form-label" style="font-size: 0.85rem; margin-bottom: 0.1rem;">Área Construída (m²)</label>
-                                        <input type="number" step="0.01" class="form-control form-control-sm" id="imovel-area-construida" name="area_construida" style="font-size: 0.8rem; padding: 0.25rem 0.5rem;">
-                                    </div>
-                                </div>
+                                        <label for="imovel-valor-cadastral" class="fo
+rm-label" style="font-size: 0.85rem; margin-bottom: 0.1rem;">Valor Cadastral</label> 
+                                        <input type="number" step="0.01" class="form-control form-control-sm" id="imovel-valor-cadastral" name="valor_cadastral" style="fo
+nt-size: 0.8rem; padding: 0.25rem 0.5rem;">                                                                              </div>                                                                               <div class="col-md-6 mb-1">
+                                        <label for="imovel-valor-mercado" class="form
+-label" style="font-size: 0.85rem; margin-bottom: 0.1rem;">Valor Mercado</label>     
+                                        <input type="number" step="0.01" class="form-control form-control-sm" id="imovel-valor-mercado" name="valor_mercado" style="font-s
+ize: 0.8rem; padding: 0.25rem 0.5rem;">                                                                                  </div>                                                                           </div>
                                 <div class="row" style="margin-bottom: 0.25rem;">
                                     <div class="col-md-6 mb-1">
-                                        <label for="imovel-valor-cadastral" class="form-label" style="font-size: 0.85rem; margin-bottom: 0.1rem;">Valor Cadastral</label>
-                                        <input type="number" step="0.01" class="form-control form-control-sm" id="imovel-valor-cadastral" name="valor_cadastral" style="font-size: 0.8rem; padding: 0.25rem 0.5rem;">
-                                    </div>
-                                    <div class="col-md-6 mb-1">
-                                        <label for="imovel-valor-mercado" class="form-label" style="font-size: 0.85rem; margin-bottom: 0.1rem;">Valor Mercado</label>
-                                        <input type="number" step="0.01" class="form-control form-control-sm" id="imovel-valor-mercado" name="valor_mercado" style="font-size: 0.8rem; padding: 0.25rem 0.5rem;">
-                                    </div>
-                                </div>
-                                <div class="row" style="margin-bottom: 0.25rem;">
-                                    <div class="col-md-6 mb-1">
-                                        <label for="imovel-iptu" class="form-label" style="font-size: 0.85rem; margin-bottom: 0.1rem;">IPTU Mensal</label>
-                                        <input type="number" step="0.01" class="form-control form-control-sm" id="imovel-iptu" name="iptu_mensal" style="font-size: 0.8rem; padding: 0.25rem 0.5rem;">
-                                    </div>
-                                    <div class="col-md-6 mb-1">
-                                        <label for="imovel-condominio" class="form-label" style="font-size: 0.85rem; margin-bottom: 0.1rem;">Condomínio Mensal</label>
-                                        <input type="number" step="0.01" class="form-control form-control-sm" id="imovel-condominio" name="condominio_mensal" style="font-size: 0.8rem; padding: 0.25rem 0.5rem;">
-                                    </div>
-                                </div>
+                                        <label for="imovel-iptu" class="form-label" s
+tyle="font-size: 0.85rem; margin-bottom: 0.1rem;">IPTU Mensal</label>                
+                                        <input type="number" step="0.01" class="form-control form-control-sm" id="imovel-iptu" name="iptu_mensal" style="font-size: 0.8rem
+; padding: 0.25rem 0.5rem;">                                                                                             </div>                                                                               <div class="col-md-6 mb-1">
+                                        <label for="imovel-condominio" class="form-la
+bel" style="font-size: 0.85rem; margin-bottom: 0.1rem;">Condomínio Mensal</label>    
+                                        <input type="number" step="0.01" class="form-control form-control-sm" id="imovel-condominio" name="condominio_mensal" style="font-
+size: 0.8rem; padding: 0.25rem 0.5rem;">                                                                                 </div>                                                                           </div>
                                 <div class="row" style="margin-bottom: 0.25rem;">
                                     <div class="col-md-4 mb-1">
-                                        <label for="imovel-quartos" class="form-label" style="font-size: 0.85rem; margin-bottom: 0.1rem;">Quartos</label>
-                                        <input type="number" class="form-control form-control-sm" id="imovel-quartos" name="numero_quartos" style="font-size: 0.8rem; padding: 0.25rem 0.5rem;">
-                                    </div>
+                                        <label for="imovel-quartos" class="form-label
+" style="font-size: 0.85rem; margin-bottom: 0.1rem;">Quartos</label>                 
+                                        <input type="number" class="form-control form-control-sm" id="imovel-quartos" name="numero_quartos" style="font-size: 0.8rem; padd
+ing: 0.25rem 0.5rem;">                                                                                                   </div>                                                                               <div class="col-md-4 mb-1">
+                                        <label for="imovel-banheiros" class="form-lab
+el" style="font-size: 0.85rem; margin-bottom: 0.1rem;">Banheiros</label>                                                     <input type="number" class="form-control form
+-control-sm" id="imovel-banheiros" name="numero_banheiros" style="font-size: 0.8rem; padding: 0.25rem 0.5rem;">                                                                                               </div>
                                     <div class="col-md-4 mb-1">
-                                        <label for="imovel-banheiros" class="form-label" style="font-size: 0.85rem; margin-bottom: 0.1rem;">Banheiros</label>
-                                        <input type="number" class="form-control form-control-sm" id="imovel-banheiros" name="numero_banheiros" style="font-size: 0.8rem; padding: 0.25rem 0.5rem;">
-                                    </div>
-                                    <div class="col-md-4 mb-1">
-                                        <label for="imovel-vagas" class="form-label" style="font-size: 0.85rem; margin-bottom: 0.1rem;">Vagas Garagem</label>
-                                        <input type="number" class="form-control form-control-sm" id="imovel-vagas" name="numero_vagas_garagem" style="font-size: 0.8rem; padding: 0.25rem 0.5rem;">
-                                    </div>
+                                        <label for="imovel-vagas" class="form-label" 
+style="font-size: 0.85rem; margin-bottom: 0.1rem;">Vagas Garagem</label>                                                     <input type="number" class="form-control form
+-control-sm" id="imovel-vagas" name="numero_vagas_garagem" style="font-size: 0.8rem; padding: 0.25rem 0.5rem;">                                                                                               </div>
                                 </div>
                                 <div class="mb-1">
                                     <div class="form-check">
-                                        <input class="form-check-input" type="checkbox" name="alugado" id="imovel-alugado">
-                                        <label class="form-check-label" for="imovel-alugado" style="font-size: 0.85rem;">
-                                            Alugado
+                                        <input class="form-check-input" type="checkbo
+x" name="alugado" id="imovel-alugado">                                                                                       <label class="form-check-label" for="imovel-a
+lugado" style="font-size: 0.85rem;">                                                                                             Alugado
                                         </label>
                                     </div>
                                 </div>
                                 <div class="mb-1">
-                                    <label for="imovel-data-cadastro" class="form-label" style="font-size: 0.85rem; margin-bottom: 0.1rem;">Data Cadastro</label>
-                                    <input type="date" class="form-control form-control-sm" id="imovel-data-cadastro" name="data_cadastro" style="font-size: 0.8rem; padding: 0.25rem 0.5rem;">
-                                </div>
+                                    <label for="imovel-data-cadastro" class="form-lab
+el" style="font-size: 0.85rem; margin-bottom: 0.1rem;">Data Cadastro</label>                                             <input type="date" class="form-control form-contr
+ol-sm" id="imovel-data-cadastro" name="data_cadastro" style="font-size: 0.8rem; padding: 0.25rem 0.5rem;">                                                                                                </div>
                                 <div class="modal-footer" style="padding: 0.25rem;">
-                                    <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancelar</button>
-                                    <button type="submit" class="btn btn-primary btn-sm" id="btn-salvar-imovel">Salvar</button>
-                                </div>
+                                    <button type="button" class="btn btn-secondary bt
+n-sm" data-bs-dismiss="modal">Cancelar</button>                                                                          <button type="submit" class="btn btn-primary btn-
+sm" id="btn-salvar-imovel">Salvar</button>                                                                           </div>
                             </form>
                         </div>
                     </div>
@@ -1084,93 +1195,93 @@ class ViewManager {
             </div>
 
             <!-- Modal de Edição de Imóvel -->
-            <div class="modal fade" id="edit-imovel-modal" tabindex="-1" aria-labelledby="editImovelModalLabel">
-                <div class="modal-dialog modal-lg">
+            <div class="modal fade" id="edit-imovel-modal" tabindex="-1" aria-labelle
+dby="editImovelModalLabel">                                                                          <div class="modal-dialog modal-lg">
                     <div class="modal-content">
-                        <div class="modal-header" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white;">
-                            <h5 class="modal-title" id="edit-imovel-modal-title">Editar Imóvel</h5>
-                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-                        </div>
-                        <div class="modal-body" style="font-size: 0.8rem; padding: 1rem;">
-                            <form id="form-edit-imovel">
+                        <div class="modal-header" style="background: linear-gradient(
+135deg, #f093fb 0%, #f5576c 100%); color: white;">                                                               <h5 class="modal-title" id="edit-imovel-modal-title">Edit
+ar Imóvel</h5>                                                                                                   <button type="button" class="btn-close btn-close-white" d
+ata-bs-dismiss="modal" aria-label="Close"></button>                                                          </div>
+                        <div class="modal-body" style="font-size: 0.8rem; padding: 1r
+em;">                                                                                                            <form id="form-edit-imovel">
                                 <div class="row" style="margin-bottom: 0.25rem;">
                                     <div class="col-md-12 mb-1">
-                                        <label for="edit-imovel-nome" class="form-label" style="font-size: 0.85rem; margin-bottom: 0.1rem;">Nome do Imóvel *</label>
-                                        <input type="text" class="form-control form-control-sm" id="edit-imovel-nome" name="nome" required style="font-size: 0.8rem; padding: 0.25rem 0.5rem;">
-                                    </div>
+                                        <label for="edit-imovel-nome" class="form-lab
+el" style="font-size: 0.85rem; margin-bottom: 0.1rem;">Nome do Imóvel *</label>                                              <input type="text" class="form-control form-c
+ontrol-sm" id="edit-imovel-nome" name="nome" required style="font-size: 0.8rem; padding: 0.25rem 0.5rem;">                                                                                                    </div>
                                 </div>
                                 <div class="mb-1">
-                                    <label for="edit-imovel-endereco" class="form-label" style="font-size: 0.85rem; margin-bottom: 0.1rem;">Endereço *</label>
-                                    <input type="text" class="form-control form-control-sm" id="edit-imovel-endereco" name="endereco" required style="font-size: 0.8rem; padding: 0.25rem 0.5rem;">
-                                </div>
+                                    <label for="edit-imovel-endereco" class="form-lab
+el" style="font-size: 0.85rem; margin-bottom: 0.1rem;">Endereço *</label>                                                <input type="text" class="form-control form-contr
+ol-sm" id="edit-imovel-endereco" name="endereco" required style="font-size: 0.8rem; padding: 0.25rem 0.5rem;">                                                                                            </div>
                                 <div class="mb-1">
-                                    <label for="edit-imovel-tipo" class="form-label" style="font-size: 0.85rem; margin-bottom: 0.1rem;">Tipo</label>
-                                    <input type="text" class="form-control form-control-sm" id="edit-imovel-tipo" name="tipo_imovel" style="font-size: 0.8rem; padding: 0.25rem 0.5rem;">
+                                    <label for="edit-imovel-tipo" class="form-label" 
+style="font-size: 0.85rem; margin-bottom: 0.1rem;">Tipo</label>                                                          <input type="text" class="form-control form-contr
+ol-sm" id="edit-imovel-tipo" name="tipo_imovel" style="font-size: 0.8rem; padding: 0.25rem 0.5rem;">                                                                                                      </div>
+                                <div class="row" style="margin-bottom: 0.25rem;">
+                                    <div class="col-md-6 mb-1">
+                                        <label for="edit-imovel-area-total" class="fo
+rm-label" style="font-size: 0.85rem; margin-bottom: 0.1rem;">Área Total (m²)</label>                                         <input type="number" step="0.01" class="form-
+control form-control-sm" id="edit-imovel-area-total" name="area_total" style="font-size: 0.8rem; padding: 0.25rem 0.5rem;">                                                                                   </div>
+                                    <div class="col-md-6 mb-1">
+                                        <label for="edit-imovel-area-construida" clas
+s="form-label" style="font-size: 0.85rem; margin-bottom: 0.1rem;">Área Construída (m²)</label>                                                                                                                    <input type="number" step="0.01" class="form-
+control form-control-sm" id="edit-imovel-area-construida" name="area_construida" style="font-size: 0.8rem; padding: 0.25rem 0.5rem;">                                                                         </div>
                                 </div>
                                 <div class="row" style="margin-bottom: 0.25rem;">
                                     <div class="col-md-6 mb-1">
-                                        <label for="edit-imovel-area-total" class="form-label" style="font-size: 0.85rem; margin-bottom: 0.1rem;">Área Total (m²)</label>
-                                        <input type="number" step="0.01" class="form-control form-control-sm" id="edit-imovel-area-total" name="area_total" style="font-size: 0.8rem; padding: 0.25rem 0.5rem;">
-                                    </div>
+                                        <label for="edit-imovel-valor-cadastral" clas
+s="form-label" style="font-size: 0.85rem; margin-bottom: 0.1rem;">Valor Cadastral</label>                                                                                                                         <input type="number" step="0.01" class="form-
+control form-control-sm" id="edit-imovel-valor-cadastral" name="valor_cadastral" style="font-size: 0.8rem; padding: 0.25rem 0.5rem;">                                                                         </div>
                                     <div class="col-md-6 mb-1">
-                                        <label for="edit-imovel-area-construida" class="form-label" style="font-size: 0.85rem; margin-bottom: 0.1rem;">Área Construída (m²)</label>
-                                        <input type="number" step="0.01" class="form-control form-control-sm" id="edit-imovel-area-construida" name="area_construida" style="font-size: 0.8rem; padding: 0.25rem 0.5rem;">
-                                    </div>
+                                        <label for="edit-imovel-valor-mercado" class=
+"form-label" style="font-size: 0.85rem; margin-bottom: 0.1rem;">Valor Mercado</label>                                        <input type="number" step="0.01" class="form-
+control form-control-sm" id="edit-imovel-valor-mercado" name="valor_mercado" style="font-size: 0.8rem; padding: 0.25rem 0.5rem;">                                                                             </div>
                                 </div>
                                 <div class="row" style="margin-bottom: 0.25rem;">
                                     <div class="col-md-6 mb-1">
-                                        <label for="edit-imovel-valor-cadastral" class="form-label" style="font-size: 0.85rem; margin-bottom: 0.1rem;">Valor Cadastral</label>
-                                        <input type="number" step="0.01" class="form-control form-control-sm" id="edit-imovel-valor-cadastral" name="valor_cadastral" style="font-size: 0.8rem; padding: 0.25rem 0.5rem;">
-                                    </div>
+                                        <label for="edit-imovel-iptu" class="form-lab
+el" style="font-size: 0.85rem; margin-bottom: 0.1rem;">IPTU Mensal</label>                                                   <input type="number" step="0.01" class="form-
+control form-control-sm" id="edit-imovel-iptu" name="iptu_mensal" style="font-size: 0.8rem; padding: 0.25rem 0.5rem;">                                                                                        </div>
                                     <div class="col-md-6 mb-1">
-                                        <label for="edit-imovel-valor-mercado" class="form-label" style="font-size: 0.85rem; margin-bottom: 0.1rem;">Valor Mercado</label>
-                                        <input type="number" step="0.01" class="form-control form-control-sm" id="edit-imovel-valor-mercado" name="valor_mercado" style="font-size: 0.8rem; padding: 0.25rem 0.5rem;">
-                                    </div>
-                                </div>
-                                <div class="row" style="margin-bottom: 0.25rem;">
-                                    <div class="col-md-6 mb-1">
-                                        <label for="edit-imovel-iptu" class="form-label" style="font-size: 0.85rem; margin-bottom: 0.1rem;">IPTU Mensal</label>
-                                        <input type="number" step="0.01" class="form-control form-control-sm" id="edit-imovel-iptu" name="iptu_mensal" style="font-size: 0.8rem; padding: 0.25rem 0.5rem;">
-                                    </div>
-                                    <div class="col-md-6 mb-1">
-                                        <label for="edit-imovel-condominio" class="form-label" style="font-size: 0.85rem; margin-bottom: 0.1rem;">Condomínio Mensal</label>
-                                        <input type="number" step="0.01" class="form-control form-control-sm" id="edit-imovel-condominio" name="condominio_mensal" style="font-size: 0.8rem; padding: 0.25rem 0.5rem;">
-                                    </div>
+                                        <label for="edit-imovel-condominio" class="fo
+rm-label" style="font-size: 0.85rem; margin-bottom: 0.1rem;">Condomínio Mensal</label>                                                                                                                            <input type="number" step="0.01" class="form-
+control form-control-sm" id="edit-imovel-condominio" name="condominio_mensal" style="font-size: 0.8rem; padding: 0.25rem 0.5rem;">                                                                            </div>
                                 </div>
                                 <div class="row" style="margin-bottom: 0.25rem;">
                                     <div class="col-md-4 mb-1">
-                                        <label for="edit-imovel-quartos" class="form-label" style="font-size: 0.85rem; margin-bottom: 0.1rem;">Quartos</label>
-                                        <input type="number" class="form-control form-control-sm" id="edit-imovel-quartos" name="numero_quartos" style="font-size: 0.8rem; padding: 0.25rem 0.5rem;">
-                                    </div>
+                                        <label for="edit-imovel-quartos" class="form-
+label" style="font-size: 0.85rem; margin-bottom: 0.1rem;">Quartos</label>                                                    <input type="number" class="form-control form
+-control-sm" id="edit-imovel-quartos" name="numero_quartos" style="font-size: 0.8rem; padding: 0.25rem 0.5rem;">                                                                                              </div>
                                     <div class="col-md-4 mb-1">
-                                        <label for="edit-imovel-banheiros" class="form-label" style="font-size: 0.85rem; margin-bottom: 0.1rem;">Banheiros</label>
-                                        <input type="number" class="form-control form-control-sm" id="edit-imovel-banheiros" name="numero_banheiros" style="font-size: 0.8rem; padding: 0.25rem 0.5rem;">
-                                    </div>
+                                        <label for="edit-imovel-banheiros" class="for
+m-label" style="font-size: 0.85rem; margin-bottom: 0.1rem;">Banheiros</label>                                                <input type="number" class="form-control form
+-control-sm" id="edit-imovel-banheiros" name="numero_banheiros" style="font-size: 0.8rem; padding: 0.25rem 0.5rem;">                                                                                          </div>
                                     <div class="col-md-4 mb-1">
-                                        <label for="edit-imovel-vagas" class="form-label" style="font-size: 0.85rem; margin-bottom: 0.1rem;">Vagas Garagem</label>
-                                        <input type="number" class="form-control form-control-sm" id="edit-imovel-vagas" name="numero_vagas_garagem" style="font-size: 0.8rem; padding: 0.25rem 0.5rem;">
-                                    </div>
+                                        <label for="edit-imovel-vagas" class="form-la
+bel" style="font-size: 0.85rem; margin-bottom: 0.1rem;">Vagas Garagem</label>                                                <input type="number" class="form-control form
+-control-sm" id="edit-imovel-vagas" name="numero_vagas_garagem" style="font-size: 0.8rem; padding: 0.25rem 0.5rem;">                                                                                          </div>
                                 </div>
                                 <div class="mb-1">
                                     <div class="form-check">
-                                        <input class="form-check-input" type="checkbox" name="alugado" id="edit-imovel-alugado">
-                                        <label class="form-check-label" for="edit-imovel-alugado" style="font-size: 0.85rem;">
-                                            Alugado
+                                        <input class="form-check-input" type="checkbo
+x" name="alugado" id="edit-imovel-alugado">                                                                                  <label class="form-check-label" for="edit-imo
+vel-alugado" style="font-size: 0.85rem;">                                                                                        Alugado
                                         </label>
                                     </div>
                                 </div>
                                 <div class="mb-1">
-                                    <label for="edit-imovel-data-cadastro" class="form-label" style="font-size: 0.85rem; margin-bottom: 0.1rem;">Data Cadastro</label>
-                                    <input type="date" class="form-control form-control-sm" id="edit-imovel-data-cadastro" name="data_cadastro" style="font-size: 0.8rem; padding: 0.25rem 0.5rem;">
-                                </div>
+                                    <label for="edit-imovel-data-cadastro" class="for
+m-label" style="font-size: 0.85rem; margin-bottom: 0.1rem;">Data Cadastro</label>                                        <input type="date" class="form-control form-contr
+ol-sm" id="edit-imovel-data-cadastro" name="data_cadastro" style="font-size: 0.8rem; padding: 0.25rem 0.5rem;">                                                                                           </div>
                                 <div class="mb-1">
-                                    <label for="edit-imovel-observacoes" class="form-label" style="font-size: 0.85rem; margin-bottom: 0.1rem;">Observações</label>
-                                    <textarea class="form-control form-control-sm" id="edit-imovel-observacoes" name="observacoes" rows="2" style="font-size: 0.8rem; padding: 0.25rem 0.5rem;"></textarea>
-                                </div>
+                                    <label for="edit-imovel-observacoes" class="form-
+label" style="font-size: 0.85rem; margin-bottom: 0.1rem;">Observações</label>                                            <textarea class="form-control form-control-sm" id
+="edit-imovel-observacoes" name="observacoes" rows="2" style="font-size: 0.8rem; padding: 0.25rem 0.5rem;"></textarea>                                                                                    </div>
                                 <div class="modal-footer" style="padding: 0.25rem;">
-                                    <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancelar</button>
-                                    <button type="submit" class="btn btn-primary btn-sm" id="btn-salvar-edit-imovel">Salvar</button>
-                                </div>
+                                    <button type="button" class="btn btn-secondary bt
+n-sm" data-bs-dismiss="modal">Cancelar</button>                                                                          <button type="submit" class="btn btn-primary btn-
+sm" id="btn-salvar-edit-imovel">Salvar</button>                                                                      </div>
                             </form>
                         </div>
                     </div>
@@ -1178,22 +1289,22 @@ class ViewManager {
             </div>
 
             <!-- Modal de Confirmação de Exclusão -->
-            <div class="modal fade" id="modal-confirmar-exclusao-imovel" tabindex="-1" aria-labelledby="modalConfirmarExclusaoLabel">
-                <div class="modal-dialog">
+            <div class="modal fade" id="modal-confirmar-exclusao-imovel" tabindex="-1
+" aria-labelledby="modalConfirmarExclusaoLabel">                                                     <div class="modal-dialog">
                     <div class="modal-content">
                         <div class="modal-header bg-danger text-white">
                             <h5 class="modal-title" id="modalConfirmarExclusaoLabel">
-<i class="fas fa-exclamation-triangle me-2"></i>Confirmar Exclusão</h5>                                          <button type="button" class="btn-close" data-bs-dismiss="
-modal" aria-label="Close"></button>                                                                          </div>
-                        <div class="modal-body">
+<i class="fas fa-exclamation-triangle me-2"></i>Confirmar Exclusão</h5>              
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>                                                  
+                        </div>                                                                               <div class="modal-body">
                             <p>Tem certeza de que deseja excluir este imóvel?</p>
                             <p class="text-danger"><strong>Esta ação não pode ser des
-feita.</strong></p>                                                                                          </div>
-                        <div class="modal-footer">
+feita.</strong></p>                                                                  
+                        </div>                                                                               <div class="modal-footer">
                             <button type="button" class="btn btn-secondary" data-bs-d
-ismiss="modal">Cancelar</button>                                                                                 <button type="button" class="btn btn-danger" id="btn-conf
-irmar-exclusao-imovel">Excluir</button>                                                                      </div>
-                    </div>
+ismiss="modal">Cancelar</button>                                                     
+                            <button type="button" class="btn btn-danger" id="btn-confirmar-exclusao-imovel">Excluir</button>                                              
+                        </div>                                                                           </div>
                 </div>
             </div>
         `;
@@ -1270,7 +1381,7 @@ irmar-exclusao-imovel">Excluir</button>                                         
                 <div class="card-responsive">
                     <div class="card-body-responsive">
                         <div class="table-responsive-custom" style="max-height: 75vh; min-height: 55vh; overflow-y: auto;">
-                            <table class="table table-striped table-hover table-custom" style="font-size: 0.8rem;">
+                            <table class="table table-striped table-hover table-custom" style="font-size:  0.8rem;">
                                 <thead class="table-dark">
                                     <tr>
                                         <th>ID</th>
@@ -1738,6 +1849,7 @@ ndo...</span>
             </div>
         `;
     }
+
 }
 
 // Inicializar ViewManager globalmente
