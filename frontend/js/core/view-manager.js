@@ -1566,6 +1566,244 @@ uted py-4">
         `;
     }
 
+    getAlugueisMobileTemplate() {
+        return `
+            <div class="alugueis-container-mobile">
+                <div class="card mb-3 shadow-sm sticky-filters-card">
+                    <div class="card-body">
+                        <div class="row g-2">
+                            <div class="col-12">
+                                <label for="alugueis-ano-select-mobile" class="form-label">Ano</label>
+                                <select id="alugueis-ano-select-mobile" class="form-select"></select>
+                            </div>
+                            <div class="col-12">
+                                <label for="alugueis-mes-select-mobile" class="form-label">Mês</label>
+                                <select id="alugueis-mes-select-mobile" class="form-select" disabled></select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div id="alugueis-list-mobile" class="px-3">
+                    <!-- Mobile cards will be inserted here -->
+                </div>
+            </div>
+        `;
+    }
+
+    getParticipacoesMobileTemplate() {
+        return `
+            <div class="participacoes-container-mobile">
+                <div id="participacoes-list-mobile">
+                    <!-- Mobile cards will be inserted here -->
+                </div>
+            </div>
+        `;
+    }
+
+    getImoveisMobileTemplate() {
+        return `
+            <div class="imoveis-container-mobile">
+                <div id="imoveis-list-mobile">
+                    <!-- Mobile cards will be inserted here -->
+                </div>
+                <!-- Floating Action Button for adding new property -->
+                <button class="btn btn-primary btn-fab admin-only" id="btn-novo-imovel" title="Adicionar Novo Imóvel">
+                    <i class="fas fa-plus"></i>
+                </button>
+            </div>
+        `;
+    }
+
+    getImportarTemplate() {
+        this.isMobile = false; // Garantir que o sufixo não seja móvel
+        const forms = [
+            this._createImportForm('proprietarios', 'Proprietários', 'fa-users'),
+            this._createImportForm('imoveis', 'Imóveis', 'fa-building'),
+            this._createImportForm('participacoes', 'Participações', 'fa-chart-pie'),
+            this._createImportForm('alugueis', 'Aluguéis', 'fa-calendar-alt')
+        ].join('');
+
+        return `
+            <div class="importar-container">
+                <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                    <h1 class="h2"><i class="fas fa-file-import me-2"></i>Importar Dados</h1>
+                </div>
+                <div class="row mb-4 justify-content-center">
+                    <div class="col-12">
+                        <div class="card-responsive">
+                            <div class="card-header-responsive">
+                                <h5 class="card-title mb-0"><i class="fas fa-upload me-2"></i>Importar Arquivos Excel</h5>
+                            </div>
+                            <div class="card-body-responsive">
+                                <div class="mb-4 text-end">
+                                    <div class="d-flex flex-wrap justify-content-center gap-2">
+                                        <button class="btn btn-primary" style="width:150px" id="btn-cadastrar-usuario" data-bs-toggle="modal" data-bs-target="#modal-cadastrar-usuario"><i class="fas fa-user-plus me-2"></i> Cadastrar Novo Usuário</button>
+                                        <button class="btn btn-primary" style="width:150px" id="btn-alterar-usuario" data-bs-toggle="modal" data-bs-target="#modal-alterar-usuario"><i class="fas fa-user-edit me-2"></i> Alterar Usuário</button>
+                                        <button class="btn btn-primary" style="width:150px" id="btn-novo-alias" type="button"><i class="fas fa-user-tag me-2"></i> Novo Alias</button>
+                                        <button class="btn btn-primary" style="width:150px" id="btn-novas-transferencias" type="button"><i class="fas fa-exchange-alt me-2"></i> Nova Transferência</button>
+                                        <button class="btn btn-primary" style="width:150px" id="btn-multiplas-transferencias" type="button"><i class="fas fa-table me-2"></i> Cadastrar Múltiplas Transferências</button>
+                                    </div>
+                                </div>
+                                ${forms}
+                                <div id="validation-results-container" class="mt-4" style="display: none;"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Modales de Usuário -->
+                <!-- Modal Cadastrar Usuário -->
+                <div class="modal fade" id="modal-cadastrar-usuario" tabindex="-1" aria-labelledby="modalCadastrarUsuarioLabel">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header bg-primary text-white">
+                                <h5 class="modal-title" id="modalCadastrarUsuarioLabel"><i class="fas fa-user-plus me-2"></i>Cadastrar Novo Usuário</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                            </div>
+                            <form id="form-cadastrar-usuario">
+                                <div class="modal-body p-1" style="font-size: 0.80rem; max-height: 50vh; overflow-y: auto;">
+                                    <div class="mb-3">
+                                        <label for="novo-usuario" class="form-label">Nome de Usuário *</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text"><i class="fas fa-user"></i></span>
+                                            <input type="text" class="form-control" id="novo-usuario" name="usuario" required placeholder="Digite o nome de usuário" autocomplete="off">
+                                        </div>
+                                        <div class="form-text">Mínimo 3 caracteres, apenas letras, números e underscore</div>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="nova-senha" class="form-label">Senha *</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text"><i class="fas fa-lock"></i></span>
+                                            <input type="password" class="form-control" id="nova-senha" name="senha" required placeholder="Digite a senha" autocomplete="off">
+                                            <button class="btn btn-outline-secondary" type="button" id="toggle-senha"><i class="fas fa-eye"></i></button>
+                                        </div>
+                                        <div class="form-text">Mínimo 6 caracteres</div>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="confirmar-senha" class="form-label">Confirmar Senha *</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text"><i class="fas fa-lock"></i></span>
+                                            <input type="password" class="form-control" id="confirmar-senha" name="confirmar_senha" required placeholder="Confirme a senha" autocomplete="off">
+                                        </div>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="tipo-usuario" class="form-label">Tipo de Usuário *</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text"><i class="fas fa-user-tag"></i></span>
+                                            <select class="form-select" id="tipo-usuario" name="tipo_de_usuario" required>
+                                                <option value="">Selecione o tipo</option>
+                                                <option value="administrador">Administrador</option>
+                                                <option value="usuario">Usuário</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div id="erro-cadastro-usuario" class="alert alert-danger d-none"></div>
+                                    <div id="sucesso-cadastro-usuario" class="alert alert-success d-none"></div>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                                    <button type="submit" class="btn btn-primary" id="btn-confirmar-cadastro">
+                                        <span class="spinner-border spinner-border-sm d-none me-2" id="spinner-cadastro"></span>
+                                        Cadastrar
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Modal Alterar Usuário -->
+                <div class="modal fade" id="modal-alterar-usuario" tabindex="-1" aria-labelledby="modalAlterarUsuarioLabel">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header bg-primary text-white">
+                                <h5 class="modal-title" id="modalAlterarUsuarioLabel"><i class="fas fa-user-edit me-2"></i>Alterar Usuário</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                            </div>
+                            <div class="modal-body">
+                                <div class="mb-3">
+                                    <label for="selecionar-usuario" class="form-label">Selecionar Usuário *</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text"><i class="fas fa-users"></i></span>
+                                        <select class="form-select" id="selecionar-usuario" required>
+                                            <option value="">Carregando usuários...</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <form id="form-alterar-usuario" style="display: none;">
+                                    <div class="mb-3">
+                                        <label for="alterar-nova-senha" class="form-label">Nova Senha (deixe vazio para não alterar)</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text"><i class="fas fa-lock"></i></span>
+                                            <input type="password" class="form-control" id="alterar-nova-senha" name="nova_senha" placeholder="Digite a nova senha" autocomplete="off">
+                                            <button class="btn btn-outline-secondary" type="button" id="toggle-alterar-senha"><i class="fas fa-eye"></i></button>
+                                        </div>
+                                        <div class="form-text">Mínimo 6 caracteres (opcional)</div>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="alterar-confirmar-senha" class="form-label">Confirmar Nova Senha</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text"><i class="fas fa-lock"></i></span>
+                                            <input type="password" class="form-control" id="alterar-confirmar-senha" name="confirmar_nova_senha" placeholder="Confirme a nova senha" autocomplete="off">
+                                        </div>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="alterar-tipo-usuario" class="form-label">Tipo de Usuário</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text"><i class="fas fa-user-tag"></i></span>
+                                            <select class="form-select" id="alterar-tipo-usuario" name="novo_tipo_usuario">
+                                                <option value="">Não alterar</option>
+                                                <option value="administrador">Administrador</option>
+                                                <option value="usuario">Usuário</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="d-flex gap-2">
+                                        <button type="submit" class="btn btn-warning flex-fill"><i class="fas fa-save me-1"></i> Alterar Usuário</button>
+                                        <button type="button" class="btn btn-danger" id="btn-excluir-usuario-selecionado"><i class="fas fa-trash me-1"></i> Excluir</button>
+                                    </div>
+                                </form>
+                                <div id="erro-alterar-usuario" class="alert alert-danger d-none mt-3"></div>
+                                <div id="sucesso-alterar-usuario" class="alert alert-success d-none mt-3"></div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"><i class="fas fa-times me-1"></i> Fechar</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Modal Alias -->
+                <div class="modal fade" id="modal-alias" tabindex="-1" aria-labelledby="modalAliasLabel" aria-hidden="true">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header bg-primary text-white">
+                                <h5 class="modal-title" id="modalAliasLabel"><i class="fas fa-edit me-2"></i>Editar Alias</h5>
+                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                            </div>
+                            <div class="modal-body p-2" style="font-size: 0.85rem; max-height: 60vh; overflow-y: auto;">
+                                <div id="alias-alerts"></div>
+                                <form id="form-alias">
+                                    <div class="mb-3">
+                                        <label for="alias-nome" class="form-label">Nome do Alias</label>
+                                        <input type="text" class="form-control" id="alias-nome" name="alias-nome" required>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="alias-proprietarios" class="form-label">Proprietários</label>
+                                        <select multiple class="form-select" id="alias-proprietarios" name="proprietarios[]"></select>
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                                        <button type="submit" class="btn btn-primary" id="btn-salvar-alias">Salvar</button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
 }
 
 // Inicializar ViewManager globalmente
