@@ -1414,4 +1414,87 @@ class ExtrasManager {
         
         return dataStr;
     }
+
+    /**
+     * Preencher select de proprietários no modal de alias
+     */
+    async preencherSelectProprietarios() {
+        try {
+            const proprietariosSelect = document.getElementById('alias-proprietarios');
+            if (!proprietariosSelect) return;
+
+            // Carregar proprietários se não estiverem carregados
+            if (!this.allProprietarios || this.allProprietarios.length === 0) {
+                await this.loadProprietarios();
+            }
+
+            // Limpar opções existentes
+            proprietariosSelect.innerHTML = '';
+
+            // Adicionar opção padrão
+            const defaultOption = document.createElement('option');
+            defaultOption.value = '';
+            defaultOption.textContent = 'Selecione os proprietários...';
+            defaultOption.disabled = true;
+            defaultOption.selected = true;
+            proprietariosSelect.appendChild(defaultOption);
+
+            // Adicionar proprietários
+            this.allProprietarios.forEach(proprietario => {
+                const option = document.createElement('option');
+                option.value = proprietario.id;
+                option.textContent = proprietario.nome;
+                proprietariosSelect.appendChild(option);
+            });
+
+        } catch (error) {
+            console.error('Erro ao preencher select de proprietários:', error);
+        }
+    }
+
+    /**
+     * Carregar proprietários de um alias específico
+     */
+    async carregarProprietariosAlias(aliasId) {
+        if (!aliasId) return;
+
+        try {
+            const response = await this.apiService.get(`/api/extras/${aliasId}`);
+            if (response && response.success) {
+                const alias = response.data;
+                let proprietariosIds = [];
+
+                // Parse IDs dos proprietários
+                if (Array.isArray(alias.id_proprietarios)) {
+                    proprietariosIds = alias.id_proprietarios.map(id => parseInt(id));
+                } else if (typeof alias.id_proprietarios === 'string') {
+                    try {
+                        const parsed = JSON.parse(alias.id_proprietarios);
+                        proprietariosIds = Array.isArray(parsed) ? parsed.map(id => parseInt(id)) : [];
+                    } catch (e) {
+                        proprietariosIds = alias.id_proprietarios.split(',').map(id => parseInt(id.trim()));
+                    }
+                }
+
+                // Selecionar proprietários no select múltiplo
+                const proprietariosSelect = document.getElementById('alias-proprietarios');
+                if (proprietariosSelect) {
+                    // Primeiro desmarcar todos
+                    Array.from(proprietariosSelect.options).forEach(option => {
+                        option.selected = false;
+                    });
+
+                    // Depois marcar os que pertencem ao alias
+                    proprietariosIds.forEach(id => {
+                        const option = proprietariosSelect.querySelector(`option[value="${id}"]`);
+                        if (option) {
+                            option.selected = true;
+                        }
+                    });
+                }
+            }
+        } catch (error) {
+            console.error('Erro ao carregar proprietários do alias:', error);
+        }
+    }
 }

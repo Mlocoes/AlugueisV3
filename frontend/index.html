@@ -168,7 +168,7 @@
                                 </div>
                                 <div class="mb-3">
                                     <label for="alias-proprietarios" class="form-label">Proprietários</label>
-                                    <select multiple class="form-select" id="alias-proprietarios" name="alias-proprietarios"></select>
+                                    <select multiple class="form-select" id="alias-proprietarios" name="proprietarios[]"></select>
                                 </div>
                                 <div class="modal-footer">
                                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
@@ -736,7 +736,7 @@
                 this.isAuthenticated = false;
                 this.currentUser = null;
 
-                // Mostrar tela de login (que reconstruirá el formulario)
+                // Mostrar tela de login (que reconstruirá el formulário)
                 this.showLogin();
             }
 
