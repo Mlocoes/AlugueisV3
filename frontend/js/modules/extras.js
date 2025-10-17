@@ -711,18 +711,22 @@ class ExtrasManager {
             // Carregar dados da transferência
             const response = await this.apiService.get(`/api/transferencias/${id}`);
             if (!response || !response.success) {
+                console.error('Resposta da API falhou:', response);
                 this.uiManager.showAlert('Erro ao carregar dados da transferência', 'danger');
                 return;
             }
 
             const transferencia = response.data;
-            console.log('Dados da transferência:', transferencia);
+            console.log('Dados da transferência carregados:', transferencia);
 
             // Definir transferência atual para modo edição
             this.currentTransferencia = transferencia;
+            console.log('currentTransferencia definido:', this.currentTransferencia);
 
             // Mostrar modal (que irá carregar aliases e configurar formulário)
+            console.log('Chamando showTransferenciasModal...');
             await this.showTransferenciasModal();
+            console.log('showTransferenciasModal concluído');
 
         } catch (error) {
             console.error('Erro ao editar transferência:', error);
@@ -940,6 +944,12 @@ class ExtrasManager {
             const form = document.getElementById('form-transferencias');
             const modalTitle = document.getElementById('modalTransferenciasLabel');
 
+            console.log('showTransferenciasModal: Elementos encontrados:', {
+                modal: !!modal,
+                form: !!form,
+                modalTitle: !!modalTitle
+            });
+
             if (!modal || !form || !modalTitle) {
                 console.error('Elementos do modal de transferências não encontrados');
                 return;
@@ -974,7 +984,30 @@ class ExtrasManager {
                 // Modo edição
                 modalTitle.innerHTML = '<i class="fas fa-edit me-2"></i>Editar Transferência';
                 
-                // Campos serão preenchidos após mostrar o modal
+                // Preencher campos com dados da transferência atual
+                const nomeInput = document.getElementById('transferencia-nome');
+                if (nomeInput && this.currentTransferencia.nome_transferencia) {
+                    nomeInput.value = this.currentTransferencia.nome_transferencia;
+                }
+                
+                const dataCriacaoInput = document.getElementById('transferencia-data-criacao');
+                if (dataCriacaoInput && this.currentTransferencia.data_criacao) {
+                    // Formatar data para YYYY-MM-DD
+                    const dataCriacao = new Date(this.currentTransferencia.data_criacao);
+                    const dataFormatada = dataCriacao.toISOString().split('T')[0];
+                    dataCriacaoInput.value = dataFormatada;
+                }
+                
+                const dataFimInput = document.getElementById('transferencia-data-fim');
+                if (dataFimInput && this.currentTransferencia.data_fim) {
+                    // Formatar data para YYYY-MM-DD
+                    const dataFim = new Date(this.currentTransferencia.data_fim);
+                    const dataFormatada = dataFim.toISOString().split('T')[0];
+                    dataFimInput.value = dataFormatada;
+                } else if (dataFimInput) {
+                    // Limpar data fim se não existir
+                    dataFimInput.value = '';
+                }
             }
 
             // Carregar aliases disponíveis primeiro
@@ -995,6 +1028,10 @@ class ExtrasManager {
                 e.preventDefault();
                 this.salvarTransferencias();
             });
+
+            // Mostrar modal
+            const bootstrapModal = new bootstrap.Modal(modal);
+            bootstrapModal.show();
 
         } catch (error) {
             console.error('Erro ao mostrar modal de transferências:', error);
@@ -1141,10 +1178,10 @@ class ExtrasManager {
             }
 
             const formData = new FormData(form);
-            const nomeTransferencia = formData.get('transferencia-nome')?.trim();
-            const aliasId = formData.get('transferencia-alias');
-            const dataCriacao = formData.get('transferencia-data-criacao');
-            const dataFim = formData.get('transferencia-data-fim');
+            const nomeTransferencia = formData.get('nome_transferencia')?.trim();
+            const aliasId = formData.get('alias_id');
+            const dataCriacao = formData.get('data_criacao');
+            const dataFim = formData.get('data_fim');
 
             if (!nomeTransferencia) {
                 this.uiManager.showAlert('Nome da transferência é obrigatório', 'warning');
