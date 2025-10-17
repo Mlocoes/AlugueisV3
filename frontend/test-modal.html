@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teste Modal</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/handsontable@14.0.0/dist/handsontable.full.min.css">
+</head>
+<body>
+    <div class="container mt-5">
+        <button id="test-btn" class="btn btn-primary">Testar Modal</button>
+    </div>
+
+    <!-- Modal de Múltiplas Transferências -->
+    <div class="modal fade" id="modal-multiplas-transferencias" tabindex="-1" aria-labelledby="modalMultiplasTransferenciasLabel" aria-hidden="true">
+        <div class="modal-dialog modal-xl">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title" id="modalMultiplasTransferenciasLabel">
+                        <i class="fas fa-table me-2"></i>Cadastrar Múltiplas Transferências
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="multiplas-transferencias-handsontable" style="height: 400px;"></div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/handsontable@14.0.0/dist/handsontable.full.min.js"></script>
+    <script>
+        document.getElementById('test-btn').addEventListener('click', function() {
+            const modal = document.getElementById('modal-multiplas-transferencias');
+            const bootstrapModal = new bootstrap.Modal(modal);
+            
+            // Testar Handsontable
+            const container = document.getElementById('multiplas-transferencias-handsontable');
+            if (container) {
+                const hot = new Handsontable(container, {
+                    data: [['Teste']],
+                    colHeaders: false,
+                    rowHeaders: false,
+                    licenseKey: 'non-commercial-and-evaluation'
+                });
+                console.log('Handsontable inicializado:', hot);
+            }
+            
+            bootstrapModal.show();
+        });
+    </script>
+</body>
+</html>

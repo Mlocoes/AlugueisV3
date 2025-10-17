@@ -229,40 +229,59 @@
                 </div>
                 <!-- Fin Modal Transferencias -->
 
-                <!-- Modal Múltiplas Transferências -->
+                <!-- Modal de Múltiplas Transferências -->
                 <div class="modal fade" id="modal-multiplas-transferencias" tabindex="-1" aria-labelledby="modalMultiplasTransferenciasLabel" aria-hidden="true">
                     <div class="modal-dialog modal-xl">
                         <div class="modal-content">
                             <div class="modal-header bg-primary text-white">
-                                <h5 class="modal-title" id="modalMultiplasTransferenciasLabel"><i class="fas fa-table me-2"></i>Cadastrar Múltiplas Transferências</h5>
-                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                <h5 class="modal-title" id="modalMultiplasTransferenciasLabel">
+                                    <i class="fas fa-table me-2"></i>Cadastrar Múltiplas Transferências
+                                </h5>
+                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fechar"></button>
                             </div>
                             <div class="modal-body">
-                                <div id="multiplas-transferencias-alerts"></div>
-                                <form id="form-multiplas-transferencias">
-                                    <div class="mb-3">
-                                        <label for="multiplas-transferencias-alias" class="form-label">Selecionar Alias *</label>
-                                        <select class="form-select" id="multiplas-transferencias-alias" name="alias_id" required>
-                                            <option value="">Selecione um alias...</option>
-                                        </select>
-                                    </div>
-                                    <div class="mb-3">
-                                        <label class="form-label">Planilha de Transferências</label>
-                                        <p class="text-muted small">Use esta planilha como uma folha de cálculo do Excel. Copie e cole dados diretamente das células.</p>
-                                        <div id="multiplas-transferencias-handsontable" style="height: 400px; width: 100%;"></div>
-                                    </div>
-                                    <div class="mt-3">
-                                        <button type="button" class="btn btn-outline-primary btn-sm me-2" id="btn-limpar-planilha">
-                                            <i class="fas fa-trash me-1"></i>Limpar Planilha
-                                        </button>
-                                        <button type="button" class="btn btn-outline-info btn-sm" id="btn-carregar-proprietarios">
-                                            <i class="fas fa-users me-1"></i>Carregar Proprietários
-                                        </button>
-                                    </div>
-                                </form>
+                                <!-- Seleção de Alias -->
+                                <div class="mb-3">
+                                    <label for="multiplas-transferencias-alias" class="form-label">
+                                        <i class="fas fa-tag me-1"></i>Selecionar Alias
+                                    </label>
+                                    <select class="form-select" id="multiplas-transferencias-alias" required>
+                                        <option value="">Selecione um alias...</option>
+                                    </select>
+                                </div>
+
+                                <!-- Botões de Controle -->
+                                <div class="mb-3 d-flex gap-2">
+                                    <button type="button" class="btn btn-outline-secondary" id="btn-limpar-planilha">
+                                        <i class="fas fa-trash me-1"></i>Limpar Planilha
+                                    </button>
+                                    <button type="button" class="btn btn-outline-primary" id="btn-carregar-proprietarios">
+                                        <i class="fas fa-users me-1"></i>Carregar Proprietários
+                                    </button>
+                                </div>
+
+                                <!-- Container da Planilha Handsontable -->
+                                <div class="mb-3">
+                                    <div id="multiplas-transferencias-handsontable" class="handsontable-container"></div>
+                                </div>
+
+                                <!-- Instruções -->
+                                <div class="alert alert-info">
+                                    <h6><i class="fas fa-info-circle me-1"></i>Instruções:</h6>
+                                    <ul class="mb-0">
+                                        <li>Selecione um alias primeiro</li>
+                                        <li>Clique em "Carregar Proprietários" para popular a planilha</li>
+                                        <li>Preencha os nomes das transferências na primeira linha</li>
+                                        <li>Defina as datas de início e fim na segunda e terceira linhas</li>
+                                        <li>Insira os valores para cada proprietário nas colunas correspondentes</li>
+                                        <li>Use vírgula como separador decimal (ex: 123,45)</li>
+                                    </ul>
+                                </div>
                             </div>
                             <div class="modal-footer">
-                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                                    <i class="fas fa-times me-1"></i>Cancelar
+                                </button>
                                 <button type="submit" class="btn btn-primary" id="btn-salvar-multiplas-transferencias" form="form-multiplas-transferencias">
                                     <i class="fas fa-save me-1"></i>Salvar Todas as Transferências
                                 </button>
@@ -270,7 +289,7 @@
                         </div>
                     </div>
                 </div>
-                <!-- Fin Modal Múltiplas Transferências -->
+                <!-- Fin Modal de Múltiplas Transferências -->
 
                 
 
@@ -463,7 +482,7 @@
                     return;
                 }
                 
-                // Guardar referencia al formulario actual
+                // Guardar referencia al formulário atual
                 const oldForm = document.getElementById('login-form');
                 if (oldForm) {
                     // Destruir formulário completamente
@@ -850,5 +869,9 @@
             window.unifiedApp.init();
         });
     </script>
+
+    <!-- Formulário oculto para submissão -->
+    <form id="form-multiplas-transferencias" style="display: none;"></form>
+
 </body>
 </html>

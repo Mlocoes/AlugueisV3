@@ -262,3 +262,15 @@
         overflow: visible !important;
     }
 }
+
+/* ===== Handsontable Styles ===== */
+.handsontable-container {
+    width: 100%;
+    height: 400px;
+    margin-bottom: 1rem;
+}
+
+.handsontable-container .handsontable {
+    width: 100%;
+    height: 100%;
+}
