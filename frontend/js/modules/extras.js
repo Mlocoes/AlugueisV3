@@ -1385,8 +1385,19 @@ class ExtrasManager {
                     continue;
                 }
 
-                // Converter valor
-                const valor = parseFloat(valorStr.replace(',', '.'));
+                // Normalizar e converter valor
+                let valorNormalizado = valorStr.trim();
+                
+                // Se contém vírgula como decimal (formato BR), converter para ponto
+                if (valorNormalizado.includes(',') && !valorNormalizado.includes('.')) {
+                    valorNormalizado = valorNormalizado.replace(',', '.');
+                }
+                // Se contém ambos (ex: 10.000,00), remover pontos de milhares e trocar vírgula por ponto
+                else if (valorNormalizado.includes('.') && valorNormalizado.includes(',')) {
+                    valorNormalizado = valorNormalizado.replace(/\./g, '').replace(',', '.');
+                }
+                
+                const valor = parseFloat(valorNormalizado);
                 if (isNaN(valor)) {
                     hasErrors = true;
                     console.error(`Linha ${rowIndex + 1}, Coluna ${colIndex + 1}: Valor inválido: ${valorStr}`);
