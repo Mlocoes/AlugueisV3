@@ -1856,6 +1856,10 @@ uted py-4">
                                     <!-- Proprietários com Valores -->
                                     <div class="mb-3">
                                         <label class="form-label fw-bold">Proprietários e Valores</label>
+                                        <div class="form-text mb-2">
+                                            <i class="fas fa-info-circle me-1"></i>
+                                            Valores positivos representam créditos, valores negativos representam débitos.
+                                        </div>
                                         <div id="transferencia-proprietarios-container" style="max-height: 300px; overflow-y: auto;">
                                             <!-- Gerado dinamicamente -->
                                         </div>

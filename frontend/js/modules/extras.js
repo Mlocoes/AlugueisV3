@@ -1746,8 +1746,8 @@ class ExtrasManager {
                            data-proprietario-id="${id}"
                            value="${valor}" 
                            step="0.01" 
-                           min="0"
-                           required>
+                           required
+                           placeholder="Valor positivo ou negativo">
                 `;
                 container.appendChild(div);
             });
@@ -1821,10 +1821,9 @@ class ExtrasManager {
             inputs.forEach(input => {
                 const id = parseInt(input.dataset.proprietarioId);
                 const valor = parseFloat(input.value) || 0;
-                if (valor > 0) {
-                    proprietariosComValores.push({ id, valor });
-                    valorTotal += valor;
-                }
+                // Aceitar valores positivos e negativos
+                proprietariosComValores.push({ id, valor });
+                valorTotal += valor;
             });
             
             console.log('Proprietários com valores:', proprietariosComValores);
@@ -1832,12 +1831,7 @@ class ExtrasManager {
             
             // Validar
             if (proprietariosComValores.length === 0) {
-                this.uiManager.showAlert('Adicione pelo menos um proprietário com valor maior que zero', 'warning');
-                return;
-            }
-            
-            if (valorTotal === 0) {
-                this.uiManager.showAlert('Valor total deve ser maior que zero', 'warning');
+                this.uiManager.showAlert('Adicione pelo menos um proprietário', 'warning');
                 return;
             }
             
