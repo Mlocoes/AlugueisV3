@@ -155,17 +155,24 @@ class ExtrasManager {
      */
     async loadProprietarios() {
         try {
+            console.log('loadProprietarios: Iniciando...');
+            
             // Verificar se o usuário é administrador antes de fazer a chamada
             const isAdmin = window.authService && window.authService.isAdmin();
+            console.log('loadProprietarios: É admin?', isAdmin);
+            
             if (!isAdmin) {
+                console.warn('loadProprietarios: Usuário não é admin, abortando');
                 return;
             }
 
-            
+            console.log('loadProprietarios: Fazendo requisição à API...');
             const response = await this.apiService.get('/api/extras/proprietarios/disponiveis');
+            console.log('loadProprietarios: Resposta recebida:', response);
             
             if (response && response.success && Array.isArray(response.data)) {
                 this.allProprietarios = response.data;
+                console.log(`loadProprietarios: ${this.allProprietarios.length} proprietários carregados`);
                 this.populateProprietariosSelects();
             } else {
                 throw new Error('Resposta inválida do servidor');
@@ -890,9 +897,13 @@ class ExtrasManager {
      */
     async showAliasModal(alias = null) {
         try {
+            console.log('showAliasModal: Iniciando...', alias ? 'Edição' : 'Novo');
+            
             const modal = document.getElementById('modal-alias');
             const form = document.getElementById('form-alias');
             const modalTitle = document.getElementById('modalAliasLabel');
+
+            console.log('showAliasModal: Elementos encontrados:', { modal: !!modal, form: !!form, modalTitle: !!modalTitle });
 
             if (!modal || !form || !modalTitle) {
                 console.error('Elementos do modal de alias não encontrados');
@@ -906,11 +917,13 @@ class ExtrasManager {
             // Configurar modal para criação ou edição
             if (!alias) {
                 // Modo criação
+                console.log('showAliasModal: Modo criação - resetando formulário');
                 form.reset();
                 modalTitle.innerHTML = '<i class="fas fa-plus me-2"></i>Novo Alias';
                 this.currentExtra = null;
             } else {
                 // Modo edição
+                console.log('showAliasModal: Modo edição - carregando dados do alias');
                 modalTitle.innerHTML = '<i class="fas fa-edit me-2"></i>Editar Alias';
                 this.currentExtra = alias;
 
@@ -923,11 +936,14 @@ class ExtrasManager {
             }
 
             // Carregar proprietários disponíveis
+            console.log('showAliasModal: Chamando preencherSelectProprietarios...');
             await this.preencherSelectProprietarios();
 
             // Mostrar modal
+            console.log('showAliasModal: Mostrando modal...');
             const bootstrapModal = new bootstrap.Modal(modal);
             bootstrapModal.show();
+            console.log('showAliasModal: Modal exibido com sucesso');
 
         } catch (error) {
             console.error('Erro ao mostrar modal de alias:', error);
@@ -1421,31 +1437,42 @@ class ExtrasManager {
     async preencherSelectProprietarios() {
         try {
             const proprietariosSelect = document.getElementById('alias-proprietarios');
-            if (!proprietariosSelect) return;
+            if (!proprietariosSelect) {
+                console.error('Select alias-proprietarios não encontrado');
+                return;
+            }
+
+            console.log('Preenchendo select de proprietários...');
 
             // Carregar proprietários se não estiverem carregados
             if (!this.allProprietarios || this.allProprietarios.length === 0) {
+                console.log('Carregando proprietários...');
                 await this.loadProprietarios();
             }
+
+            console.log(`Total de proprietários disponíveis: ${this.allProprietarios?.length || 0}`);
 
             // Limpar opções existentes
             proprietariosSelect.innerHTML = '';
 
-            // Adicionar opção padrão
-            const defaultOption = document.createElement('option');
-            defaultOption.value = '';
-            defaultOption.textContent = 'Selecione os proprietários...';
-            defaultOption.disabled = true;
-            defaultOption.selected = true;
-            proprietariosSelect.appendChild(defaultOption);
-
-            // Adicionar proprietários
-            this.allProprietarios.forEach(proprietario => {
-                const option = document.createElement('option');
-                option.value = proprietario.id;
-                option.textContent = proprietario.nome;
-                proprietariosSelect.appendChild(option);
-            });
+            // Adicionar proprietários (sem opção padrão em select múltiplo)
+            if (this.allProprietarios && this.allProprietarios.length > 0) {
+                this.allProprietarios.forEach(proprietario => {
+                    const option = document.createElement('option');
+                    option.value = proprietario.id;
+                    option.textContent = proprietario.nome;
+                    proprietariosSelect.appendChild(option);
+                });
+                console.log(`${this.allProprietarios.length} proprietários adicionados ao select`);
+            } else {
+                console.warn('Nenhum proprietário disponível para adicionar');
+                // Adicionar mensagem informativa se não houver proprietários
+                const emptyOption = document.createElement('option');
+                emptyOption.value = '';
+                emptyOption.textContent = 'Nenhum proprietário disponível';
+                emptyOption.disabled = true;
+                proprietariosSelect.appendChild(emptyOption);
+            }
 
         } catch (error) {
             console.error('Erro ao preencher select de proprietários:', error);

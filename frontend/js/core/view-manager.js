@@ -226,43 +226,13 @@ class ViewManager {
             const btnNovoAlias = document.getElementById('btn-novo-alias');
             if (btnNovoAlias) {
                 btnNovoAlias.addEventListener('click', async function() {
-                    if (window.extrasModule && typeof window.extrasModule.loadProprietarios === 'function') {
-                        await window.extrasModule.loadProprietarios();
-                        window.extrasModule.showAliasModal(null);
-                    } else if (window.extrasModule && typeof window.extrasModule.showAliasModal === 'function') {
-                        window.extrasModule.showAliasModal(null);
+                    if (window.extrasModule && typeof window.extrasModule.showAliasModal === 'function') {
+                        await window.extrasModule.showAliasModal(null);
                     } else {
-                        const form = document.getElementById('form-alias');
-                        if (form) form.reset();
-                        const modalTitle = document.getElementById('modalAliasLabel');
-                        if (modalTitle) modalTitle.innerHTML = '<i class="fas fa-plus me-2"></i>Novo Alias';
-                        const modal = document.getElementById('modal-alias');
-                        if (modal) {
-                            bootstrap.Modal.getOrCreateInstance(modal).show();
-                        }
+                        console.error('ExtrasModule ou showAliasModal não disponível');
                     }
                 });
             }
-            // Registrar evento para Novas Transferências
-            const btnNovasTransferencias = document.getElementById('btn-novas-transferencias');
-            if (btnNovasTransferencias) {
-                btnNovasTransferencias.addEventListener('click', function() {
-                    // Forzar modo de nova transferência
-                    if (window.extrasModule && typeof window.extrasModule.showTransferenciasModal === 'function') {
-                        window.extrasModule.currentTransferencia = null;
-                        window.extrasModule.showTransferenciasModal();
-                    } else {
-                        // Fallback: limpiar y mostrar modal diretamente
-                        const form = document.getElementById('form-transferencias');
-                        if (form) form.reset();
-                        const modal = document.getElementById('modal-transferencias');
-                        if (modal) {
-                            bootstrap.Modal.getOrCreateInstance(modal).show();
-                        }
-                    }
-                });
-            }
-            
             // Registrar evento para el botón de múltiplas transferências
             const btnMultiplasTransferencias = document.getElementById('btn-multiplas-transferencias');
             if (btnMultiplasTransferencias) {
@@ -277,42 +247,14 @@ class ViewManager {
             const btnNovoAliasMobile = document.getElementById('btn-novo-alias-mobile');
             if (btnNovoAliasMobile) {
                 btnNovoAliasMobile.addEventListener('click', async function() {
-                    if (window.extrasModule && typeof window.extrasModule.loadProprietarios === 'function') {
-                        await window.extrasModule.loadProprietarios();
-                        window.extrasModule.showAliasModal(null);
-                    } else if (window.extrasModule && typeof window.extrasModule.showAliasModal === 'function') {
-                        window.extrasModule.showAliasModal(null);
+                    if (window.extrasModule && typeof window.extrasModule.showAliasModal === 'function') {
+                        await window.extrasModule.showAliasModal(null);
                     } else {
-                        const form = document.getElementById('form-alias');
-                        if (form) form.reset();
-                        const modalTitle = document.getElementById('modalAliasLabel');
-                        if (modalTitle) modalTitle.innerHTML = '<i class="fas fa-plus me-2"></i>Novo Alias';
-                        const modal = document.getElementById('modal-alias');
-                        if (modal) {
-                            bootstrap.Modal.getOrCreateInstance(modal).show();
-                        }
+                        console.error('ExtrasModule ou showAliasModal não disponível');
                     }
                 });
             }
             
-            const btnNovasTransferenciasMobile = document.getElementById('btn-novas-transferencias-mobile');
-            if (btnNovasTransferenciasMobile) {
-                btnNovasTransferenciasMobile.addEventListener('click', function() {
-                    // Forzar modo de nova transferência
-                    if (window.extrasModule && typeof window.extrasModule.showTransferenciasModal === 'function') {
-                        window.extrasModule.currentTransferencia = null;
-                        window.extrasModule.showTransferenciasModal();
-                    } else {
-                        // Fallback: limpiar y mostrar modal diretamente
-                        const form = document.getElementById('form-transferencias');
-                        if (form) form.reset();
-                        const modal = document.getElementById('modal-transferencias');
-                        if (modal) {
-                            bootstrap.Modal.getOrCreateInstance(modal).show();
-                        }
-                    }
-                });
-            }
             // Registrar evento para el botón de múltiplas transferências mobile
             const btnMultiplasTransferenciasMobile = document.getElementById('btn-multiplas-transferencias-mobile');
             if (btnMultiplasTransferenciasMobile) {
@@ -322,18 +264,44 @@ class ViewManager {
                     }
                 });
             }
-            
-            // Registrar evento para el select de alias en transferencias
-            setTimeout(() => {
-                const aliasSelect = document.getElementById('transferencia-alias');
-                if (aliasSelect) {
-                    aliasSelect.addEventListener('change', function(e) {
-                        if (window.extrasModule && typeof window.extrasModule.carregarProprietariosAlias === 'function') {
-                            window.extrasModule.carregarProprietariosAlias(e.target.value);
-                        }
-                    });
-                }
-            }, 400);
+
+            // Registrar evento de submit do formulário de alias
+            const formAlias = document.getElementById('form-alias');
+            if (formAlias) {
+                // Remover event listener anterior se existir
+                const newForm = formAlias.cloneNode(true);
+                formAlias.parentNode.replaceChild(newForm, formAlias);
+                
+                // Adicionar novo event listener
+                document.getElementById('form-alias').addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    console.log('Formulário de alias submetido na view Importar');
+                    if (window.extrasModule && typeof window.extrasModule.salvarAlias === 'function') {
+                        window.extrasModule.salvarAlias();
+                    } else {
+                        console.error('ExtrasModule ou salvarAlias não disponível');
+                    }
+                });
+            }
+
+            // Registrar evento de submit do formulário de múltiplas transferências
+            const formMultiplasTransferencias = document.getElementById('form-multiplas-transferencias');
+            if (formMultiplasTransferencias) {
+                // Remover event listener anterior se existir
+                const newForm = formMultiplasTransferencias.cloneNode(true);
+                formMultiplasTransferencias.parentNode.replaceChild(newForm, formMultiplasTransferencias);
+                
+                // Adicionar novo event listener
+                document.getElementById('form-multiplas-transferencias').addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    console.log('Formulário de múltiplas transferências submetido na view Importar');
+                    if (window.extrasModule && typeof window.extrasModule.salvarMultiplasTransferencias === 'function') {
+                        window.extrasModule.salvarMultiplasTransferencias();
+                    } else {
+                        console.error('ExtrasModule ou salvarMultiplasTransferencias não disponível');
+                    }
+                });
+            }
 
             // Inicializar UsuarioManager para los modales de usuario
             if (window.usuarioManager && typeof window.usuarioManager.init === 'function') {
@@ -882,29 +850,30 @@ class ViewManager {
 
             <!-- Modal Alias -->
             <div class="modal fade" id="modal-alias" tabindex="-1" aria-labelledby="modalAliasLabel" aria-hidden="true">
-                <div class="modal-dialog">
+                <div class="modal-dialog modal-dialog-centered">
                     <div class="modal-content">
                         <div class="modal-header bg-primary text-white">
                             <h5 class="modal-title" id="modalAliasLabel"><i class="fas fa-edit me-2"></i>Editar Alias</h5>
                             <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                         </div>
-                        <div class="modal-body p-2" style="font-size: 0.85rem; max-height: 60vh; overflow-y: auto;">
-                            <div id="alias-alerts"></div>
-                            <form id="form-alias">
+                        <form id="form-alias">
+                            <div class="modal-body">
+                                <div id="alias-alerts"></div>
                                 <div class="mb-3">
-                                    <label for="alias-nome" class="form-label">Nome do Alias</label>
-                                    <input type="text" class="form-control" id="alias-nome" name="alias-nome" required>
+                                    <label for="alias-nome" class="form-label fw-bold">Nome do Alias</label>
+                                    <input type="text" class="form-control" id="alias-nome" name="alias-nome" required placeholder="Digite o nome do alias">
                                 </div>
                                 <div class="mb-3">
-                                    <label for="alias-proprietarios" class="form-label">Proprietários</label>
-                                    <select multiple class="form-select" id="alias-proprietarios" name="proprietarios[]"></select>
+                                    <label for="alias-proprietarios" class="form-label fw-bold">Proprietários</label>
+                                    <select multiple class="form-select" id="alias-proprietarios" name="proprietarios[]" size="10" style="min-height: 200px;"></select>
+                                    <div class="form-text"><i class="fas fa-info-circle me-1"></i>Mantenha pressionado Ctrl (ou Cmd no Mac) para selecionar múltiplos proprietários</div>
                                 </div>
-                                <div class="modal-footer">
-                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                                    <button type="submit" class="btn btn-primary" id="btn-salvar-alias">Salvar</button>
-                                </div>
-                            </form>
-                        </div>
+                            </div>
+                            <div class="modal-footer bg-light">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"><i class="fas fa-times me-1"></i> Cancelar</button>
+                                <button type="submit" class="btn btn-primary" id="btn-salvar-alias"><i class="fas fa-save me-1"></i> Salvar</button>
+                            </div>
+                        </form>
                     </div>
                 </div>
             </div>
@@ -1652,7 +1621,6 @@ uted py-4">
                                         <button class="btn btn-primary" style="width:150px" id="btn-cadastrar-usuario" data-bs-toggle="modal" data-bs-target="#modal-cadastrar-usuario"><i class="fas fa-user-plus me-2"></i> Cadastrar Novo Usuário</button>
                                         <button class="btn btn-primary" style="width:150px" id="btn-alterar-usuario" data-bs-toggle="modal" data-bs-target="#modal-alterar-usuario"><i class="fas fa-user-edit me-2"></i> Alterar Usuário</button>
                                         <button class="btn btn-primary" style="width:150px" id="btn-novo-alias" type="button"><i class="fas fa-user-tag me-2"></i> Novo Alias</button>
-                                        <button class="btn btn-primary" style="width:150px" id="btn-novas-transferencias" type="button"><i class="fas fa-exchange-alt me-2"></i> Nova Transferência</button>
                                         <button class="btn btn-primary" style="width:150px" id="btn-multiplas-transferencias" type="button"><i class="fas fa-table me-2"></i> Cadastrar Múltiplas Transferências</button>
                                     </div>
                                 </div>
@@ -1787,26 +1755,75 @@ uted py-4">
 
                 <!-- Modal Alias -->
                 <div class="modal fade" id="modal-alias" tabindex="-1" aria-labelledby="modalAliasLabel" aria-hidden="true">
-                    <div class="modal-dialog">
+                    <div class="modal-dialog modal-dialog-centered">
                         <div class="modal-content">
                             <div class="modal-header bg-primary text-white">
                                 <h5 class="modal-title" id="modalAliasLabel"><i class="fas fa-edit me-2"></i>Editar Alias</h5>
                                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                             </div>
-                            <div class="modal-body p-2" style="font-size: 0.85rem; max-height: 60vh; overflow-y: auto;">
-                                <div id="alias-alerts"></div>
-                                <form id="form-alias">
+                            <form id="form-alias">
+                                <div class="modal-body">
+                                    <div id="alias-alerts"></div>
                                     <div class="mb-3">
-                                        <label for="alias-nome" class="form-label">Nome do Alias</label>
-                                        <input type="text" class="form-control" id="alias-nome" name="alias-nome" required>
+                                        <label for="alias-nome" class="form-label fw-bold">Nome do Alias</label>
+                                        <input type="text" class="form-control" id="alias-nome" name="alias-nome" required placeholder="Digite o nome do alias">
                                     </div>
                                     <div class="mb-3">
-                                        <label for="alias-proprietarios" class="form-label">Proprietários</label>
-                                        <select multiple class="form-select" id="alias-proprietarios" name="proprietarios[]"></select>
+                                        <label for="alias-proprietarios" class="form-label fw-bold">Proprietários</label>
+                                        <select multiple class="form-select" id="alias-proprietarios" name="proprietarios[]" size="10" style="min-height: 200px;"></select>
+                                        <div class="form-text"><i class="fas fa-info-circle me-1"></i>Mantenha pressionado Ctrl (ou Cmd no Mac) para selecionar múltiplos proprietários</div>
                                     </div>
-                                    <div class="modal-footer">
-                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                                        <button type="submit" class="btn btn-primary" id="btn-salvar-alias">Salvar</button>
+                                </div>
+                                <div class="modal-footer bg-light">
+                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"><i class="fas fa-times me-1"></i> Cancelar</button>
+                                    <button type="submit" class="btn btn-primary" id="btn-salvar-alias"><i class="fas fa-save me-1"></i> Salvar</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Modal Múltiplas Transferências -->
+                <div class="modal fade" id="modal-multiplas-transferencias" tabindex="-1" aria-labelledby="modalMultiplasTransferenciasLabel" aria-hidden="true">
+                    <div class="modal-dialog modal-xl">
+                        <div class="modal-content">
+                            <div class="modal-header bg-primary text-white">
+                                <h5 class="modal-title" id="modalMultiplasTransferenciasLabel">
+                                    <i class="fas fa-table me-2"></i>Cadastrar Múltiplas Transferências
+                                </h5>
+                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                            </div>
+                            <div class="modal-body">
+                                <div id="multiplas-transferencias-alerts"></div>
+                                
+                                <div class="mb-3">
+                                    <label for="multiplas-transferencias-alias" class="form-label">Selecionar Alias</label>
+                                    <select class="form-select" id="multiplas-transferencias-alias">
+                                        <option value="">Selecione um alias...</option>
+                                    </select>
+                                </div>
+
+                                <div class="mb-3 d-flex gap-2">
+                                    <button type="button" class="btn btn-secondary btn-sm" id="btn-limpar-planilha">
+                                        <i class="fas fa-eraser me-1"></i> Limpar Planilha
+                                    </button>
+                                    <button type="button" class="btn btn-info btn-sm" id="btn-carregar-proprietarios">
+                                        <i class="fas fa-users me-1"></i> Carregar Proprietários
+                                    </button>
+                                </div>
+
+                                <div class="table-responsive" style="height: 400px; overflow: auto;">
+                                    <div id="multiplas-transferencias-table"></div>
+                                </div>
+                                
+                                <form id="form-multiplas-transferencias">
+                                    <div class="modal-footer mt-3">
+                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                                            <i class="fas fa-times me-1"></i> Cancelar
+                                        </button>
+                                        <button type="submit" class="btn btn-primary" id="btn-salvar-multiplas-transferencias">
+                                            <i class="fas fa-save me-1"></i> Salvar Transferências
+                                        </button>
                                     </div>
                                 </form>
                             </div>
