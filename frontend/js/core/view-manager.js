@@ -1811,6 +1811,104 @@ uted py-4">
                         </div>
                     </div>
                 </div>
+
+                <!-- Modal Editar Transferência -->
+                <div class="modal fade" id="modal-transferencias" tabindex="-1" aria-labelledby="modalTransferenciasLabel" aria-hidden="true">
+                    <div class="modal-dialog modal-lg modal-dialog-centered">
+                        <div class="modal-content">
+                            <div class="modal-header bg-primary text-white">
+                                <h5 class="modal-title" id="modalTransferenciasLabel">
+                                    <i class="fas fa-exchange-alt me-2"></i>Editar Transferência
+                                </h5>
+                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                            </div>
+                            <form id="form-transferencias">
+                                <div class="modal-body">
+                                    <div id="transferencia-alerts"></div>
+                                    
+                                    <!-- Alias (readonly) -->
+                                    <div class="mb-3">
+                                        <label for="transferencia-alias" class="form-label fw-bold">Alias</label>
+                                        <select class="form-select" id="transferencia-alias" disabled>
+                                            <option value="">Carregando...</option>
+                                        </select>
+                                    </div>
+                                    
+                                    <!-- Nome -->
+                                    <div class="mb-3">
+                                        <label for="transferencia-nome" class="form-label fw-bold">Nome da Transferência</label>
+                                        <input type="text" class="form-control" id="transferencia-nome" required placeholder="Ex: Aluguel Outubro 2025">
+                                    </div>
+                                    
+                                    <!-- Datas -->
+                                    <div class="row">
+                                        <div class="col-md-6 mb-3">
+                                            <label for="transferencia-data-criacao" class="form-label fw-bold">Data Início</label>
+                                            <input type="date" class="form-control" id="transferencia-data-criacao" required>
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label for="transferencia-data-fim" class="form-label fw-bold">Data Fim</label>
+                                            <input type="date" class="form-control" id="transferencia-data-fim">
+                                            <div class="form-text">Opcional</div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Proprietários com Valores -->
+                                    <div class="mb-3">
+                                        <label class="form-label fw-bold">Proprietários e Valores</label>
+                                        <div id="transferencia-proprietarios-container" style="max-height: 300px; overflow-y: auto;">
+                                            <!-- Gerado dinamicamente -->
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Valor Total (calculado) -->
+                                    <div class="mb-3">
+                                        <label class="form-label fw-bold">Valor Total</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text">R$</span>
+                                            <input type="text" class="form-control" id="transferencia-valor-total" readonly>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="modal-footer bg-light">
+                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                                        <i class="fas fa-times me-1"></i> Cancelar
+                                    </button>
+                                    <button type="submit" class="btn btn-primary" id="btn-salvar-transferencia">
+                                        <i class="fas fa-save me-1"></i> Salvar
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Modal Confirmar Exclusão -->
+                <div class="modal fade" id="modal-confirmar-exclusao" tabindex="-1" aria-labelledby="modalConfirmarExclusaoLabel" aria-hidden="true">
+                    <div class="modal-dialog modal-dialog-centered">
+                        <div class="modal-content">
+                            <div class="modal-header bg-danger text-white">
+                                <h5 class="modal-title" id="modalConfirmarExclusaoLabel">
+                                    <i class="fas fa-exclamation-triangle me-2"></i>Confirmar Exclusão
+                                </h5>
+                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                            </div>
+                            <div class="modal-body">
+                                <p id="modal-confirmar-exclusao-msg" class="mb-0">
+                                    Tem certeza que deseja excluir este item? Esta ação não pode ser desfeita.
+                                </p>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                                    <i class="fas fa-times me-1"></i> Cancelar
+                                </button>
+                                <button type="button" class="btn btn-danger" id="btn-confirmar-exclusao">
+                                    <i class="fas fa-trash me-1"></i> Excluir
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         `;
     }
