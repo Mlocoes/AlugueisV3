@@ -11,29 +11,39 @@ class RelatoriosModule {
     }
 
     async load() {
+        console.log('🔵 [RELATORIOS] Iniciando load()...');
         
         // Re-avaliar tipo de dispositivo
         this.isMobile = window.deviceManager && window.deviceManager.deviceType === 'mobile';
         
-        // Buscar container do Handsontable
+        // Buscar container do Handsontable com retry mais longo
         this.handsontableContainer = document.getElementById('handsontable-relatorios');
 
         // Retry múltiplas vezes se não encontrar (timing issue)
         if (!this.handsontableContainer) {
-            for (let i = 0; i < 10; i++) {
-                await new Promise(resolve => setTimeout(resolve, 300));
+            console.log('🔵 [RELATORIOS] Container não encontrado, tentando novamente...');
+            for (let i = 0; i < 20; i++) {
+                await new Promise(resolve => setTimeout(resolve, 500));
                 this.handsontableContainer = document.getElementById('handsontable-relatorios');
                 if (this.handsontableContainer) {
+                    console.log(`✅ [RELATORIOS] Container encontrado na tentativa ${i + 1}`);
                     break;
                 }
             }
+        } else {
+            console.log('✅ [RELATORIOS] Container encontrado imediatamente');
         }
 
         if (!this.handsontableContainer) {
-            console.error('Container handsontable-relatorios não encontrado após retries');
+            console.error('❌ [RELATORIOS] Container handsontable-relatorios não encontrado após 20 retries');
+            // Tentar renderizar o DOM para debug
+            console.log('📋 [RELATORIOS] Elementos disponíveis no DOM:', 
+                Array.from(document.querySelectorAll('[id*="relatorio"]')).map(el => el.id)
+            );
             return;
         }
 
+        console.log('🔵 [RELATORIOS] Buscando controles de filtro...');
         // Container legado para mobile (fallback)
         this.container = document.getElementById('relatorios-table-body');
 
@@ -43,12 +53,15 @@ class RelatoriosModule {
         this.proprietarioSelect = document.getElementById('relatorios-proprietario-select');
         this.transferenciasCheck = document.getElementById('relatorios-transferencias-check');
 
+        console.log('🔵 [RELATORIOS] Configurando event listeners...');
         // Setup event listeners (sempre reconfigurar)
         this.setupEventListeners();
 
+        console.log('🔵 [RELATORIOS] Carregando dados iniciais...');
         // Carregar dados
         await this.loadInitialData();
         
+        console.log('✅ [RELATORIOS] Load() concluído com sucesso');
     }
 
     setupEventListeners() {
