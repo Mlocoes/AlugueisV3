@@ -11,45 +11,25 @@ class RelatoriosModule {
     }
 
     async load() {
-        console.log('🔵 [RELATORIOS] Iniciando load()...');
-        
         // Re-avaliar tipo de dispositivo
         this.isMobile = window.deviceManager && window.deviceManager.deviceType === 'mobile';
         
-        // Buscar container do Handsontable com retry mais longo
+        // Buscar container do Handsontable com retry
         this.handsontableContainer = document.getElementById('handsontable-relatorios');
 
         // Retry múltiplas vezes se não encontrar (timing issue)
         if (!this.handsontableContainer) {
-            console.log('🔵 [RELATORIOS] Container não encontrado, tentando novamente...');
-            for (let i = 0; i < 20; i++) {
-                await new Promise(resolve => setTimeout(resolve, 500));
+            for (let i = 0; i < 10; i++) {
+                await new Promise(resolve => setTimeout(resolve, 200));
                 this.handsontableContainer = document.getElementById('handsontable-relatorios');
-                if (this.handsontableContainer) {
-                    console.log(`✅ [RELATORIOS] Container encontrado na tentativa ${i + 1}`);
-                    break;
-                }
+                if (this.handsontableContainer) break;
             }
-        } else {
-            console.log('✅ [RELATORIOS] Container encontrado imediatamente');
         }
 
         if (!this.handsontableContainer) {
-            console.error('❌ [RELATORIOS] Container handsontable-relatorios não encontrado após 20 retries');
-            // Tentar renderizar o DOM para debug
-            const elementosRelatorios = Array.from(document.querySelectorAll('[id*="relatorio"]')).map(el => el.id);
-            console.log('📋 [RELATORIOS] Elementos disponíveis no DOM:', elementosRelatorios);
-            
-            // Verificar se o container principal existe
-            const mainContent = document.getElementById('main-content');
-            console.log('📋 [RELATORIOS] main-content existe?', !!mainContent);
-            if (mainContent) {
-                console.log('📋 [RELATORIOS] Conteúdo de main-content:', mainContent.innerHTML.substring(0, 500));
-            }
+            console.error('❌ Container handsontable-relatorios não encontrado');
             return;
         }
-
-        console.log('🔵 [RELATORIOS] Buscando controles de filtro...');
         // Container legado para mobile (fallback)
         this.container = document.getElementById('relatorios-table-body');
 
