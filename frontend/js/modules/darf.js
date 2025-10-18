@@ -49,11 +49,11 @@ class DarfManager {
         console.log('🔵 [DARF] Iniciando load()...');
         try {
             // Verificar disponibilidade do uiManager
-            if (!this.uiManager || typeof this.uiManager.showLoader !== 'function') {
+            if (!this.uiManager || typeof this.uiManager.showLoading !== 'function') {
                 console.warn('⚠️ [DARF] uiManager não disponível em load()');
             } else {
                 console.log('🔵 [DARF] Mostrando loader...');
-                this.uiManager.showLoader('Carregando DARFs...');
+                this.uiManager.showLoading('Carregando DARFs...');
             }
             
             // Carregar dados
@@ -78,11 +78,11 @@ class DarfManager {
         } finally {
             console.log('🔵 [DARF] Executando finally - escondendo loader...');
             // SEMPRE esconder loader, mesmo com erro
-            if (this.uiManager && typeof this.uiManager.hideLoader === 'function') {
-                this.uiManager.hideLoader();
+            if (this.uiManager && typeof this.uiManager.hideLoading === 'function') {
+                this.uiManager.hideLoading();
                 console.log('✅ [DARF] Loader escondido');
             } else {
-                console.warn('⚠️ [DARF] uiManager.hideLoader não disponível');
+                console.warn('⚠️ [DARF] uiManager.hideLoading não disponível');
             }
         }
     }
@@ -236,9 +236,9 @@ class DarfManager {
         const ano = document.getElementById('darf-filtro-ano')?.value;
         const mes = document.getElementById('darf-filtro-mes')?.value;
         
-        this.uiManager.showLoader();
+        this.uiManager.showLoading();
         await this.loadDarfs(ano || null, mes || null);
-        this.uiManager.hideLoader();
+        this.uiManager.hideLoading();
     }
 
     /**
@@ -418,7 +418,7 @@ class DarfManager {
         }
 
         try {
-            this.uiManager.showLoader('Importando DARFs...');
+            this.uiManager.showLoading('Importando DARFs...');
 
             const response = await this.apiService.post(
                 '/api/darf/importar-multiplos',
@@ -435,11 +435,11 @@ class DarfManager {
             // Recarregar lista
             await this.loadDarfs();
 
-            this.uiManager.hideLoader();
+            this.uiManager.hideLoading();
         } catch (error) {
             console.error('Erro ao importar DARFs:', error);
             this.uiManager.showNotification(`Erro ao importar DARFs: ${error.message}`, 'error');
-            this.uiManager.hideLoader();
+            this.uiManager.hideLoading();
         }
     }
 
@@ -533,18 +533,18 @@ class DarfManager {
         if (!confirm('Tem certeza que deseja excluir este DARF?')) return;
 
         try {
-            this.uiManager.showLoader();
+            this.uiManager.showLoading();
 
             await this.apiService.delete(`/api/darf/${id}`);
 
             this.uiManager.showNotification('DARF excluído com sucesso', 'success');
             await this.loadDarfs();
 
-            this.uiManager.hideLoader();
+            this.uiManager.hideLoading();
         } catch (error) {
             console.error('Erro ao excluir DARF:', error);
             this.uiManager.showNotification(`Erro ao excluir DARF: ${error.message}`, 'error');
-            this.uiManager.hideLoader();
+            this.uiManager.hideLoading();
         }
     }
 
