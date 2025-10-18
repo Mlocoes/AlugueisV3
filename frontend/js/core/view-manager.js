@@ -1564,6 +1564,74 @@ uted py-4">
         `;
     }
 
+    getRelatoriosMobileTemplate() {
+        return `
+            <div class="relatorios-container-mobile p-3">
+                <div class="card mb-3">
+                    <div class="card-body">
+                        <h5 class="card-title">
+                            <i class="fas fa-filter me-2"></i>Filtros
+                        </h5>
+                        
+                        <!-- Filtros de período -->
+                        <div class="row mb-3">
+                            <div class="col-6">
+                                <label for="filtro-ano-mobile" class="form-label">Ano</label>
+                                <select class="form-select form-select-sm" id="filtro-ano-mobile">
+                                    <option value="">Todos</option>
+                                </select>
+                            </div>
+                            <div class="col-6">
+                                <label for="filtro-mes-mobile" class="form-label">Mês</label>
+                                <select class="form-select form-select-sm" id="filtro-mes-mobile">
+                                    <option value="">Todos</option>
+                                    <option value="1">Janeiro</option>
+                                    <option value="2">Fevereiro</option>
+                                    <option value="3">Março</option>
+                                    <option value="4">Abril</option>
+                                    <option value="5">Maio</option>
+                                    <option value="6">Junho</option>
+                                    <option value="7">Julho</option>
+                                    <option value="8">Agosto</option>
+                                    <option value="9">Setembro</option>
+                                    <option value="10">Outubro</option>
+                                    <option value="11">Novembro</option>
+                                    <option value="12">Dezembro</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <!-- Filtro de proprietário -->
+                        <div class="mb-3">
+                            <label for="filtro-proprietario-mobile" class="form-label">Proprietário</label>
+                            <select class="form-select form-select-sm" id="filtro-proprietario-mobile">
+                                <option value="">Todos</option>
+                            </select>
+                        </div>
+                        
+                        <!-- Botões de ação -->
+                        <div class="d-grid gap-2">
+                            <button class="btn btn-primary btn-sm" id="btn-gerar-relatorio-mobile">
+                                <i class="fas fa-chart-bar me-2"></i>Gerar Relatório
+                            </button>
+                            <button class="btn btn-success btn-sm" id="btn-exportar-excel-mobile">
+                                <i class="fas fa-file-excel me-2"></i>Exportar Excel
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Área de resultados -->
+                <div id="relatorios-resultado-mobile">
+                    <div class="text-center text-muted py-4">
+                        <i class="fas fa-chart-line fa-3x mb-3"></i>
+                        <p>Selecione os filtros e clique em "Gerar Relatório"</p>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
     _createImportForm(type, title, icon) {
         const suffix = this.isMobile ? '-mobile' : '';
         return `
