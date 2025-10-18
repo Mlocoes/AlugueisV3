@@ -15,26 +15,29 @@ class RelatoriosModule {
         // Re-avaliar tipo de dispositivo
         this.isMobile = window.deviceManager && window.deviceManager.deviceType === 'mobile';
         
-        // Após unificação dos templates, sempre usar o mesmo ID (sem sufixo -mobile)
-        this.container = document.getElementById('relatorios-table-body');
+        // Buscar container do Handsontable
+        this.handsontableContainer = document.getElementById('handsontable-relatorios');
 
         // Retry múltiplas vezes se não encontrar (timing issue)
-        if (!this.container) {
+        if (!this.handsontableContainer) {
             for (let i = 0; i < 10; i++) {
                 await new Promise(resolve => setTimeout(resolve, 300));
-                this.container = document.getElementById('relatorios-table-body');
-                if (this.container) {
+                this.handsontableContainer = document.getElementById('handsontable-relatorios');
+                if (this.handsontableContainer) {
                     break;
                 }
             }
         }
 
-        if (!this.container) {
-            // Não retornar erro, apenas avisar - o container pode ser encontrado depois
+        if (!this.handsontableContainer) {
+            console.error('Container handsontable-relatorios não encontrado após retries');
             return;
         }
 
-        // Após unificação: sempre usar mesmos IDs (sem sufixo)
+        // Container legado para mobile (fallback)
+        this.container = document.getElementById('relatorios-table-body');
+
+        // Buscar controles de filtro
         this.anoSelect = document.getElementById('relatorios-ano-select');
         this.mesSelect = document.getElementById('relatorios-mes-select');
         this.proprietarioSelect = document.getElementById('relatorios-proprietario-select');
@@ -311,9 +314,10 @@ class RelatoriosModule {
     }
 
     async render() {
-        const container = document.getElementById('handsontable-relatorios');
+        const container = this.handsontableContainer || document.getElementById('handsontable-relatorios');
+        
         if (!container) {
-            console.warn('Container handsontable-relatorios não encontrado');
+            console.error('Container handsontable-relatorios não encontrado em render()');
             return;
         }
 
