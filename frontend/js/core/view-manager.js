@@ -873,7 +873,6 @@ class ViewManager {
     }
 
     getRelatoriosTemplate() {
-        console.log('🔵 getRelatoriosTemplate() chamado - VERSÃO NOVA com Handsontable');
         return `
             <div class="relatorios-container">
                 <div id="relatorios-alerts"></div>
@@ -1607,32 +1606,13 @@ uted py-4">
                     </div>
                 </div>
                 
+                <!-- Container Handsontable -->
                 <div class="card-responsive">
                     <div class="card-body-responsive">
-                        <div class="table-responsive-custom" style="max-height: 70vh; min-height: 50vh; overflow-y: auto;">
-                            <table class="table table-striped table-hover table-custom" style="font-size: 0.76rem;">
-                                <thead class="table-dark">
-                                    <tr>
-                                        <th width="50">Nº</th>
-                                        <th>Nome do Proprietário</th>
-                                        <th width="120" class="text-center">Período</th>
-                                        <th width="150" class="text-end">Soma dos Aluguéis</th>
-                                        <th width="150" class="text-end">Soma das Taxas de Administração</th>
-                                        <th width="150" class="text-center">Imóveis</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="relatorios-table-body">
-                                    <tr>
-                                        <td colspan="6" class="text-center text-muted py-4">
-                                            <div class="spinner-border" role="status">
-                                                <span class="visually-hidden">Carregando...</span>
-                                            </div>
-                                            <br>Carregando relatórios...
-                                        </td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
+                        <div id="handsontable-relatorios" style="width: 100%; overflow: auto;"></div>
+                        
+                        <!-- Container legado para mobile (fallback) -->
+                        <div id="relatorios-table-body" class="d-none"></div>
                     </div>
                 </div>
             </div>

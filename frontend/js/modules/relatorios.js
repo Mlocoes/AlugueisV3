@@ -11,31 +11,23 @@ class RelatoriosModule {
     }
 
     async load() {
-        console.log('🔵 [RELATORIOS] load() iniciado');
-        
         // Re-avaliar tipo de dispositivo
         this.isMobile = window.deviceManager && window.deviceManager.deviceType === 'mobile';
         
         // Buscar container do Handsontable com retry
         this.handsontableContainer = document.getElementById('handsontable-relatorios');
-        console.log('🔵 [RELATORIOS] Primeira busca do container:', !!this.handsontableContainer);
 
         // Retry múltiplas vezes se não encontrar (timing issue)
         if (!this.handsontableContainer) {
-            console.log('🔵 [RELATORIOS] Iniciando retries...');
             for (let i = 0; i < 15; i++) {
                 await new Promise(resolve => setTimeout(resolve, 300));
                 this.handsontableContainer = document.getElementById('handsontable-relatorios');
-                if (this.handsontableContainer) {
-                    console.log(`✅ [RELATORIOS] Container encontrado na tentativa ${i + 1}`);
-                    break;
-                }
+                if (this.handsontableContainer) break;
             }
         }
 
         if (!this.handsontableContainer) {
             console.error('❌ Container handsontable-relatorios não encontrado');
-            console.log('📋 DOM atual:', document.getElementById('main-content')?.innerHTML.substring(0, 1000));
             return;
         }
         // Container legado para mobile (fallback)
