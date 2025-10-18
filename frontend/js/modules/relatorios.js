@@ -2,10 +2,12 @@ class RelatoriosModule {
     constructor() {
         this.apiService = window.apiService;
         this.uiManager = window.uiManager;
+        this.localeManager = window.localeManager || new LocaleManager();
         this.currentData = [];
         this.transferenciasCache = new Map();
         this.isMobile = window.deviceManager && window.deviceManager.deviceType === 'mobile';
-        this.initialLoadDone = false; // Flag para controlar primeira carga
+        this.initialLoadDone = false;
+        this.hotInstance = null; // Handsontable instance
     }
 
     async load() {
@@ -185,23 +187,82 @@ class RelatoriosModule {
 
         try {
             this.uiManager.showLoading('Carregando relatórios...');
-            const response = await this.apiService.get(`/api/reportes/resumen-mensual?${params.toString()}`);
-            let data = (response.success ? response.data : response) || [];
+            
+            // Buscar dados de aluguéis
+            const responseAlugueis = await this.apiService.get(`/api/reportes/resumen-mensual?${params.toString()}`);
+            let dataAlugueis = (responseAlugueis.success ? responseAlugueis.data : responseAlugueis) || [];
+
+            // Buscar dados de DARFs
+            const responseDarfs = await this.apiService.get(`/api/darf/relatorios?${params.toString()}`);
+            let dataDarfs = (responseDarfs.success ? responseDarfs.data : responseDarfs) || [];
 
             if (proprietarioSelection && proprietarioSelection.startsWith('alias:')) {
                 const aliasId = proprietarioSelection.replace('alias:', '');
                 const propIdsResponse = await this.apiService.get(`/api/extras/${aliasId}/proprietarios/relatorios`);
                 const propIds = (propIdsResponse.success ? propIdsResponse.data : []).map(p => p.id);
-                data = data.filter(item => propIds.includes(item.proprietario_id));
+                dataAlugueis = dataAlugueis.filter(item => propIds.includes(item.proprietario_id));
+                dataDarfs = dataDarfs.filter(item => propIds.includes(item.proprietario_id));
             }
 
-            this.currentData = data;
+            // Consolidar dados de aluguéis e DARFs
+            this.currentData = this.consolidarDados(dataAlugueis, dataDarfs);
             await this.render();
         } catch (error) {
+            console.error('Erro ao carregar dados de relatórios:', error);
             this.uiManager.showError('Erro ao carregar dados de relatórios.');
         } finally {
             this.uiManager.hideLoading();
         }
+    }
+
+    /**
+     * Consolidar dados de aluguéis e DARFs por proprietário e período
+     */
+    consolidarDados(dataAlugueis, dataDarfs) {
+        const consolidated = new Map();
+
+        // Processar aluguéis
+        dataAlugueis.forEach(item => {
+            const key = `${item.proprietario_id}_${item.ano}_${item.mes}`;
+            consolidated.set(key, {
+                proprietario_id: item.proprietario_id,
+                nome_proprietario: item.nome_proprietario,
+                ano: item.ano,
+                mes: item.mes,
+                periodo: `${String(item.mes).padStart(2, '0')}/${item.ano}`,
+                soma_alugueis: parseFloat(item.soma_alugueis || 0),
+                soma_taxas: parseFloat(item.soma_taxas || 0),
+                valor_darf: 0
+            });
+        });
+
+        // Adicionar DARFs
+        dataDarfs.forEach(item => {
+            const key = `${item.proprietario_id}_${item.ano}_${item.mes}`;
+            if (consolidated.has(key)) {
+                consolidated.get(key).valor_darf = parseFloat(item.valor_darf || 0);
+            } else {
+                // DARF sem aluguel correspondente
+                consolidated.set(key, {
+                    proprietario_id: item.proprietario_id,
+                    nome_proprietario: item.nome_proprietario,
+                    ano: item.ano,
+                    mes: item.mes,
+                    periodo: item.periodo,
+                    soma_alugueis: 0,
+                    soma_taxas: 0,
+                    valor_darf: parseFloat(item.valor_darf || 0)
+                });
+            }
+        });
+
+        return Array.from(consolidated.values()).sort((a, b) => {
+            // Ordenar por nome, depois por ano/mês decrescente
+            const nomeCompare = a.nome_proprietario.localeCompare(b.nome_proprietario);
+            if (nomeCompare !== 0) return nomeCompare;
+            if (a.ano !== b.ano) return b.ano - a.ano;
+            return b.mes - a.mes;
+        });
     }
 
     async getTransferenciasValue(proprietarioId, ano, mes) {
@@ -250,17 +311,100 @@ class RelatoriosModule {
     }
 
     async render() {
-        if (!this.container) return;
-
-        if (this.isMobile) {
-            await this.renderMobileCards();
-        } else {
-            await this.renderDesktopTable();
+        const container = document.getElementById('handsontable-relatorios');
+        if (!container) {
+            console.warn('Container handsontable-relatorios não encontrado');
+            return;
         }
+
+        // Destruir instância anterior se existir
+        if (this.hotInstance) {
+            this.hotInstance.destroy();
+            this.hotInstance = null;
+        }
+
+        if (this.currentData.length === 0) {
+            container.innerHTML = '<div class="text-center text-muted p-4">Nenhum relatório encontrado.</div>';
+            return;
+        }
+
+        // Preparar dados para Handsontable
+        const tableData = await this.prepararDadosTabela();
+
+        // Inicializar Handsontable
+        this.hotInstance = new Handsontable(container, {
+            data: tableData,
+            colHeaders: ['Proprietário', 'Período', 'Aluguel', 'DARF', 'Aluguel - DARF'],
+            columns: [
+                { data: 'proprietario', type: 'text', readOnly: true },
+                { data: 'periodo', type: 'text', readOnly: true, className: 'htCenter' },
+                { data: 'aluguel', type: 'text', readOnly: true, className: 'htRight' },
+                { data: 'darf', type: 'text', readOnly: true, className: 'htRight' },
+                { data: 'diferenca', type: 'text', readOnly: true, className: 'htRight' }
+            ],
+            rowHeaders: false,
+            stretchH: 'all',
+            width: '100%',
+            height: '60vh',
+            licenseKey: 'non-commercial-and-evaluation',
+            readOnly: true,
+            contextMenu: false,
+            manualColumnResize: true,
+            manualRowResize: false
+        });
+
         this.applyPermissions();
     }
 
+    /**
+     * Preparar dados para exibição no Handsontable
+     */
+    async prepararDadosTabela() {
+        const incluirTransferencias = this.transferenciasCheck && this.transferenciasCheck.checked;
+        const tableData = [];
+
+        for (const item of this.currentData) {
+            let somaAlugueis = item.soma_alugueis;
+            
+            // Adicionar transferências se marcado
+            if (incluirTransferencias) {
+                const transferencia = await this.getTransferenciasValue(
+                    item.proprietario_id,
+                    item.ano,
+                    item.mes
+                );
+                somaAlugueis += transferencia;
+            }
+
+            const valorDarf = item.valor_darf;
+            const diferenca = somaAlugueis - valorDarf;
+
+            tableData.push({
+                proprietario: item.nome_proprietario,
+                periodo: item.periodo,
+                aluguel: this.formatarValor(somaAlugueis),
+                darf: this.formatarValor(valorDarf),
+                diferenca: this.formatarValor(diferenca)
+            });
+        }
+
+        return tableData;
+    }
+
+    /**
+     * Formatar valor em moeda brasileira
+     */
+    formatarValor(valor) {
+        return valor.toLocaleString('pt-BR', {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        });
+    }
+
     async renderMobileCards() {
+        // Manter compatibilidade mobile por enquanto
+        if (!this.container) return;
+
         if (this.currentData.length === 0) {
             this.container.innerHTML = `<div class="text-center p-4">Nenhum relatório encontrado.</div>`;
             return;
@@ -268,25 +412,34 @@ class RelatoriosModule {
 
         const incluirTransferencias = this.transferenciasCheck && this.transferenciasCheck.checked;
         let cardsHtml = '';
+        
         for (const item of this.currentData) {
-            let somaAlugueis = parseFloat(item.soma_alugueis || 0);
+            let somaAlugueis = item.soma_alugueis;
             if (incluirTransferencias) {
                 const transferencia = await this.getTransferenciasValue(item.proprietario_id, item.ano, item.mes);
                 somaAlugueis += transferencia;
             }
-            const somaTaxas = parseFloat(item.soma_taxas || 0);
-            const valorLiquido = somaAlugueis - somaTaxas;
+            const valorDarf = item.valor_darf;
+            const diferenca = somaAlugueis - valorDarf;
 
             cardsHtml += `
                 <div class="card mobile-card mb-3 shadow-sm">
                     <div class="card-header bg-light d-flex justify-content-between align-items-center">
                         <h5 class="card-title mb-0">${SecurityUtils.escapeHtml(item.nome_proprietario)}</h5>
-                        <small class="text-muted">${item.mes}/${item.ano}</small>
+                        <small class="text-muted">${item.periodo}</small>
                     </div>
                     <ul class="list-group list-group-flush">
                         <li class="list-group-item d-flex justify-content-between align-items-center">
-                            Valor Líquido
-                            <span class="badge bg-success rounded-pill">R$ ${valorLiquido.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
+                            Aluguel
+                            <span class="badge bg-primary rounded-pill">R$ ${this.formatarValor(somaAlugueis)}</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            DARF
+                            <span class="badge bg-warning rounded-pill">R$ ${this.formatarValor(valorDarf)}</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            Diferença
+                            <span class="badge bg-success rounded-pill">R$ ${this.formatarValor(diferenca)}</span>
                         </li>
                     </ul>
                 </div>
@@ -296,33 +449,8 @@ class RelatoriosModule {
     }
 
     async renderDesktopTable() {
-        if (this.currentData.length === 0) {
-            this.container.innerHTML = '<tr><td colspan="6" class="text-center">Nenhum relatório encontrado.</td></tr>';
-            return;
-        }
-
-        const incluirTransferencias = this.transferenciasCheck && this.transferenciasCheck.checked;
-        let tableHtml = '';
-        for (const [index, item] of this.currentData.entries()) {
-            let somaAlugueis = parseFloat(item.soma_alugueis || 0);
-            if (incluirTransferencias) {
-                const transferencia = await this.getTransferenciasValue(item.proprietario_id, item.ano, item.mes);
-                somaAlugueis += transferencia;
-            }
-            const somaTaxas = parseFloat(item.soma_taxas || 0);
-
-            tableHtml += `
-                <tr>
-                    <td>${index + 1}</td>
-                    <td>${SecurityUtils.escapeHtml(item.nome_proprietario)}</td>
-                    <td class="text-center">${item.mes}/${item.ano}</td>
-                    <td class="text-end">R$ ${somaAlugueis.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
-                    <td class="text-end">R$ ${somaTaxas.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
-                    <td class="text-center">${item.quantidade_imoveis}</td>
-                </tr>
-            `;
-        }
-        this.container.innerHTML = tableHtml;
+        // Método legado - agora usa Handsontable via render()
+        await this.render();
     }
 
     applyPermissions() {

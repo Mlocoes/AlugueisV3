@@ -328,3 +328,65 @@ async def total_darfs_por_proprietario(
         "total": float(r.total) if r.total else 0,
         "quantidade": r.quantidade
     } for r in resultados]
+
+
+@router.get("/relatorios")
+async def obter_relatorio_darfs(
+    ano: int = None,
+    mes: int = None,
+    proprietario_id: int = None,
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(verify_token)
+):
+    """
+    Obter relatório de DARFs por proprietário e período
+    Retorna: proprietario_id, nome, periodo (MM/YYYY), valor_darf
+    """
+    query = db.query(
+        Proprietario.id.label('proprietario_id'),
+        Proprietario.nome,
+        Proprietario.sobrenome,
+        func.extract('month', Darf.data).label('mes'),
+        func.extract('year', Darf.data).label('ano'),
+        func.sum(Darf.valor_darf).label('valor_darf')
+    ).join(
+        Darf, Darf.proprietario_id == Proprietario.id
+    )
+    
+    # Aplicar filtros
+    if proprietario_id:
+        query = query.filter(Proprietario.id == proprietario_id)
+    
+    if ano and mes:
+        data_inicio = date(ano, mes, 1)
+        if mes == 12:
+            data_fim = date(ano + 1, 1, 1)
+        else:
+            data_fim = date(ano, mes + 1, 1)
+        query = query.filter(and_(
+            Darf.data >= data_inicio,
+            Darf.data < data_fim
+        ))
+    elif ano:
+        query = query.filter(func.extract('year', Darf.data) == ano)
+    
+    resultados = query.group_by(
+        Proprietario.id,
+        Proprietario.nome,
+        Proprietario.sobrenome,
+        func.extract('month', Darf.data),
+        func.extract('year', Darf.data)
+    ).order_by(
+        Proprietario.nome,
+        func.extract('year', Darf.data).desc(),
+        func.extract('month', Darf.data).desc()
+    ).all()
+    
+    return [{
+        "proprietario_id": r.proprietario_id,
+        "nome_proprietario": f"{r.nome} {r.sobrenome}".strip(),
+        "mes": int(r.mes),
+        "ano": int(r.ano),
+        "periodo": f"{int(r.mes):02d}/{int(r.ano)}",
+        "valor_darf": float(r.valor_darf) if r.valor_darf else 0
+    } for r in resultados]

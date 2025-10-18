@@ -869,73 +869,55 @@ class ViewManager {
     getRelatoriosTemplate() {
         return `
             <div class="relatorios-container">
-                <!-- Encabezado eliminado -->
                 <div id="relatorios-alerts"></div>
-                <!-- Filtros sin rectángulo, estilo Participação -->
-                        <div class="d-flex align-items-center mb-4" style="gap: 24px;
- flex-wrap: wrap;">                                                                  
-                            <div class="d-flex align-items-center me-3">                                             <label for="relatorios-ano-select" class="form-label 
-mb-0 me-2" style="min-width: 50px;">Ano</label>                                      
-                                <select id="relatorios-ano-select" class="form-select" style="width: 160px; min-width: 140px;">                                           
-                                    <option value="">Carregando...</option>                                          </select>
-                            </div>
-                            <div class="d-flex align-items-center me-3">
-                                <label for="relatorios-mes-select" class="form-label 
-mb-0 me-2" style="min-width: 50px;">Mês</label>                                      
-                                <select id="relatorios-mes-select" class="form-select" style="width: 160px; min-width: 140px;">                                           
-                                    <option value="">Todos os meses</option>                                             <option value="1">Janeiro</option>
-                                    <option value="2">Fevereiro</option>
-                                    <option value="3">Março</option>
-                                    <option value="4">Abril</option>
-                                    <option value="5">Maio</option>
-                                    <option value="6">Junho</option>
-                                    <option value="7">Julho</option>
-                                    <option value="8">Agosto</option>
-                                    <option value="9">Setembro</option>
-                                    <option value="10">Outubro</option>
-                                    <option value="11">Novembro</option>
-                                    <option value="12">Dezembro</option>
-                                </select>
-                            </div>
-                            <div class="d-flex align-items-center me-3">
-                                <label for="relatorios-proprietario-select" class="fo
-rm-label mb-0 me-2" style="min-width: 80px;">Proprietário</label>                    
-                                <select id="relatorios-proprietario-select" class="form-select" style="width: 200px; min-width: 160px;">                                  
-                                    <option value="">Carregando...</option>                                          </select>
-                            </div>
-                            <div class="d-flex align-items-center">
-                                <input class="form-check-input me-2" type="checkbox" 
-id="relatorios-transferencias-check">                                                
-                                <label class="form-check-label" for="relatorios-transferencias-check">                                                                    
-                                    <i class="fas fa-exchange-alt me-1"></i>Transferências                                                                                
-                                </label>                                                                         </div>
-                        </div>
                 
+                <!-- Filtros -->
+                <div class="d-flex align-items-center mb-4" style="gap: 24px; flex-wrap: wrap;">
+                    <div class="d-flex align-items-center me-3">
+                        <label for="relatorios-ano-select" class="form-label mb-0 me-2" style="min-width: 50px;">Ano</label>
+                        <select id="relatorios-ano-select" class="form-select" style="width: 160px; min-width: 140px;">
+                            <option value="">Carregando...</option>
+                        </select>
+                    </div>
+                    <div class="d-flex align-items-center me-3">
+                        <label for="relatorios-mes-select" class="form-label mb-0 me-2" style="min-width: 50px;">Mês</label>
+                        <select id="relatorios-mes-select" class="form-select" style="width: 160px; min-width: 140px;">
+                            <option value="">Todos os meses</option>
+                            <option value="1">Janeiro</option>
+                            <option value="2">Fevereiro</option>
+                            <option value="3">Março</option>
+                            <option value="4">Abril</option>
+                            <option value="5">Maio</option>
+                            <option value="6">Junho</option>
+                            <option value="7">Julho</option>
+                            <option value="8">Agosto</option>
+                            <option value="9">Setembro</option>
+                            <option value="10">Outubro</option>
+                            <option value="11">Novembro</option>
+                            <option value="12">Dezembro</option>
+                        </select>
+                    </div>
+                    <div class="d-flex align-items-center me-3">
+                        <label for="relatorios-proprietario-select" class="form-label mb-0 me-2" style="min-width: 80px;">Proprietário</label>
+                        <select id="relatorios-proprietario-select" class="form-select" style="width: 200px; min-width: 160px;">
+                            <option value="">Carregando...</option>
+                        </select>
+                    </div>
+                    <div class="d-flex align-items-center">
+                        <input class="form-check-input me-2" type="checkbox" id="relatorios-transferencias-check">
+                        <label class="form-check-label" for="relatorios-transferencias-check">
+                            <i class="fas fa-exchange-alt me-1"></i>Transferências
+                        </label>
+                    </div>
+                </div>
+                
+                <!-- Container Handsontable -->
                 <div class="card-responsive">
-                    <!-- Título eliminado por solicitud del usuario -->
                     <div class="card-body-responsive">
-                            <div class="table-responsive-custom" style="max-height: 70vh; min-height: 50vh; overflow-y: auto;">                                                                       <table class="table table-striped table-hover table-custom" style="font-size: 0.76rem;">                                                      
-                                <thead class="table-dark">                                                               <tr>
-                                        <th width="50">Nº</th>
-                                        <th>Nome do Proprietário</th>
-                                        <th width="120" class="text-center">Período</
-th>                                                                                  
-                                        <th width="150" class="text-end">Soma dos Aluguéis</th>                                                                           
-                                        <th width="150" class="text-end">Soma das Taxas de Administração</th>                                                             
-                                        <th width="150" class="text-center">Imóveis</th>                                                                                  
-                                    </tr>                                                                            </thead>
-                                <tbody id="relatorios-table-body">
-                                    <tr>
-                                        <td colspan="6" class="text-center text-muted
- py-4">                                                                              
-                                            <div class="spinner-border" role="status">                                                                                    
-                                                <span class="visually-hidden">Carregando...</span>                                                                        
-                                            </div>                                                                               <br>Carregando relatórios...
-                                        </td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
+                        <div id="handsontable-relatorios" style="width: 100%; overflow: auto;"></div>
+                        
+                        <!-- Container legado para mobile (fallback) -->
+                        <div id="relatorios-table-body" class="d-none"></div>
                     </div>
                 </div>
             </div>
