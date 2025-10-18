@@ -8,7 +8,7 @@ from sqlalchemy import and_, func
 from typing import List
 from datetime import datetime, date
 
-from database import get_db
+from config import get_db
 from models_final import Darf, Proprietario, DarfCreate, DarfUpdate, DarfResponse, DarfImportacao
 from routers.auth import verify_token
 
