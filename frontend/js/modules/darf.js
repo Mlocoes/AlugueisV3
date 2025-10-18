@@ -43,31 +43,31 @@ class DarfManager {
     }
 
     /**
-     * Carregar módulo DARF
+     * Carregar módulo
      */
     async load() {
         try {
-            if (this.uiManager && typeof this.uiManager.showLoader === 'function') {
-                this.uiManager.showLoader();
+            // Verificar disponibilidade do uiManager
+            if (!this.uiManager || typeof this.uiManager.showLoader !== 'function') {
+                console.warn('uiManager não disponível em load()');
+            } else {
+                this.uiManager.showLoader('Carregando DARFs...');
             }
             
             // Carregar dados
-            await Promise.all([
-                this.loadDarfs(),
-                this.loadProprietarios()
-            ]);
+            await this.loadProprietarios();
+            await this.loadDarfs();
             
             // Setup eventos
             this.setupEvents();
             
-            if (this.uiManager && typeof this.uiManager.hideLoader === 'function') {
-                this.uiManager.hideLoader();
-            }
         } catch (error) {
             console.error('Erro ao carregar módulo DARF:', error);
             if (this.uiManager && typeof this.uiManager.showNotification === 'function') {
                 this.uiManager.showNotification('Erro ao carregar DARFs', 'error');
             }
+        } finally {
+            // SEMPRE esconder loader, mesmo com erro
             if (this.uiManager && typeof this.uiManager.hideLoader === 'function') {
                 this.uiManager.hideLoader();
             }
@@ -87,9 +87,12 @@ class DarfManager {
             }
             
             const response = await this.apiService.get(url);
-            this.allDarfs = response;
+            
+            // A resposta pode ser um array direto ou um objeto com data
+            this.allDarfs = Array.isArray(response) ? response : (response.data || []);
+            
             this.renderDarfsTable();
-            return response;
+            return this.allDarfs;
         } catch (error) {
             console.error('Erro ao carregar DARFs:', error);
             this.safeUICall('showNotification', 'Erro ao carregar DARFs', 'error');
@@ -123,6 +126,12 @@ class DarfManager {
     renderDarfsTable() {
         const tbody = document.getElementById('darfs-table-body');
         if (!tbody) return;
+
+        // Garantir que allDarfs é um array
+        if (!Array.isArray(this.allDarfs)) {
+            console.warn('allDarfs não é um array:', this.allDarfs);
+            this.allDarfs = [];
+        }
 
         if (this.allDarfs.length === 0) {
             tbody.innerHTML = `
