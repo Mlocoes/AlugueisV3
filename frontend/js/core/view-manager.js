@@ -1,6 +1,7 @@
 /**
  * Manejador de Vistas Unificado
  * Gestiona la carga y visualización de las diferentes secciones de la aplicación
+ * @version 2025-10-18-v2 - Actualización con Handsontable en Relatórios
  */
 
 class ViewManager {
