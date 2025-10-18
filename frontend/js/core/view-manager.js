@@ -1565,67 +1565,80 @@ uted py-4">
     }
 
     getRelatoriosMobileTemplate() {
+        // Usar o mesmo template do desktop para mobile (mesmos IDs e estrutura)
         return `
-            <div class="relatorios-container-mobile p-3">
-                <div class="card mb-3">
-                    <div class="card-body">
-                        <h5 class="card-title">
-                            <i class="fas fa-filter me-2"></i>Filtros
-                        </h5>
-                        
-                        <!-- Filtros de período -->
-                        <div class="row mb-3">
-                            <div class="col-6">
-                                <label for="filtro-ano-mobile" class="form-label">Ano</label>
-                                <select class="form-select form-select-sm" id="filtro-ano-mobile">
-                                    <option value="">Todos</option>
-                                </select>
-                            </div>
-                            <div class="col-6">
-                                <label for="filtro-mes-mobile" class="form-label">Mês</label>
-                                <select class="form-select form-select-sm" id="filtro-mes-mobile">
-                                    <option value="">Todos</option>
-                                    <option value="1">Janeiro</option>
-                                    <option value="2">Fevereiro</option>
-                                    <option value="3">Março</option>
-                                    <option value="4">Abril</option>
-                                    <option value="5">Maio</option>
-                                    <option value="6">Junho</option>
-                                    <option value="7">Julho</option>
-                                    <option value="8">Agosto</option>
-                                    <option value="9">Setembro</option>
-                                    <option value="10">Outubro</option>
-                                    <option value="11">Novembro</option>
-                                    <option value="12">Dezembro</option>
-                                </select>
-                            </div>
-                        </div>
-                        
-                        <!-- Filtro de proprietário -->
-                        <div class="mb-3">
-                            <label for="filtro-proprietario-mobile" class="form-label">Proprietário</label>
-                            <select class="form-select form-select-sm" id="filtro-proprietario-mobile">
-                                <option value="">Todos</option>
-                            </select>
-                        </div>
-                        
-                        <!-- Botões de ação -->
-                        <div class="d-grid gap-2">
-                            <button class="btn btn-primary btn-sm" id="btn-gerar-relatorio-mobile">
-                                <i class="fas fa-chart-bar me-2"></i>Gerar Relatório
-                            </button>
-                            <button class="btn btn-success btn-sm" id="btn-exportar-excel-mobile">
-                                <i class="fas fa-file-excel me-2"></i>Exportar Excel
-                            </button>
-                        </div>
+            <div class="relatorios-container">
+                <div id="relatorios-alerts"></div>
+                
+                <!-- Filtros adaptados para mobile -->
+                <div class="d-flex flex-column mb-4" style="gap: 12px;">
+                    <div class="d-flex align-items-center">
+                        <label for="relatorios-ano-select" class="form-label mb-0 me-2" style="min-width: 80px;">Ano</label>
+                        <select id="relatorios-ano-select" class="form-select form-select-sm">
+                            <option value="">Carregando...</option>
+                        </select>
+                    </div>
+                    
+                    <div class="d-flex align-items-center">
+                        <label for="relatorios-mes-select" class="form-label mb-0 me-2" style="min-width: 80px;">Mês</label>
+                        <select id="relatorios-mes-select" class="form-select form-select-sm">
+                            <option value="">Todos os meses</option>
+                            <option value="1">Janeiro</option>
+                            <option value="2">Fevereiro</option>
+                            <option value="3">Março</option>
+                            <option value="4">Abril</option>
+                            <option value="5">Maio</option>
+                            <option value="6">Junho</option>
+                            <option value="7">Julho</option>
+                            <option value="8">Agosto</option>
+                            <option value="9">Setembro</option>
+                            <option value="10">Outubro</option>
+                            <option value="11">Novembro</option>
+                            <option value="12">Dezembro</option>
+                        </select>
+                    </div>
+                    
+                    <div class="d-flex align-items-center">
+                        <label for="relatorios-proprietario-select" class="form-label mb-0 me-2" style="min-width: 80px;">Proprietário</label>
+                        <select id="relatorios-proprietario-select" class="form-select form-select-sm">
+                            <option value="">Carregando...</option>
+                        </select>
+                    </div>
+                    
+                    <div class="d-flex align-items-center">
+                        <input class="form-check-input me-2" type="checkbox" id="relatorios-transferencias-check">
+                        <label class="form-check-label" for="relatorios-transferencias-check">
+                            <i class="fas fa-exchange-alt me-1"></i>Transferências
+                        </label>
                     </div>
                 </div>
                 
-                <!-- Área de resultados -->
-                <div id="relatorios-resultado-mobile">
-                    <div class="text-center text-muted py-4">
-                        <i class="fas fa-chart-line fa-3x mb-3"></i>
-                        <p>Selecione os filtros e clique em "Gerar Relatório"</p>
+                <div class="card-responsive">
+                    <div class="card-body-responsive">
+                        <div class="table-responsive-custom" style="max-height: 70vh; min-height: 50vh; overflow-y: auto;">
+                            <table class="table table-striped table-hover table-custom" style="font-size: 0.76rem;">
+                                <thead class="table-dark">
+                                    <tr>
+                                        <th width="50">Nº</th>
+                                        <th>Nome do Proprietário</th>
+                                        <th width="120" class="text-center">Período</th>
+                                        <th width="150" class="text-end">Soma dos Aluguéis</th>
+                                        <th width="150" class="text-end">Soma das Taxas de Administração</th>
+                                        <th width="150" class="text-center">Imóveis</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="relatorios-table-body">
+                                    <tr>
+                                        <td colspan="6" class="text-center text-muted py-4">
+                                            <div class="spinner-border" role="status">
+                                                <span class="visually-hidden">Carregando...</span>
+                                            </div>
+                                            <br>Carregando relatórios...
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
             </div>
