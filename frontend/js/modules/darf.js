@@ -46,30 +46,43 @@ class DarfManager {
      * Carregar módulo
      */
     async load() {
+        console.log('🔵 [DARF] Iniciando load()...');
         try {
             // Verificar disponibilidade do uiManager
             if (!this.uiManager || typeof this.uiManager.showLoader !== 'function') {
-                console.warn('uiManager não disponível em load()');
+                console.warn('⚠️ [DARF] uiManager não disponível em load()');
             } else {
+                console.log('🔵 [DARF] Mostrando loader...');
                 this.uiManager.showLoader('Carregando DARFs...');
             }
             
             // Carregar dados
+            console.log('🔵 [DARF] Carregando proprietários...');
             await this.loadProprietarios();
+            console.log('✅ [DARF] Proprietários carregados');
+            
+            console.log('🔵 [DARF] Carregando DARFs...');
             await this.loadDarfs();
+            console.log('✅ [DARF] DARFs carregados');
             
             // Setup eventos
+            console.log('🔵 [DARF] Setup de eventos...');
             this.setupEvents();
+            console.log('✅ [DARF] Eventos configurados');
             
         } catch (error) {
-            console.error('Erro ao carregar módulo DARF:', error);
+            console.error('❌ [DARF] Erro ao carregar módulo DARF:', error);
             if (this.uiManager && typeof this.uiManager.showNotification === 'function') {
                 this.uiManager.showNotification('Erro ao carregar DARFs', 'error');
             }
         } finally {
+            console.log('🔵 [DARF] Executando finally - escondendo loader...');
             // SEMPRE esconder loader, mesmo com erro
             if (this.uiManager && typeof this.uiManager.hideLoader === 'function') {
                 this.uiManager.hideLoader();
+                console.log('✅ [DARF] Loader escondido');
+            } else {
+                console.warn('⚠️ [DARF] uiManager.hideLoader não disponível');
             }
         }
     }
@@ -78,6 +91,7 @@ class DarfManager {
      * Carregar lista de DARFs
      */
     async loadDarfs(ano = null, mes = null) {
+        console.log('🔵 [DARF] loadDarfs() iniciado', {ano, mes});
         try {
             let url = '/api/darf/?limit=1000';
             if (ano && mes) {
@@ -86,15 +100,19 @@ class DarfManager {
                 url += `&ano=${ano}`;
             }
             
+            console.log('🔵 [DARF] Fazendo requisição para:', url);
             const response = await this.apiService.get(url);
+            console.log('🔵 [DARF] Resposta recebida:', response);
             
             // A resposta pode ser um array direto ou um objeto com data
             this.allDarfs = Array.isArray(response) ? response : (response.data || []);
+            console.log('✅ [DARF] allDarfs definido:', this.allDarfs.length, 'registros');
             
             this.renderDarfsTable();
+            console.log('✅ [DARF] Tabela renderizada');
             return this.allDarfs;
         } catch (error) {
-            console.error('Erro ao carregar DARFs:', error);
+            console.error('❌ [DARF] Erro ao carregar DARFs:', error);
             this.safeUICall('showNotification', 'Erro ao carregar DARFs', 'error');
             throw error;
         }
@@ -104,18 +122,24 @@ class DarfManager {
      * Carregar proprietários
      */
     async loadProprietarios() {
+        console.log('🔵 [DARF] loadProprietarios() iniciado');
         try {
             const response = await this.apiService.get('/api/proprietarios/');
+            console.log('🔵 [DARF] Proprietários recebidos:', response);
             
             // A resposta pode ser um array direto ou um objeto com data
-            let proprietarios = Array.isArray(response) ? response : (response.data || []);
+            const proprietariosData = Array.isArray(response) ? response : (response.data || []);
+            console.log('🔵 [DARF] Proprietários processados:', proprietariosData.length, 'registros');
             
-            this.allProprietarios = proprietarios.sort((a, b) => 
-                a.nome.localeCompare(b.nome)
+            this.proprietarios = proprietariosData.sort((a, b) => 
+                (a.nome || '').localeCompare(b.nome || '')
             );
-            return this.allProprietarios;
+            console.log('✅ [DARF] Proprietários ordenados');
+            
+            return this.proprietarios;
         } catch (error) {
-            console.error('Erro ao carregar proprietários:', error);
+            console.error('❌ [DARF] Erro ao carregar proprietários:', error);
+            this.safeUICall('showNotification', 'Erro ao carregar proprietários', 'error');
             throw error;
         }
     }
