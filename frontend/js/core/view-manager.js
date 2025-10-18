@@ -179,7 +179,12 @@ class ViewManager {
             this.currentView = viewId;
             
             // Delay aumentado para garantir que o DOM seja completamente renderizado
-            await new Promise(resolve => setTimeout(resolve, 200));
+            await new Promise(resolve => setTimeout(resolve, 500));
+            
+            // Forçar reflow para garantir que o DOM está pronto
+            if (this.contentContainer) {
+                this.contentContainer.offsetHeight; // Force reflow
+            }
             
             // Inicializar módulos requeridos
             await this.initializeRequiredModules(view);
