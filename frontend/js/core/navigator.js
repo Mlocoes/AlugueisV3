@@ -176,6 +176,12 @@ class UnifiedNavigator {
                 permission: 'admin'
             },
             {
+                id: 'darf',
+                label: 'DARF',
+                icon: 'fas fa-file-invoice-dollar',
+                permission: 'admin'
+            },
+            {
                 id: 'importar',
                 label: 'Importar',
                 icon: 'fas fa-file-import',

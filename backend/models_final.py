@@ -656,3 +656,93 @@ class ProprietarioUpdateSchema(BaseModel):
         if isinstance(v, str) and v.strip() == '':
             return None
         return v
+
+# ============================================
+# DARF - Documento de Arrecadação de Receitas Federais
+# ============================================
+
+class Darf(Base):
+    """Tabela de DARF - Documento de Arrecadação de Receitas Federais"""
+    __tablename__ = 'darfs'
+    
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    uuid = Column(UUID, default=uuid.uuid4, unique=True, nullable=False)
+    proprietario_id = Column(Integer, ForeignKey('proprietarios.id', ondelete="CASCADE"), nullable=False)
+    data = Column(Date, nullable=False)
+    valor_darf = Column(Numeric(12,2), nullable=False)
+    data_cadastro = Column(DateTime, default=func.current_timestamp())
+    
+    # Constraint única: cada proprietário pode ter apenas um DARF por data
+    __table_args__ = (
+        UniqueConstraint('proprietario_id', 'data', name='uq_darf_proprietario_data'),
+        Index('idx_darf_proprietario', 'proprietario_id'),
+        Index('idx_darf_data', 'data'),
+    )
+    
+    # Relacionamento
+    proprietario = relationship('Proprietario', back_populates='darfs')
+    
+    def __repr__(self):
+        return f"<Darf(proprietario_id={self.proprietario_id}, data='{self.data}', valor={self.valor_darf})>"
+    
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'uuid': str(self.uuid) if self.uuid else None,
+            'proprietario_id': self.proprietario_id,
+            'nome_proprietario': f"{self.proprietario.nome} {self.proprietario.sobrenome}".strip() if self.proprietario else None,
+            'data': self.data.isoformat() if self.data else None,
+            'valor_darf': float(self.valor_darf) if self.valor_darf else 0,
+            'data_cadastro': self.data_cadastro.isoformat() if self.data_cadastro else None
+        }
+
+# Adicionar relacionamento em Proprietario
+Proprietario.darfs = relationship('Darf', back_populates='proprietario', cascade='all, delete-orphan')
+
+# ============================================
+# SCHEMAS PYDANTIC PARA DARF
+# ============================================
+
+class DarfBase(BaseModel):
+    proprietario_id: int = Field(..., description="ID do proprietário")
+    data: date = Field(..., description="Data do DARF")
+    valor_darf: float = Field(..., description="Valor do DARF")
+    
+    @validator('valor_darf')
+    def validar_valor(cls, v):
+        if v < 0:
+            raise ValueError('Valor do DARF não pode ser negativo')
+        return v
+
+class DarfCreate(DarfBase):
+    pass
+
+class DarfUpdate(BaseModel):
+    valor_darf: Optional[float] = Field(None, description="Valor do DARF")
+    
+    @validator('valor_darf')
+    def validar_valor(cls, v):
+        if v is not None and v < 0:
+            raise ValueError('Valor do DARF não pode ser negativo')
+        return v
+
+class DarfResponse(DarfBase):
+    id: int
+    uuid: str
+    nome_proprietario: Optional[str] = None
+    data_cadastro: Optional[datetime] = None
+    
+    class Config:
+        from_attributes = True
+
+class DarfImportacao(BaseModel):
+    """Schema para importação múltipla de DARFs"""
+    proprietario: str = Field(..., description="Nome do proprietário")
+    data: str = Field(..., description="Data no formato DD/MM/YYYY")
+    valor_darf: float = Field(..., description="Valor do DARF")
+    
+    @validator('valor_darf')
+    def validar_valor(cls, v):
+        if v < 0:
+            raise ValueError('Valor do DARF não pode ser negativo')
+        return v

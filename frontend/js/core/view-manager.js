@@ -91,6 +91,14 @@ class ViewManager {
             requiredModules: ['importacao', 'usuarioManager', 'proprietarios', 'imoveis'],
             permission: 'admin'
         });
+
+        this.registerView('darf', {
+            title: 'Gestão de DARF',
+            component: 'DarfView',
+            template: this.getDarfTemplate(),
+            requiredModules: ['darf'],
+            permission: 'admin'
+        });
     }
 
     /**
@@ -1993,6 +2001,167 @@ uted py-4">
                 </div>
             </div>
         `;
+    }
+
+    // ============================================
+    // TEMPLATES DARF
+    // ============================================
+
+    getDarfTemplate() {
+        return `
+            <div class="darf-container">
+                <div class="card-responsive mb-4">
+                    <div class="card-header-responsive bg-primary text-white">
+                        <h5 class="mb-0">
+                            <i class="fas fa-file-invoice-dollar me-2"></i>Gestão de DARF
+                        </h5>
+                    </div>
+                    <div class="card-body-responsive">
+                        <!-- Filtros -->
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-3">
+                                <label for="darf-filtro-ano" class="form-label">Ano</label>
+                                <select id="darf-filtro-ano" class="form-select">
+                                    <option value="">Todos</option>
+                                    ${this.getYearOptions()}
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <label for="darf-filtro-mes" class="form-label">Mês</label>
+                                <select id="darf-filtro-mes" class="form-select">
+                                    <option value="">Todos</option>
+                                    <option value="1">Janeiro</option>
+                                    <option value="2">Fevereiro</option>
+                                    <option value="3">Março</option>
+                                    <option value="4">Abril</option>
+                                    <option value="5">Maio</option>
+                                    <option value="6">Junho</option>
+                                    <option value="7">Julho</option>
+                                    <option value="8">Agosto</option>
+                                    <option value="9">Setembro</option>
+                                    <option value="10">Outubro</option>
+                                    <option value="11">Novembro</option>
+                                    <option value="12">Dezembro</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6 d-flex align-items-end gap-2">
+                                <button id="btn-limpar-filtros" class="btn btn-outline-secondary">
+                                    <i class="fas fa-eraser me-1"></i> Limpar
+                                </button>
+                                <button id="btn-importar-darfs" class="btn btn-success ms-auto">
+                                    <i class="fas fa-file-import me-2"></i>Importar Múltiplos DARFs
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Tabela de DARFs -->
+                        <div class="table-responsive-custom" style="max-height: 60vh; overflow-y: auto;">
+                            <table class="table table-striped table-hover table-custom" style="font-size: 0.85rem;">
+                                <thead class="table-dark">
+                                    <tr>
+                                        <th>Data</th>
+                                        <th>Proprietário</th>
+                                        <th class="text-end">Valor DARF</th>
+                                        <th class="text-center">Status</th>
+                                        <th class="text-end" width="180">Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="darfs-table-body">
+                                    <tr>
+                                        <td colspan="5" class="text-center text-muted py-4">
+                                            <div class="spinner-border" role="status">
+                                                <span class="visually-hidden">Carregando...</span>
+                                            </div>
+                                            <br>Carregando DARFs...
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Modal de Importação Múltipla -->
+                <div class="modal fade" id="modal-importar-darfs" tabindex="-1" aria-labelledby="modalImportarDarfsLabel" aria-hidden="true">
+                    <div class="modal-dialog modal-xl">
+                        <div class="modal-content">
+                            <div class="modal-header bg-success text-white">
+                                <h5 class="modal-title" id="modalImportarDarfsLabel">
+                                    <i class="fas fa-file-import me-2"></i>Importar Múltiplos DARFs
+                                </h5>
+                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                            </div>
+                            <form id="form-importar-darfs">
+                                <div class="modal-body">
+                                    <div class="alert alert-info">
+                                        <strong><i class="fas fa-info-circle"></i> Instruções:</strong>
+                                        <ul class="mb-0 mt-2">
+                                            <li>Preencha os dados de cada DARF na tabela abaixo</li>
+                                            <li>O nome do proprietário será buscado automaticamente (busca parcial)</li>
+                                            <li>Data deve estar no formato DD/MM/YYYY</li>
+                                            <li>Se já existir um DARF para o proprietário na mesma data, o valor será atualizado</li>
+                                            <li>Use vírgula (,) como separador decimal: 1234,56</li>
+                                        </ul>
+                                    </div>
+
+                                    <!-- Container Handsontable -->
+                                    <div id="handsontable-darfs" style="width: 100%; overflow: hidden;"></div>
+
+                                    <!-- Alertas de validação -->
+                                    <div id="importacao-alerts" class="mt-3"></div>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                                        <i class="fas fa-times me-1"></i> Cancelar
+                                    </button>
+                                    <button type="submit" class="btn btn-success">
+                                        <i class="fas fa-check me-1"></i> Importar DARFs
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Modal de Resultados da Importação -->
+                <div class="modal fade" id="modal-resultados-importacao" tabindex="-1" aria-labelledby="modalResultadosLabel" aria-hidden="true">
+                    <div class="modal-dialog modal-xl">
+                        <div class="modal-content">
+                            <div class="modal-header bg-primary text-white">
+                                <h5 class="modal-title" id="modalResultadosLabel">
+                                    <i class="fas fa-chart-bar me-2"></i>Resultados da Importação
+                                </h5>
+                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                            </div>
+                            <div class="modal-body">
+                                <div id="resultados-importacao-content"></div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-primary" data-bs-dismiss="modal">
+                                    <i class="fas fa-check me-1"></i> Fechar
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    getDarfMobileTemplate() {
+        return this.getDarfTemplate(); // Mobile usa o mesmo template (responsivo)
+    }
+
+    /**
+     * Helper para gerar options de anos
+     */
+    getYearOptions() {
+        const currentYear = new Date().getFullYear();
+        const years = [];
+        for (let year = currentYear + 1; year >= currentYear - 10; year--) {
+            years.push(`<option value="${year}">${year}</option>`);
+        }
+        return years.join('');
     }
 }
 
