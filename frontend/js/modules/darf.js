@@ -113,10 +113,10 @@ class DarfManager {
                     </span>
                 </td>
                 <td class="text-end">
-                    <button class="btn btn-sm btn-outline-primary" onclick="darfManager.editarDarf(${darf.id})">
+                    <button class="btn btn-sm btn-outline-primary" onclick="window.darfModule.editarDarf(${darf.id})">
                         <i class="fas fa-edit"></i> ${this.isMobile ? '' : 'Editar'}
                     </button>
-                    <button class="btn btn-sm btn-outline-danger" onclick="darfManager.excluirDarf(${darf.id})">
+                    <button class="btn btn-sm btn-outline-danger" onclick="window.darfModule.excluirDarf(${darf.id})">
                         <i class="fas fa-trash"></i> ${this.isMobile ? '' : 'Excluir'}
                     </button>
                 </td>
@@ -491,12 +491,4 @@ class DarfManager {
         if (parts.length !== 3) return dateStr;
         return `${parts[2]}/${parts[1]}/${parts[0]}`;
     }
-}
-
-// Instância global
-let darfManager;
-
-// Inicializar quando o módulo for carregado
-if (typeof window !== 'undefined') {
-    darfManager = new DarfManager();
 }
