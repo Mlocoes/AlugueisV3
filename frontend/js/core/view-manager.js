@@ -867,6 +867,7 @@ class ViewManager {
     }
 
     getRelatoriosTemplate() {
+        console.log('🔵 getRelatoriosTemplate() chamado - VERSÃO NOVA com Handsontable');
         return `
             <div class="relatorios-container">
                 <div id="relatorios-alerts"></div>
