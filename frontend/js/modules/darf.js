@@ -312,7 +312,6 @@ class DarfManager {
             width: '100%',
             height: 400,
             licenseKey: 'non-commercial-and-evaluation',
-            language: 'pt-BR',
             afterChange: (changes, source) => {
                 if (source === 'loadData') return;
                 this.validarDadosHandsontable();
