@@ -13,19 +13,14 @@ class RelatoriosModule {
         // Re-avaliar tipo de dispositivo
         this.isMobile = window.deviceManager && window.deviceManager.deviceType === 'mobile';
         
-        // Sempre re-buscar elementos DOM (podem ter sido recriados ao mudar de tela)
-        const getContainer = () => this.isMobile
-            ? document.getElementById('relatorios-list-mobile')
-            : document.getElementById('relatorios-table-body');
-
-        this.container = getContainer();
+        // Após unificação dos templates, sempre usar o mesmo ID (sem sufixo -mobile)
+        this.container = document.getElementById('relatorios-table-body');
 
         // Retry múltiplas vezes se não encontrar (timing issue)
-        // Aumentado para 10 tentativas com delay maior
         if (!this.container) {
             for (let i = 0; i < 10; i++) {
                 await new Promise(resolve => setTimeout(resolve, 300));
-                this.container = getContainer();
+                this.container = document.getElementById('relatorios-table-body');
                 if (this.container) {
                     break;
                 }
@@ -37,12 +32,11 @@ class RelatoriosModule {
             return;
         }
 
-        // Re-buscar todos os elementos DOM
-        const suffix = this.isMobile ? '-mobile' : '';
-        this.anoSelect = document.getElementById(`relatorios-ano-select${suffix}`);
-        this.mesSelect = document.getElementById(`relatorios-mes-select${suffix}`);
-        this.proprietarioSelect = document.getElementById(`relatorios-proprietario-select${suffix}`);
-        this.transferenciasCheck = document.getElementById(`relatorios-transferencias-check${suffix}`);
+        // Após unificação: sempre usar mesmos IDs (sem sufixo)
+        this.anoSelect = document.getElementById('relatorios-ano-select');
+        this.mesSelect = document.getElementById('relatorios-mes-select');
+        this.proprietarioSelect = document.getElementById('relatorios-proprietario-select');
+        this.transferenciasCheck = document.getElementById('relatorios-transferencias-check');
 
         // Setup event listeners (sempre reconfigurar)
         this.setupEventListeners();
