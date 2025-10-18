@@ -37,9 +37,15 @@ class RelatoriosModule {
         if (!this.handsontableContainer) {
             console.error('❌ [RELATORIOS] Container handsontable-relatorios não encontrado após 20 retries');
             // Tentar renderizar o DOM para debug
-            console.log('📋 [RELATORIOS] Elementos disponíveis no DOM:', 
-                Array.from(document.querySelectorAll('[id*="relatorio"]')).map(el => el.id)
-            );
+            const elementosRelatorios = Array.from(document.querySelectorAll('[id*="relatorio"]')).map(el => el.id);
+            console.log('📋 [RELATORIOS] Elementos disponíveis no DOM:', elementosRelatorios);
+            
+            // Verificar se o container principal existe
+            const mainContent = document.getElementById('main-content');
+            console.log('📋 [RELATORIOS] main-content existe?', !!mainContent);
+            if (mainContent) {
+                console.log('📋 [RELATORIOS] Conteúdo de main-content:', mainContent.innerHTML.substring(0, 500));
+            }
             return;
         }
 
