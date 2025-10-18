@@ -33,11 +33,23 @@ class DarfManager {
     }
 
     /**
+     * Wrapper seguro para uiManager
+     */
+    safeUICall(method, ...args) {
+        if (this.uiManager && typeof this.uiManager[method] === 'function') {
+            return this.uiManager[method](...args);
+        }
+        return null;
+    }
+
+    /**
      * Carregar módulo DARF
      */
     async load() {
         try {
-            this.uiManager.showLoader();
+            if (this.uiManager && typeof this.uiManager.showLoader === 'function') {
+                this.uiManager.showLoader();
+            }
             
             // Carregar dados
             await Promise.all([
@@ -48,11 +60,17 @@ class DarfManager {
             // Setup eventos
             this.setupEvents();
             
-            this.uiManager.hideLoader();
+            if (this.uiManager && typeof this.uiManager.hideLoader === 'function') {
+                this.uiManager.hideLoader();
+            }
         } catch (error) {
             console.error('Erro ao carregar módulo DARF:', error);
-            this.uiManager.showNotification('Erro ao carregar DARFs', 'error');
-            this.uiManager.hideLoader();
+            if (this.uiManager && typeof this.uiManager.showNotification === 'function') {
+                this.uiManager.showNotification('Erro ao carregar DARFs', 'error');
+            }
+            if (this.uiManager && typeof this.uiManager.hideLoader === 'function') {
+                this.uiManager.hideLoader();
+            }
         }
     }
 
@@ -74,7 +92,7 @@ class DarfManager {
             return response;
         } catch (error) {
             console.error('Erro ao carregar DARFs:', error);
-            this.uiManager.showNotification('Erro ao carregar DARFs', 'error');
+            this.safeUICall('showNotification', 'Erro ao carregar DARFs', 'error');
             throw error;
         }
     }
@@ -84,11 +102,15 @@ class DarfManager {
      */
     async loadProprietarios() {
         try {
-            const response = await this.apiService.get('/api/proprietarios/?ativo=true');
-            this.allProprietarios = response.sort((a, b) => 
+            const response = await this.apiService.get('/api/proprietarios/');
+            
+            // A resposta pode ser um array direto ou um objeto com data
+            let proprietarios = Array.isArray(response) ? response : (response.data || []);
+            
+            this.allProprietarios = proprietarios.sort((a, b) => 
                 a.nome.localeCompare(b.nome)
             );
-            return response;
+            return this.allProprietarios;
         } catch (error) {
             console.error('Erro ao carregar proprietários:', error);
             throw error;
