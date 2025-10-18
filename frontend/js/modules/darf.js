@@ -5,6 +5,16 @@
 
 class DarfManager {
     constructor() {
+        // Garantir que os serviços estão disponíveis
+        if (!window.apiService) {
+            console.error('❌ apiService não está disponível');
+            throw new Error('apiService não inicializado');
+        }
+        if (!window.uiManager) {
+            console.error('❌ uiManager não está disponível');
+            throw new Error('uiManager não inicializado');
+        }
+        
         this.apiService = window.apiService;
         this.uiManager = window.uiManager;
         this.localeManager = window.localeManager || new LocaleManager();
@@ -18,6 +28,8 @@ class DarfManager {
         this.load = this.load.bind(this);
         this.loadDarfs = this.loadDarfs.bind(this);
         this.loadProprietarios = this.loadProprietarios.bind(this);
+        
+        console.log('✅ DarfManager inicializado com sucesso');
     }
 
     /**
@@ -56,7 +68,7 @@ class DarfManager {
                 url += `&ano=${ano}`;
             }
             
-            const response = await this.apiService.request(url);
+            const response = await this.apiService.get(url);
             this.allDarfs = response;
             this.renderDarfsTable();
             return response;
@@ -72,7 +84,7 @@ class DarfManager {
      */
     async loadProprietarios() {
         try {
-            const response = await this.apiService.request('/api/proprietarios/?ativo=true');
+            const response = await this.apiService.get('/api/proprietarios/?ativo=true');
             this.allProprietarios = response.sort((a, b) => 
                 a.nome.localeCompare(b.nome)
             );
@@ -353,9 +365,8 @@ class DarfManager {
         try {
             this.uiManager.showLoader('Importando DARFs...');
 
-            const response = await this.apiService.request(
+            const response = await this.apiService.post(
                 '/api/darf/importar-multiplos',
-                'POST',
                 darfsParaImportar
             );
 
@@ -469,7 +480,7 @@ class DarfManager {
         try {
             this.uiManager.showLoader();
 
-            await this.apiService.request(`/api/darf/${id}`, 'DELETE');
+            await this.apiService.delete(`/api/darf/${id}`);
 
             this.uiManager.showNotification('DARF excluído com sucesso', 'success');
             await this.loadDarfs();
