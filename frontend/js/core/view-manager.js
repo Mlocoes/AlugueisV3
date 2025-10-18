@@ -692,9 +692,6 @@ class ViewManager {
                         <button class="btn btn-primary" id="btn-novo-alias-mobile" type="button">
                             <i class="fas fa-user-tag me-2"></i> Novo Alias
                         </button>
-                        <button class="btn btn-primary" id="btn-novas-transferencias-mobile" type="button">
-                            <i class="fas fa-exchange-alt me-2"></i> Nova Transferência
-                        </button>
                         <button class="btn btn-primary" id="btn-multiplas-transferencias-mobile" type="button">
                             <i class="fas fa-table me-2"></i> Cadastrar Múltiplas Transferências
                         </button>
