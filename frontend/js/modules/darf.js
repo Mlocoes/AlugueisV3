@@ -275,17 +275,15 @@ class DarfManager {
             this.hotInstance.destroy();
         }
 
-        // Dados de exemplo
-        const dataExemplo = [
-            ['Jandira', '01/09/2025', '969,16'],
-            ['Manoel', '01/09/2025', '3484,76'],
-            ['Fabio', '01/09/2025', '1137,19'],
-            ['Carla', '01/09/2025', '1638,77'],
+        // Iniciar com dados vazios (usuário pode copiar/colar do Excel)
+        const dataVazia = [
+            ['', '', ''],
+            ['', '', ''],
             ['', '', '']
         ];
 
         this.hotInstance = new Handsontable(container, {
-            data: dataExemplo,
+            data: dataVazia,
             colHeaders: ['Proprietário', 'Data (DD/MM/YYYY)', 'Valor DARF'],
             columns: [
                 {
@@ -310,7 +308,7 @@ class DarfManager {
             minSpareRows: 5,
             stretchH: 'all',
             width: '100%',
-            height: 400,
+            height: 300,
             licenseKey: 'non-commercial-and-evaluation',
             afterChange: (changes, source) => {
                 if (source === 'loadData') return;

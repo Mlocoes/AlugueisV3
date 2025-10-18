@@ -2083,7 +2083,7 @@ uted py-4">
 
                 <!-- Modal de Importação Múltipla -->
                 <div class="modal fade" id="modal-importar-darfs" tabindex="-1" aria-labelledby="modalImportarDarfsLabel" aria-hidden="true">
-                    <div class="modal-dialog modal-xl">
+                    <div class="modal-dialog modal-lg">
                         <div class="modal-content">
                             <div class="modal-header bg-success text-white">
                                 <h5 class="modal-title" id="modalImportarDarfsLabel">
@@ -2093,22 +2093,16 @@ uted py-4">
                             </div>
                             <form id="form-importar-darfs">
                                 <div class="modal-body">
-                                    <div class="alert alert-info">
+                                    <div class="alert alert-info py-2">
                                         <strong><i class="fas fa-info-circle"></i> Instruções:</strong>
-                                        <ul class="mb-0 mt-2">
-                                            <li>Preencha os dados de cada DARF na tabela abaixo</li>
-                                            <li>O nome do proprietário será buscado automaticamente (busca parcial)</li>
-                                            <li>Data deve estar no formato DD/MM/YYYY</li>
-                                            <li>Se já existir um DARF para o proprietário na mesma data, o valor será atualizado</li>
-                                            <li>Use vírgula (,) como separador decimal: 1234,56</li>
-                                        </ul>
+                                        Cole ou digite os dados: <strong>Proprietário | Data (DD/MM/YYYY) | Valor</strong>
                                     </div>
 
                                     <!-- Container Handsontable -->
-                                    <div id="handsontable-darfs" style="width: 100%; overflow: hidden;"></div>
+                                    <div id="handsontable-darfs" style="width: 100%; overflow: auto;"></div>
 
                                     <!-- Alertas de validação -->
-                                    <div id="importacao-alerts" class="mt-3"></div>
+                                    <div id="importacao-alerts" class="mt-2"></div>
                                 </div>
                                 <div class="modal-footer">
                                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
