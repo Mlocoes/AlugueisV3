@@ -116,8 +116,8 @@ class DarfManager {
             
         } catch (error) {
             console.error('❌ [DARF] Erro ao carregar módulo DARF:', error);
-            if (this.uiManager && typeof this.uiManager.showNotification === 'function') {
-                this.uiManager.showNotification('Erro ao carregar DARFs', 'error');
+            if (this.uiManager && typeof this.uiManager.showAlert === 'function') {
+                this.uiManager.showAlert('Erro ao carregar DARFs', 'error');
             }
         } finally {
             console.log('🔵 [DARF] Executando finally - escondendo loader...');
@@ -157,7 +157,7 @@ class DarfManager {
             return this.allDarfs;
         } catch (error) {
             console.error('❌ [DARF] Erro ao carregar DARFs:', error);
-            this.safeUICall('showNotification', 'Erro ao carregar DARFs', 'error');
+            this.safeUICall('showAlert', 'Erro ao carregar DARFs', 'error');
             throw error;
         }
     }
@@ -183,7 +183,7 @@ class DarfManager {
             return this.proprietarios;
         } catch (error) {
             console.error('❌ [DARF] Erro ao carregar proprietários:', error);
-            this.safeUICall('showNotification', 'Erro ao carregar proprietários', 'error');
+            this.safeUICall('showAlert', 'Erro ao carregar proprietários', 'error');
             throw error;
         }
     }
@@ -419,13 +419,13 @@ class DarfManager {
      */
     async salvarMultiplosDarfs() {
         if (!this.hotInstance) {
-            this.uiManager.showNotification('Erro: Handsontable não inicializado', 'error');
+            this.uiManager.showAlert('Erro: Handsontable não inicializado', 'error');
             return;
         }
 
         // Validar dados
         if (!this.validarDadosHandsontable()) {
-            this.uiManager.showNotification('Corrija os erros antes de importar', 'warning');
+            this.uiManager.showAlert('Corrija os erros antes de importar', 'warning');
             return;
         }
 
@@ -454,7 +454,7 @@ class DarfManager {
         });
 
         if (darfsParaImportar.length === 0) {
-            this.uiManager.showNotification('Nenhum DARF para importar', 'warning');
+            this.uiManager.showAlert('Nenhum DARF para importar', 'warning');
             return;
         }
 
@@ -479,7 +479,7 @@ class DarfManager {
             this.uiManager.hideLoading();
         } catch (error) {
             console.error('Erro ao importar DARFs:', error);
-            this.uiManager.showNotification(`Erro ao importar DARFs: ${error.message}`, 'error');
+            this.uiManager.showAlert(`Erro ao importar DARFs: ${error.message}`, 'error');
             this.uiManager.hideLoading();
         }
     }
@@ -564,7 +564,7 @@ class DarfManager {
      */
     async editarDarf(id) {
         // TODO: Implementar edição de DARF individual
-        this.uiManager.showNotification('Funcionalidade em desenvolvimento', 'info');
+        this.uiManager.showAlert('Funcionalidade em desenvolvimento', 'info');
     }
 
     /**
@@ -578,13 +578,13 @@ class DarfManager {
 
             await this.apiService.delete(`/api/darf/${id}`);
 
-            this.uiManager.showNotification('DARF excluído com sucesso', 'success');
+            this.uiManager.showAlert('DARF excluído com sucesso', 'success');
             await this.loadDarfs();
 
             this.uiManager.hideLoading();
         } catch (error) {
             console.error('Erro ao excluir DARF:', error);
-            this.uiManager.showNotification(`Erro ao excluir DARF: ${error.message}`, 'error');
+            this.uiManager.showAlert(`Erro ao excluir DARF: ${error.message}`, 'error');
             this.uiManager.hideLoading();
         }
     }
