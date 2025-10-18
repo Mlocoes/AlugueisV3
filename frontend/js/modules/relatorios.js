@@ -336,21 +336,51 @@ class RelatoriosModule {
             data: tableData,
             colHeaders: ['Proprietário', 'Período', 'Aluguel', 'DARF', 'Aluguel - DARF'],
             columns: [
-                { data: 'proprietario', type: 'text', readOnly: true },
-                { data: 'periodo', type: 'text', readOnly: true, className: 'htCenter' },
-                { data: 'aluguel', type: 'text', readOnly: true, className: 'htRight' },
-                { data: 'darf', type: 'text', readOnly: true, className: 'htRight' },
-                { data: 'diferenca', type: 'text', readOnly: true, className: 'htRight' }
+                { 
+                    data: 'proprietario', 
+                    type: 'text', 
+                    readOnly: true,
+                    width: 200
+                },
+                { 
+                    data: 'periodo', 
+                    type: 'text', 
+                    readOnly: true, 
+                    className: 'htCenter',
+                    width: 100
+                },
+                { 
+                    data: 'aluguel', 
+                    type: 'numeric',
+                    readOnly: true, 
+                    className: 'htRight',
+                    width: 150
+                },
+                { 
+                    data: 'darf', 
+                    type: 'numeric',
+                    readOnly: true, 
+                    className: 'htRight',
+                    width: 150
+                },
+                { 
+                    data: 'diferenca', 
+                    type: 'numeric',
+                    readOnly: true, 
+                    className: 'htRight',
+                    width: 150
+                }
             ],
             rowHeaders: false,
-            stretchH: 'all',
+            colWidths: [200, 100, 150, 150, 150],
             width: '100%',
             height: '60vh',
             licenseKey: 'non-commercial-and-evaluation',
             readOnly: true,
             contextMenu: false,
             manualColumnResize: true,
-            manualRowResize: false
+            manualRowResize: false,
+            className: 'htMiddle'
         });
 
         this.applyPermissions();
