@@ -340,6 +340,9 @@ class ViewManager {
             if (view.id === 'relatorios') {
                 return this.getRelatoriosMobileTemplate();
             }
+            if (view.id === 'darf') {
+                return this.getDarfMobileTemplate();
+            }
             if (view.id === 'importar') {
                 return this.getImportarMobileTemplate();
             }
