@@ -43,6 +43,50 @@ class DarfManager {
     }
 
     /**
+     * Converter string formatada em número
+     * Suporta: "1.234,56" ou "1234.56" ou "1234,56"
+     */
+    parseNumber(str) {
+        if (!str) return 0;
+        
+        // Remover espaços
+        str = str.trim();
+        
+        // Se já é um número, retornar
+        if (typeof str === 'number') return str;
+        
+        // Detectar formato: se tem vírgula e ponto, determinar qual é decimal
+        const hasComma = str.includes(',');
+        const hasDot = str.includes('.');
+        
+        if (hasComma && hasDot) {
+            // Formato brasileiro: 1.234,56 -> remover pontos, trocar vírgula por ponto
+            const lastComma = str.lastIndexOf(',');
+            const lastDot = str.lastIndexOf('.');
+            
+            if (lastComma > lastDot) {
+                // Vírgula é decimal: 1.234,56
+                str = str.replace(/\./g, '').replace(',', '.');
+            } else {
+                // Ponto é decimal: 1,234.56
+                str = str.replace(/,/g, '');
+            }
+        } else if (hasComma) {
+            // Só vírgula: pode ser decimal (1234,56) ou milhares (1,234)
+            // Assumir que é decimal se tiver 2 dígitos após vírgula
+            const parts = str.split(',');
+            if (parts.length === 2 && parts[1].length <= 2) {
+                str = str.replace(',', '.');
+            } else {
+                str = str.replace(/,/g, '');
+            }
+        }
+        // Se só tem ponto, já está no formato correto
+        
+        return parseFloat(str) || 0;
+    }
+
+    /**
      * Carregar módulo
      */
     async load() {
@@ -398,8 +442,8 @@ class DarfManager {
             const valorStr = row[2]?.trim();
 
             if (proprietario && dataStr && valorStr) {
-                // Normalizar valor
-                const valor = this.localeManager.parseNumber(valorStr);
+                // Normalizar valor (1.234,56 ou 1234.56 -> número)
+                const valor = this.parseNumber(valorStr);
 
                 darfsParaImportar.push({
                     proprietario: proprietario,
