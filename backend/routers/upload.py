@@ -1401,19 +1401,16 @@ async def import_alquileres_matricial(df: pd.DataFrame, db: Session) -> int:
         mes, ano = 9, int(sheet_name.replace('Set', ''))
     elif 'Oct' in sheet_name:
         mes, ano = 10, int(sheet_name.replace('Oct', ''))
+    elif 'Out' in sheet_name:
+        mes, ano = 10, int(sheet_name.replace('Out', ''))
     elif 'Nov' in sheet_name:
         mes, ano = 11, int(sheet_name.replace('Nov', ''))
     elif 'Dec' in sheet_name:
         mes, ano = 12, int(sheet_name.replace('Dec', ''))
-    else:
-        # Tentar extrair do nome da planilha de outras formas
-        import re
-        match = re.search(r'(\d{1,2})[^\d]*(\d{4})', sheet_name)
-        if match:
-            mes, ano = int(match.group(1)), int(match.group(2))
-        else:
-            print(f"Não foi possível extrair mês/ano da planilha: {sheet_name}")
-            return 0
+    
+    # Ajustar ano se for abreviado (ex: 25 -> 2025)
+    if ano < 100:
+        ano += 2000
     
     print(f"Mês: {mes}, Ano: {ano}")
     
