@@ -1024,11 +1024,11 @@ async def import_propietarios(df: pd.DataFrame, db: Session) -> int:
             continue
     
     if new_proprietarios:
-        db.bulk_insert_mappings(Propietario, new_proprietores)
+        db.bulk_insert_mappings(Propietario, new_proprietarios)
         count += len(new_proprietarios)
 
     if updated_proprietarios:
-        db.bulk_update_mappings(Propietario, updated_proprietores)
+        db.bulk_update_mappings(Propietario, updated_proprietarios)
         count += len(updated_proprietarios)
     
     return count
