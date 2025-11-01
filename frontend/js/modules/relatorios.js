@@ -208,6 +208,16 @@ class RelatoriosModule {
 
             // Consolidar dados de aluguéis e DARFs
             this.currentData = this.consolidarDados(dataAlugueis, dataDarfs);
+            
+            // Verificar se não há dados e se é por falta de permissões
+            if (this.currentData.length === 0) {
+                const isAdmin = window.authService && window.authService.isAdmin();
+                if (!isAdmin && this.handsontableContainer && window.EmptyStateManager) {
+                    window.EmptyStateManager.showNoPermissions(this.handsontableContainer, 'relatorios');
+                    return;
+                }
+            }
+            
             await this.render();
         } catch (error) {
             console.error('Erro ao carregar dados de relatórios:', error);

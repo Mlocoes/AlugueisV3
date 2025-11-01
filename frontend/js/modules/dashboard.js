@@ -64,6 +64,21 @@ class DashboardModule {
         this.isLoading = false;
 
         if (summary) {
+            // Verificar se há dados zerados (possível falta de permissões)
+            const hasNoData = summary.total_proprietarios === 0 && 
+                             summary.total_imoveis === 0 && 
+                             summary.total_alugueis_ano_corrente === 0;
+            
+            if (hasNoData) {
+                // Verificar se é por falta de permissões ou realmente não há dados
+                const isAdmin = window.authService && window.authService.isAdmin();
+                if (!isAdmin) {
+                    // Usuário não-admin sem dados = sem permissões
+                    this.showNoPermissionsMessage();
+                    return;
+                }
+            }
+
             this.dataLoaded = true;
             this.summaryData = summary;
 
@@ -73,6 +88,23 @@ class DashboardModule {
             if (this.isViewActive) {
                 this.createCharts();
             }
+        }
+    }
+
+    showNoPermissionsMessage() {
+        const chartContainer = document.getElementById('income-chart-container');
+        if (chartContainer && window.EmptyStateManager) {
+            window.EmptyStateManager.showNoPermissions(chartContainer, 'dashboard');
+        }
+        
+        // Limpar stats
+        this.updateCounter('dashboard-total-proprietarios', '0');
+        this.updateCounter('dashboard-total-inmuebles', '0');
+        this.updateCounter('dashboard-ingresos-mensuales', 'R$ 0,00');
+        
+        const variacaoElement = document.getElementById('dashboard-variacao-percentual');
+        if (variacaoElement) {
+            variacaoElement.innerHTML = '<span class="text-muted">-</span>';
         }
     }
 
