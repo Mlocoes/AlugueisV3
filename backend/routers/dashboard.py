@@ -24,10 +24,12 @@ def get_dashboard_summary(
         query_prop = query_prop.filter(Proprietario.id.in_(proprietarios_permitidos))
     total_proprietarios = query_prop.scalar()
     
-    # Para imóveis, filtrar por proprietário
-    query_imoveis = db.query(func.count(Imovel.id))
+    # Para imóveis, filtrar por participação com proprietário
+    query_imoveis = db.query(func.count(Imovel.id.distinct()))
     if proprietarios_permitidos is not None:
-        query_imoveis = query_imoveis.filter(Imovel.proprietario_id.in_(proprietarios_permitidos))
+        from models_final import Participacao
+        query_imoveis = query_imoveis.join(Participacao, Imovel.id == Participacao.imovel_id) \
+            .filter(Participacao.proprietario_id.in_(proprietarios_permitidos))
     total_imoveis = query_imoveis.scalar()
 
     # 2. Valor total de aluguéis no ano corrente
