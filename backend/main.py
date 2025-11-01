@@ -18,7 +18,7 @@ from fastapi.responses import JSONResponse
 from config import APP_CONFIG, CORS_CONFIG, get_db, UPLOAD_DIR
 from models_final import AluguelSimples, Imovel
 from routers import alugueis, estadisticas, upload, auth
-from routers import proprietarios, imoveis, participacoes, reportes, extras, transferencias, dashboard, health, darf
+from routers import proprietarios, imoveis, participacoes, reportes, extras, transferencias, dashboard, health, darf, permissoes
 from routers.auth import verify_token
 from utils.error_handlers import global_exception_handler
 
@@ -99,6 +99,7 @@ app.include_router(reportes.router)
 app.include_router(extras.router)
 app.include_router(transferencias.router)
 app.include_router(darf.router)
+app.include_router(permissoes.router)
 app.include_router(health.router)
 
 # =====================================================

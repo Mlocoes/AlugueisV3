@@ -8,7 +8,7 @@ from typing import Optional
 from datetime import datetime
 from models_final import Imovel, Proprietario, AluguelSimples, Usuario
 from sqlalchemy import asc, desc, func
-from .auth import verify_token_flexible
+from .auth import verify_token_flexible, obter_proprietarios_permitidos_usuario, filtrar_por_proprietarios_permitidos
 import calendar
 # Assuming CalculoService is in this path
 from services.calculo_service import CalculoService
@@ -37,12 +37,21 @@ async def listar_alugueis(
     proprietario_id: Optional[int] = Query(None, description="Filtrar por ID do proprietário"),
     ordem: str = Query("desc", description="Ordem: 'asc' ou 'desc'"),
     db: Session = Depends(get_db),
-    current_user: Usuario = Depends(verify_token_flexible)
+    current_user: Usuario = Depends(verify_token_flexible),
+    proprietarios_permitidos: Optional[list] = Depends(obter_proprietarios_permitidos_usuario)
 ):
-    """Listar aluguéis com filtros e paginação"""
+    """Listar aluguéis com filtros e paginação (respeitando permissões)"""
     try:
         query = db.query(AluguelSimples)
-        # Aplicar filtros
+        
+        # APLICAR FILTRO DE PERMISSÕES PRIMEIRO
+        query = filtrar_por_proprietarios_permitidos(
+            query, 
+            AluguelSimples.proprietario_id, 
+            proprietarios_permitidos
+        )
+        
+        # Aplicar outros filtros
         if ano:
             query = query.filter(AluguelSimples.ano == ano)
         if mes:

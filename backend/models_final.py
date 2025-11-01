@@ -4,7 +4,8 @@ Sistema de Aluguéis V2 - Migrado para Português
 """
 from datetime import datetime, date
 from sqlalchemy import Column, Integer, String, Text, DateTime, Date, Numeric, Boolean, ForeignKey, func, UniqueConstraint, Interval, CheckConstraint, Index, TypeDecorator, CHAR
-from sqlalchemy.dialects.postgresql import UUID as pgUUID
+from sqlalchemy.dialects.postgresql import UUID as pgUUID, ARRAY as postgresql_ARRAY
+from sqlalchemy.dialects import postgresql
 import uuid
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
@@ -52,6 +53,14 @@ class Usuario(Base):
     tipo_de_usuario = Column(String(20), nullable=False)
     data_criacao = Column(DateTime, default=func.current_timestamp())
     
+    # Campos de permissões
+    proprietarios_permitidos = Column(postgresql.ARRAY(Integer), default=[], server_default='{}')
+    permissoes_atualizadas_em = Column(DateTime, nullable=True)
+    permissoes_atualizadas_por = Column(Integer, ForeignKey('usuarios.id'), nullable=True)
+    
+    # Relacionamento para auditoria
+    atualizador = relationship('Usuario', remote_side=[id], foreign_keys=[permissoes_atualizadas_por])
+    
     def __repr__(self):
         return f"<Usuario(usuario='{self.usuario}', tipo='{self.tipo_de_usuario}')>"
 
@@ -60,7 +69,10 @@ class Usuario(Base):
             'id': self.id,
             'usuario': self.usuario,
             'tipo_de_usuario': self.tipo_de_usuario,
-            'data_criacao': self.data_criacao.isoformat() if self.data_criacao else None
+            'data_criacao': self.data_criacao.isoformat() if self.data_criacao else None,
+            'proprietarios_permitidos': self.proprietarios_permitidos or [],
+            'permissoes_atualizadas_em': self.permissoes_atualizadas_em.isoformat() if self.permissoes_atualizadas_em else None,
+            'permissoes_atualizadas_por': self.permissoes_atualizadas_por
         }
 
 # ============================================
