@@ -9,7 +9,7 @@ from pydantic import BaseModel
 
 from config import get_db
 from models_final import *
-from .auth import verify_token_flexible
+from .auth import verify_token_flexible, obter_proprietarios_permitidos_usuario, filtrar_por_proprietarios_permitidos
 
 router = APIRouter(prefix="/api/reportes", tags=["reportes"])
 
@@ -41,14 +41,23 @@ async def get_reportes_info():
 @router.get("/anos-disponiveis")
 async def get_anos_disponiveis(
     db: Session = Depends(get_db),
-    current_user: Usuario = Depends(verify_token_flexible)
+    current_user: Usuario = Depends(verify_token_flexible),
+    proprietarios_permitidos: Optional[list] = Depends(obter_proprietarios_permitidos_usuario)
 ):
     """
-    Obtém lista de anos disponíveis nos dados
+    Obtém lista de anos disponíveis nos dados (respeitando permissões)
     """
     try:
-        anos = db.query(func.distinct(AluguelSimples.ano))\
-                .order_by(AluguelSimples.ano.desc()).all()
+        query = db.query(func.distinct(AluguelSimples.ano))
+        
+        # Aplicar filtro de permissões
+        query = filtrar_por_proprietarios_permitidos(
+            query,
+            AluguelSimples.proprietario_id,
+            proprietarios_permitidos
+        )
+        
+        anos = query.order_by(AluguelSimples.ano.desc()).all()
         
         return [ano[0] for ano in anos if ano[0] is not None]
 
@@ -59,17 +68,26 @@ async def get_anos_disponiveis(
 @router.get("/ultimo-periodo")
 async def get_ultimo_periodo(
     db: Session = Depends(get_db),
-    current_user: Usuario = Depends(verify_token_flexible)
+    current_user: Usuario = Depends(verify_token_flexible),
+    proprietarios_permitidos: Optional[list] = Depends(obter_proprietarios_permitidos_usuario)
 ):
     """
-    Obtém o último ano e mês disponível nos dados
+    Obtém o último ano e mês disponível nos dados (respeitando permissões)
     """
     try:
-        # Obter o último ano e mês disponível
-        result = db.query(
+        query = db.query(
             AluguelSimples.ano,
             AluguelSimples.mes
-        ).order_by(
+        )
+        
+        # Aplicar filtro de permissões
+        query = filtrar_por_proprietarios_permitidos(
+            query,
+            AluguelSimples.proprietario_id,
+            proprietarios_permitidos
+        )
+        
+        result = query.order_by(
             AluguelSimples.ano.desc(),
             AluguelSimples.mes.desc()
         ).first()
@@ -99,10 +117,11 @@ async def get_resumen_mensual(
     proprietario_id: Optional[int] = None,
     nome_proprietario: Optional[str] = None,
     db: Session = Depends(get_db),
-    current_user: Usuario = Depends(verify_token_flexible)
+    current_user: Usuario = Depends(verify_token_flexible),
+    proprietarios_permitidos: Optional[list] = Depends(obter_proprietarios_permitidos_usuario)
 ):
     """
-    Obtém resumo mensal de aluguéis agrupado por proprietário
+    Obtém resumo mensal de aluguéis agrupado por proprietário (respeitando permissões)
     """
     try:
         # Query base usando JOIN para obter dados dos proprietários e aluguéis
@@ -116,15 +135,23 @@ async def get_resumen_mensual(
             func.sum(AluguelSimples.taxa_administracao_proprietario).label('soma_taxas'),
             func.count(func.distinct(AluguelSimples.imovel_id)).label('quantidade_imoveis')
         ).select_from(AluguelSimples)\
-        .join(Proprietario, AluguelSimples.proprietario_id == Proprietario.id)\
-        .group_by(
+        .join(Proprietario, AluguelSimples.proprietario_id == Proprietario.id)
+        
+        # APLICAR FILTRO DE PERMISSÕES PRIMEIRO
+        query = filtrar_por_proprietarios_permitidos(
+            query,
+            AluguelSimples.proprietario_id,
+            proprietarios_permitidos
+        )
+        
+        query = query.group_by(
             func.concat(Proprietario.nome, ' ', func.coalesce(Proprietario.sobrenome, '')),
             AluguelSimples.proprietario_id,
             AluguelSimples.mes,
             AluguelSimples.ano
         )
 
-        # Aplicar filtros
+        # Aplicar outros filtros
         if mes is not None:
             query = query.filter(AluguelSimples.mes == mes)
         

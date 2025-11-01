@@ -5,12 +5,12 @@ Router para gerenciamento de DARF
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session, joinedload
 from sqlalchemy import and_, func
-from typing import List
+from typing import List, Optional
 from datetime import datetime, date
 
 from config import get_db
 from models_final import Darf, Proprietario, DarfCreate, DarfUpdate, DarfResponse, DarfImportacao
-from routers.auth import verify_token
+from routers.auth import verify_token, obter_proprietarios_permitidos_usuario, filtrar_por_proprietarios_permitidos
 
 router = APIRouter(prefix="/api/darf", tags=["darf"])
 
@@ -26,12 +26,20 @@ async def listar_darfs(
     ano: int = None,
     mes: int = None,
     db: Session = Depends(get_db),
-    current_user: dict = Depends(verify_token)
+    current_user: dict = Depends(verify_token),
+    proprietarios_permitidos: Optional[list] = Depends(obter_proprietarios_permitidos_usuario)
 ):
-    """Listar DARFs com filtros opcionais"""
+    """Listar DARFs com filtros opcionais (respeitando permissões)"""
     query = db.query(Darf).options(joinedload(Darf.proprietario))
     
-    # Filtros
+    # APLICAR FILTRO DE PERMISSÕES PRIMEIRO
+    query = filtrar_por_proprietarios_permitidos(
+        query,
+        Darf.proprietario_id,
+        proprietarios_permitidos
+    )
+    
+    # Filtros adicionais
     if proprietario_id:
         query = query.filter(Darf.proprietario_id == proprietario_id)
     
@@ -64,10 +72,11 @@ async def obter_relatorio_darfs(
     mes: int = None,
     proprietario_id: int = None,
     db: Session = Depends(get_db),
-    current_user: dict = Depends(verify_token)
+    current_user: dict = Depends(verify_token),
+    proprietarios_permitidos: Optional[list] = Depends(obter_proprietarios_permitidos_usuario)
 ):
     """
-    Obter relatório de DARFs por proprietário e período
+    Obter relatório de DARFs por proprietário e período (respeitando permissões)
     Retorna: proprietario_id, nome, periodo (MM/YYYY), valor_darf
     """
     query = db.query(
@@ -81,7 +90,14 @@ async def obter_relatorio_darfs(
         Darf, Darf.proprietario_id == Proprietario.id
     )
     
-    # Aplicar filtros
+    # APLICAR FILTRO DE PERMISSÕES PRIMEIRO
+    query = filtrar_por_proprietarios_permitidos(
+        query,
+        Proprietario.id,
+        proprietarios_permitidos
+    )
+    
+    # Aplicar outros filtros
     if proprietario_id:
         query = query.filter(Proprietario.id == proprietario_id)
     

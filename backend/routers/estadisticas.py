@@ -8,23 +8,43 @@ from sqlalchemy import func, desc
 
 from config import get_db
 from models_final import AluguelSimples, LogImportacao, ResumenCalculator, Imovel as Inmueble, Usuario
-from .auth import verify_token_flexible
+from .auth import verify_token_flexible, obter_proprietarios_permitidos_usuario, filtrar_por_proprietarios_permitidos
 
 router = APIRouter(prefix="/api/estadisticas", tags=["estadísticas"])
 
 @router.get("/generales")
-async def estadisticas_generales(db: Session = Depends(get_db), current_user: Usuario = Depends(verify_token_flexible)):
+async def estadisticas_generales(
+    db: Session = Depends(get_db), 
+    current_user: Usuario = Depends(verify_token_flexible),
+    proprietarios_permitidos: Optional[list] = Depends(obter_proprietarios_permitidos_usuario)
+):
     """Obtener estadísticas generales del sistema"""
     try:
-        # Consultas agregadas
-        total_alquileres = db.query(func.count(AluguelSimples.id)).scalar()
+        # Consultas agregadas con filtros de permissão
+        query_alquileres = db.query(func.count(AluguelSimples.id))
+        query_alquileres = filtrar_por_proprietarios_permitidos(query_alquileres, AluguelSimples.proprietario_id, proprietarios_permitidos)
+        total_alquileres = query_alquileres.scalar()
+        
         # Contar propiedades distintas por nombre de inmueble
-        total_propiedades = db.query(func.count(func.distinct(Inmueble.nome))).select_from(AluguelSimples).join(Inmueble, AluguelSimples.imovel_id == Inmueble.id).scalar()
-        total_propietarios = db.query(func.count(func.distinct(AluguelSimples.proprietario_id))).scalar()
+        query_propiedades = db.query(func.count(func.distinct(Inmueble.nome))).select_from(AluguelSimples).join(Inmueble, AluguelSimples.imovel_id == Inmueble.id)
+        query_propiedades = filtrar_por_proprietarios_permitidos(query_propiedades, AluguelSimples.proprietario_id, proprietarios_permitidos)
+        total_propiedades = query_propiedades.scalar()
+        
+        query_propietarios = db.query(func.count(func.distinct(AluguelSimples.proprietario_id)))
+        query_propietarios = filtrar_por_proprietarios_permitidos(query_propietarios, AluguelSimples.proprietario_id, proprietarios_permitidos)
+        total_propietarios = query_propietarios.scalar()
 
-        suma_valores = db.query(func.sum(AluguelSimples.valor_aluguel_proprietario)).scalar() or 0
-        suma_tasas = db.query(func.sum(AluguelSimples.taxa_administracao_proprietario)).scalar() or 0
-        suma_liquido = db.query(func.sum(AluguelSimples.valor_liquido_proprietario)).scalar() or 0
+        query_valores = db.query(func.sum(AluguelSimples.valor_aluguel_proprietario))
+        query_valores = filtrar_por_proprietarios_permitidos(query_valores, AluguelSimples.proprietario_id, proprietarios_permitidos)
+        suma_valores = query_valores.scalar() or 0
+        
+        query_tasas = db.query(func.sum(AluguelSimples.taxa_administracao_proprietario))
+        query_tasas = filtrar_por_proprietarios_permitidos(query_tasas, AluguelSimples.proprietario_id, proprietarios_permitidos)
+        suma_tasas = query_tasas.scalar() or 0
+        
+        query_liquido = db.query(func.sum(AluguelSimples.valor_liquido_proprietario))
+        query_liquido = filtrar_por_proprietarios_permitidos(query_liquido, AluguelSimples.proprietario_id, proprietarios_permitidos)
+        suma_liquido = query_liquido.scalar() or 0
 
         # Últimas importaciones
         ultimas_importaciones = db.query(LogImportacao)\
@@ -52,11 +72,13 @@ async def resumen_por_propiedad(
     ano: Optional[int] = Query(None, description="Año para el resumen"),
     mes: Optional[int] = Query(None, ge=1, le=12, description="Mes para el resumen"),
     db: Session = Depends(get_db),
-    current_user: Usuario = Depends(verify_token_flexible)
+    current_user: Usuario = Depends(verify_token_flexible),
+    proprietarios_permitidos: Optional[list] = Depends(obter_proprietarios_permitidos_usuario)
 ):
     """Obtener resumen agrupado por propiedad"""
     try:
         query = db.query(AluguelSimples)
+        query = filtrar_por_proprietarios_permitidos(query, AluguelSimples.proprietario_id, proprietarios_permitidos)
 
         if ano:
             query = query.filter(AluguelSimples.ano == ano)
@@ -92,11 +114,13 @@ async def resumen_por_propietario(
     ano: Optional[int] = Query(None, description="Año para el resumen"),
     mes: Optional[int] = Query(None, ge=1, le=12, description="Mes para el resumen"),
     db: Session = Depends(get_db),
-    current_user: Usuario = Depends(verify_token_flexible)
+    current_user: Usuario = Depends(verify_token_flexible),
+    proprietarios_permitidos: Optional[list] = Depends(obter_proprietarios_permitidos_usuario)
 ):
     """Obtener resumen agrupado por propietario"""
     try:
         query = db.query(AluguelSimples)
+        query = filtrar_por_proprietarios_permitidos(query, AluguelSimples.proprietario_id, proprietarios_permitidos)
 
         if ano:
             query = query.filter(AluguelSimples.ano == ano)
@@ -128,7 +152,11 @@ async def resumen_por_propietario(
         raise HTTPException(status_code=500, detail=f"Error al generar resumen: {str(e)}")
 
 @router.get("/resumen-mensual")
-async def resumen_mensual(db: Session = Depends(get_db), current_user: Usuario = Depends(verify_token_flexible)):
+async def resumen_mensual(
+    db: Session = Depends(get_db), 
+    current_user: Usuario = Depends(verify_token_flexible),
+    proprietarios_permitidos: Optional[list] = Depends(obter_proprietarios_permitidos_usuario)
+):
     """Obtener resumen del último mes con métricas detalladas"""
     try:
         from datetime import datetime, timedelta
@@ -152,32 +180,39 @@ async def resumen_mensual(db: Session = Depends(get_db), current_user: Usuario =
                 AluguelSimples.mes == mes_actual,
                 AluguelSimples.ano == ano_actual
             )
+        query_mes_actual = filtrar_por_proprietarios_permitidos(query_mes_actual, AluguelSimples.proprietario_id, proprietarios_permitidos)
         
         # Debug: contar registros del mes actual
-        count_mes_actual = db.query(func.count(AluguelSimples.id))\
+        count_query = db.query(func.count(AluguelSimples.id))\
             .filter(
                 AluguelSimples.mes == mes_actual,
                 AluguelSimples.ano == ano_actual
-            ).scalar() or 0
+            )
+        count_query = filtrar_por_proprietarios_permitidos(count_query, AluguelSimples.proprietario_id, proprietarios_permitidos)
+        count_mes_actual = count_query.scalar() or 0
         
         ingresos_mes_actual = query_mes_actual.scalar() or 0
         
         # 2. Ingresos del mes anterior
-        ingresos_mes_anterior = db.query(func.sum(AluguelSimples.valor_alquiler_propietario))\
+        query_mes_anterior = db.query(func.sum(AluguelSimples.valor_alquiler_propietario))\
             .filter(
                 AluguelSimples.mes == mes_anterior,
                 AluguelSimples.ano == ano_anterior
-            ).scalar() or 0
+            )
+        query_mes_anterior = filtrar_por_proprietarios_permitidos(query_mes_anterior, AluguelSimples.proprietario_id, proprietarios_permitidos)
+        ingresos_mes_anterior = query_mes_anterior.scalar() or 0
         
         # 3. Total acumulado del año actual
-        total_ano_actual = db.query(func.sum(AluguelSimples.valor_alquiler_propietario))\
-            .filter(AluguelSimples.ano == ano_actual)\
-            .scalar() or 0
+        query_total_ano = db.query(func.sum(AluguelSimples.valor_alquiler_propietario))\
+            .filter(AluguelSimples.ano == ano_actual)
+        query_total_ano = filtrar_por_proprietarios_permitidos(query_total_ano, AluguelSimples.proprietario_id, proprietarios_permitidos)
+        total_ano_actual = query_total_ano.scalar() or 0
         
         # 4. Calcular media mensual del año actual
-        meses_con_datos = db.query(func.count(func.distinct(AluguelSimples.mes)))\
-            .filter(AluguelSimples.ano == ano_actual)\
-            .scalar() or 1
+        query_meses = db.query(func.count(func.distinct(AluguelSimples.mes)))\
+            .filter(AluguelSimples.ano == ano_actual)
+        query_meses = filtrar_por_proprietarios_permitidos(query_meses, AluguelSimples.proprietario_id, proprietarios_permitidos)
+        meses_con_datos = query_meses.scalar() or 1
         
         media_mensual = total_ano_actual / meses_con_datos if meses_con_datos > 0 else 0
         
@@ -237,23 +272,32 @@ async def resumen_mensual(db: Session = Depends(get_db), current_user: Usuario =
         raise HTTPException(status_code=500, detail=f"Error al obtener resumen mensual: {str(e)}")
 
 @router.get("/debug/mes")
-async def debug_mes(mes: int = 7, ano: int = 2025, db: Session = Depends(get_db), current_user: Usuario = Depends(verify_token_flexible)):
+async def debug_mes(
+    mes: int = 7, 
+    ano: int = 2025, 
+    db: Session = Depends(get_db), 
+    current_user: Usuario = Depends(verify_token_flexible),
+    proprietarios_permitidos: Optional[list] = Depends(obter_proprietarios_permitidos_usuario)
+):
     """Debug: verificar datos de un mes específico"""
     
     # Contar registros
-    count = db.query(func.count(AluguelSimples.id))\
-        .filter(AluguelSimples.mes == mes, AluguelSimples.ano == ano)\
-        .scalar()
+    query_count = db.query(func.count(AluguelSimples.id))\
+        .filter(AluguelSimples.mes == mes, AluguelSimples.ano == ano)
+    query_count = filtrar_por_proprietarios_permitidos(query_count, AluguelSimples.proprietario_id, proprietarios_permitidos)
+    count = query_count.scalar()
     
     # Sumar valores
-    suma = db.query(func.sum(AluguelSimples.valor_alquiler_propietario))\
-        .filter(AluguelSimples.mes == mes, AluguelSimples.ano == ano)\
-        .scalar() or 0
+    query_suma = db.query(func.sum(AluguelSimples.valor_alquiler_propietario))\
+        .filter(AluguelSimples.mes == mes, AluguelSimples.ano == ano)
+    query_suma = filtrar_por_proprietarios_permitidos(query_suma, AluguelSimples.proprietario_id, proprietarios_permitidos)
+    suma = query_suma.scalar() or 0
     
     # Primeros 5 registros para muestra
-    registros = db.query(AluguelSimples.nombre_propietario, AluguelSimples.valor_alquiler_propietario)\
-        .filter(AluguelSimples.mes == mes, AluguelSimples.ano == ano)\
-        .limit(5).all()
+    query_registros = db.query(AluguelSimples.nombre_propietario, AluguelSimples.valor_alquiler_propietario)\
+        .filter(AluguelSimples.mes == mes, AluguelSimples.ano == ano)
+    query_registros = filtrar_por_proprietarios_permitidos(query_registros, AluguelSimples.proprietario_id, proprietarios_permitidos)
+    registros = query_registros.limit(5).all()
     
     return {
         "mes": mes,
@@ -269,8 +313,12 @@ async def debug_mes(mes: int = 7, ano: int = 2025, db: Session = Depends(get_db)
 
 # Endpoint de compatibilidad
 @router.get("/")
-async def estadisticas_compatibilidad(db: Session = Depends(get_db), current_user: Usuario = Depends(verify_token_flexible)):
+async def estadisticas_compatibilidad(
+    db: Session = Depends(get_db), 
+    current_user: Usuario = Depends(verify_token_flexible),
+    proprietarios_permitidos: Optional[list] = Depends(obter_proprietarios_permitidos_usuario)
+):
     """Endpoint de compatibilidad para el frontend"""
     # This endpoint calls an already secured function, but it's good practice
     # to secure the entry point as well.
-    return await estadisticas_generales(db)
+    return await estadisticas_generales(db, current_user, proprietarios_permitidos)
