@@ -178,7 +178,7 @@ def is_user_or_admin(current_user: Usuario = Depends(verify_token_flexible)):
 # ============================================
 
 async def obter_proprietarios_permitidos_usuario(
-    current_user: dict = Depends(verify_token),
+    current_user: Usuario = Depends(verify_token_flexible),
     db: Session = Depends(get_db)
 ) -> Optional[List[int]]:
     """
@@ -189,24 +189,12 @@ async def obter_proprietarios_permitidos_usuario(
         List[int]: Lista de IDs de proprietários permitidos
         []: Lista vazia se usuário não tem permissões
     """
-    from sqlalchemy import text
-    
-    usuario_id = current_user['user_id']
-    
-    # Buscar usuário
-    usuario = db.query(Usuario).filter(Usuario.id == usuario_id).first()
-    if not usuario:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Usuário não encontrado"
-        )
-    
     # Administradores têm acesso total (retorna None para indicar "sem filtro")
-    if usuario.tipo_de_usuario == 'administrador':
+    if current_user.tipo_de_usuario == 'administrador':
         return None
     
     # Usuários comuns: retornar array de proprietários permitidos
-    return usuario.proprietarios_permitidos or []
+    return current_user.proprietarios_permitidos or []
 
 
 def filtrar_por_proprietarios_permitidos(
