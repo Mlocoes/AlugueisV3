@@ -38,14 +38,14 @@ class UsuarioPermissoesResponse(BaseModel):
     tem_permissoes: bool
 
 class AtualizarPermissoesRequest(BaseModel):
-    proprietarios_ids: List[int]
+    proprietarios_permitidos: List[int]
 
 
 # ===========================================
 # ENDPOINTS
 # ===========================================
 
-@router.get("/", response_model=List[UsuarioPermissoesResponse])
+@router.get("/usuarios", response_model=List[UsuarioPermissoesResponse])
 async def listar_usuarios_permissoes(
     db: Session = Depends(get_db),
     current_user: dict = Depends(verify_token)
@@ -118,7 +118,7 @@ async def listar_usuarios_permissoes(
         )
 
 
-@router.put("/{usuario_id}")
+@router.put("/usuarios/{usuario_id}")
 async def atualizar_permissoes(
     usuario_id: int,
     request: AtualizarPermissoesRequest,
@@ -146,21 +146,21 @@ async def atualizar_permissoes(
             )
         
         # Verificar se os proprietários existem
-        if request.proprietarios_ids:
+        if request.proprietarios_permitidos:
             proprietarios_existentes = db.query(Proprietario.id).filter(
-                Proprietario.id.in_(request.proprietarios_ids)
+                Proprietario.id.in_(request.proprietarios_permitidos)
             ).all()
             
             ids_existentes = [p.id for p in proprietarios_existentes]
-            if len(ids_existentes) != len(request.proprietarios_ids):
-                ids_invalidos = set(request.proprietarios_ids) - set(ids_existentes)
+            if len(ids_existentes) != len(request.proprietarios_permitidos):
+                ids_invalidos = set(request.proprietarios_permitidos) - set(ids_existentes)
                 raise HTTPException(
                     status_code=status.HTTP_400_BAD_REQUEST,
                     detail=f"Proprietários não encontrados: {list(ids_invalidos)}"
                 )
         
         # Atualizar permissões
-        usuario.proprietarios_permitidos = request.proprietarios_ids
+        usuario.proprietarios_permitidos = request.proprietarios_permitidos
         usuario.permissoes_atualizadas_em = datetime.now()
         usuario.permissoes_atualizadas_por = current_user['user_id']
         
@@ -258,7 +258,7 @@ async def obter_proprietarios_permitidos(
         )
 
 
-@router.get("/log/{usuario_id}")
+@router.get("/usuarios/{usuario_id}/log")
 async def obter_log_permissoes(
     usuario_id: int,
     limit: int = 50,
