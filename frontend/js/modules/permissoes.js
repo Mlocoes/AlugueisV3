@@ -105,7 +105,7 @@ class PermissoesModule {
     async loadData() {
         try {
             // Carregar usuários
-            const usersResponse = await this.apiService.get('/api/usuarios/listar');
+            const usersResponse = await this.apiService.get('/api/auth/usuarios');
             this.usuarios = usersResponse.data || [];
 
             // Carregar proprietários

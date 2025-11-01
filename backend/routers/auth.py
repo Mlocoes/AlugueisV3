@@ -465,8 +465,13 @@ async def listar_usuarios(
         "data": [
             {
                 "id": user.id,
+                "nome": user.nome,
+                "login": user.usuario,
                 "usuario": user.usuario,
+                "tipo": user.tipo_de_usuario,
                 "tipo_de_usuario": user.tipo_de_usuario,
+                "proprietarios_permitidos": user.proprietarios_permitidos or [],
+                "permissoes_atualizadas_em": user.permissoes_atualizadas_em.isoformat() if user.permissoes_atualizadas_em else None,
                 "data_criacao": user.data_criacao
             }
             for user in usuarios
