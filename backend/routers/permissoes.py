@@ -10,7 +10,7 @@ from datetime import datetime
 
 from config import get_db
 from models_final import Usuario, Proprietario
-from routers.auth import verify_token, is_admin
+from routers.auth import verify_token_flexible, is_admin
 
 router = APIRouter(prefix="/api/permissoes", tags=["permissoes"])
 
@@ -48,19 +48,12 @@ class AtualizarPermissoesRequest(BaseModel):
 @router.get("/usuarios", response_model=List[UsuarioPermissoesResponse])
 async def listar_usuarios_permissoes(
     db: Session = Depends(get_db),
-    current_user: dict = Depends(verify_token)
+    current_user: Usuario = Depends(is_admin)
 ):
     """
     Listar todos os usuários com suas permissões.
     Apenas administradores podem acessar.
     """
-    # Verificar se é administrador
-    if not await is_admin(current_user, db):
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Apenas administradores podem gerenciar permissões"
-        )
-    
     try:
         # Buscar todos os usuários com informações de permissões
         usuarios = db.query(Usuario).all()
@@ -93,7 +86,7 @@ async def listar_usuarios_permissoes(
                 if atualizador:
                     atualizado_por_nome = atualizador.usuario
             
-            tem_permissoes = (
+            tem_permissoes = bool(
                 usuario.tipo_de_usuario == 'administrador' or
                 (usuario.proprietarios_permitidos and len(usuario.proprietarios_permitidos) > 0)
             )
@@ -123,19 +116,12 @@ async def atualizar_permissoes(
     usuario_id: int,
     request: AtualizarPermissoesRequest,
     db: Session = Depends(get_db),
-    current_user: dict = Depends(verify_token)
+    current_user: Usuario = Depends(is_admin)
 ):
     """
     Atualizar permissões de um usuário específico.
     Apenas administradores podem atualizar permissões.
     """
-    # Verificar se é administrador
-    if not await is_admin(current_user, db):
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Apenas administradores podem gerenciar permissões"
-        )
-    
     try:
         # Buscar usuário
         usuario = db.query(Usuario).filter(Usuario.id == usuario_id).first()
@@ -162,7 +148,7 @@ async def atualizar_permissoes(
         # Atualizar permissões
         usuario.proprietarios_permitidos = request.proprietarios_permitidos
         usuario.permissoes_atualizadas_em = datetime.now()
-        usuario.permissoes_atualizadas_por = current_user['user_id']
+        usuario.permissoes_atualizadas_por = current_user.id
         
         db.commit()
         db.refresh(usuario)
@@ -189,7 +175,7 @@ async def verificar_permissao(
     usuario_id: int,
     proprietario_id: int,
     db: Session = Depends(get_db),
-    current_user: dict = Depends(verify_token)
+    current_user: Usuario = Depends(verify_token_flexible)
 ):
     """
     Verificar se um usuário tem permissão para visualizar dados de um proprietário específico.
@@ -218,7 +204,7 @@ async def verificar_permissao(
 async def obter_proprietarios_permitidos(
     usuario_id: int,
     db: Session = Depends(get_db),
-    current_user: dict = Depends(verify_token)
+    current_user: Usuario = Depends(verify_token_flexible)
 ):
     """
     Obter lista de proprietários que o usuário tem permissão para visualizar.
@@ -263,19 +249,12 @@ async def obter_log_permissoes(
     usuario_id: int,
     limit: int = 50,
     db: Session = Depends(get_db),
-    current_user: dict = Depends(verify_token)
+    current_user: Usuario = Depends(is_admin)
 ):
     """
     Obter histórico de alterações de permissões de um usuário.
     Apenas administradores podem acessar.
     """
-    # Verificar se é administrador
-    if not await is_admin(current_user, db):
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Apenas administradores podem visualizar logs de permissões"
-        )
-    
     try:
         result = db.execute(
             text("""

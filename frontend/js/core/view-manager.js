@@ -145,9 +145,12 @@ class ViewManager {
      */
     async showView(viewId) {
         
+        console.log(`🔍 [ViewManager] Intentando mostrar vista: ${viewId}`);
+        
         const view = this.views.get(viewId);
         if (!view) {
             console.error(`❌ Vista no encontrada: ${viewId}`);
+            console.log('📋 Vistas disponibles:', Array.from(this.views.keys()));
             return;
         }
 
@@ -229,8 +232,12 @@ class ViewManager {
     updateContent(view) {
         if (!this.contentContainer) return;
         
+        console.log(`🔄 [ViewManager] Actualizando contenido para vista: ${view.id}`);
+        
         // Obtener template responsivo
         const template = this.getResponsiveTemplate(view);
+        
+        console.log(`📄 [ViewManager] Template obtenido (primeros 100 chars):`, template.substring(0, 100));
         
         // Actualizar contenido de forma segura
         window.SecurityUtils.setSafeHTML(this.contentContainer, template);

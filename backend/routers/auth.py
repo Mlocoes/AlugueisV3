@@ -465,7 +465,6 @@ async def listar_usuarios(
         "data": [
             {
                 "id": user.id,
-                "nome": user.nome,
                 "login": user.usuario,
                 "usuario": user.usuario,
                 "tipo": user.tipo_de_usuario,

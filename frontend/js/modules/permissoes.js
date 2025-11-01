@@ -21,19 +21,21 @@ class PermissoesModule {
         
         // Verificar se usuário é admin
         this.isAdmin = window.authService && window.authService.isAdmin();
-        if (!this.isAdmin) {
-            // Aguardar container para mostrar mensagem de acesso negado
-            this.container = await this.waitForContainer();
-            this.showAccessDenied();
-            return;
-        }
-
+        
+        // Aguardar container estar disponível
         this.container = await this.waitForContainer();
+        
         if (!this.container) {
             console.error('❌ [PermissoesModule] Container não encontrado após múltiplas tentativas');
             return;
         }
+        
+        if (!this.isAdmin) {
+            this.showAccessDenied();
+            return;
+        }
 
+        // Container disponível e usuário é admin, inicializar
         await this.init();
     }
 
@@ -42,11 +44,15 @@ class PermissoesModule {
         for (let i = 0; i < 15; i++) {
             const container = document.getElementById('permissoes-table-container');
             if (container) {
-                console.log('✅ [PermissoesModule] Container encontrado');
+                console.log('✅ [PermissoesModule] Container encontrado na tentativa', i + 1);
                 return container;
             }
+            console.log(`⏳ [PermissoesModule] Aguardando container... tentativa ${i + 1}/15`);
             await new Promise(resolve => setTimeout(resolve, 100));
         }
+        console.error('❌ [PermissoesModule] Container #permissoes-table-container não encontrado no DOM');
+        console.log('📋 [PermissoesModule] Elementos disponíveis no main-content:', 
+            document.getElementById('main-content')?.innerHTML.substring(0, 200));
         return null;
     }
 
@@ -108,8 +114,8 @@ class PermissoesModule {
             const usersResponse = await this.apiService.get('/api/auth/usuarios');
             this.usuarios = usersResponse.data || [];
 
-            // Carregar proprietários
-            const propsResponse = await this.apiService.get('/api/proprietarios/listar');
+            // Carregar proprietários (con barra final para evitar redirect 307)
+            const propsResponse = await this.apiService.get('/api/proprietarios/');
             this.proprietarios = propsResponse.data || [];
 
             // Carregar permissões
@@ -209,10 +215,10 @@ class PermissoesModule {
 
             return {
                 id: user.id,
-                nome: user.nome,
-                login: user.login,
-                tipo: user.tipo,
-                proprietarios_permitidos: proprietariosNomes || (user.tipo === 'admin' ? 'TODOS' : 'Nenhum'),
+                nome: user.usuario,  // Campo correto da API
+                login: user.usuario, // Campo correto da API
+                tipo: user.tipo_de_usuario, // Campo correto da API
+                proprietarios_permitidos: proprietariosNomes || (user.tipo_de_usuario === 'administrador' ? 'TODOS' : 'Nenhum'),
                 proprietarios_permitidos_ids: proprietariosIds,
                 permissoes_atualizadas_em: user.permissoes_atualizadas_em,
                 actions: ''
@@ -224,8 +230,8 @@ class PermissoesModule {
     tipoRenderer(instance, td, row, col, prop, value, cellProperties) {
         td.innerHTML = '';
         const badge = document.createElement('span');
-        badge.className = value === 'admin' ? 'badge bg-danger' : 'badge bg-primary';
-        badge.textContent = value === 'admin' ? 'Admin' : 'Usuário';
+        badge.className = value === 'administrador' ? 'badge bg-danger' : 'badge bg-primary';
+        badge.textContent = value === 'administrador' ? 'Admin' : 'Usuário';
         td.appendChild(badge);
         return td;
     }
@@ -234,7 +240,7 @@ class PermissoesModule {
         td.innerHTML = '';
         const rowData = instance.getSourceDataAtRow(row);
         
-        if (rowData.tipo === 'admin') {
+        if (rowData.tipo === 'administrador') {
             const badge = document.createElement('span');
             badge.className = 'badge bg-success';
             badge.innerHTML = '<i class="fas fa-infinity me-1"></i>TODOS';
@@ -273,8 +279,8 @@ class PermissoesModule {
         const rowData = instance.getSourceDataAtRow(row);
         
         // Não permitir editar o próprio usuário logado
-        const currentUserId = window.authService?.getUserId();
-        if (rowData.id === currentUserId) {
+        const currentUserName = window.authService?.getUserData()?.usuario;
+        if (currentUserName && rowData.login === currentUserName) {
             td.innerHTML = '<small class="text-muted">Você</small>';
             return td;
         }
@@ -359,10 +365,10 @@ class PermissoesModule {
                             <div class="alert alert-info">
                                 <i class="fas fa-info-circle me-2"></i>
                                 <strong>Usuário:</strong> ${user.nome} (${user.login})<br>
-                                <strong>Tipo:</strong> ${user.tipo === 'admin' ? 'Administrador' : 'Usuário'}
+                                <strong>Tipo:</strong> ${user.tipo === 'administrador' ? 'Administrador' : 'Usuário'}
                             </div>
 
-                            ${user.tipo === 'admin' ? `
+                            ${user.tipo === 'administrador' ? `
                                 <div class="alert alert-success">
                                     <i class="fas fa-crown me-2"></i>
                                     Administradores têm acesso a TODOS os dados automaticamente.
@@ -412,7 +418,7 @@ class PermissoesModule {
     }
 
     setupPermissionsSelect(user) {
-        if (user.tipo === 'admin') return;
+        if (user.tipo === 'administrador') return;
 
         const select = document.getElementById('select-proprietarios');
         if (!select) return;
@@ -457,7 +463,7 @@ class PermissoesModule {
             });
 
             // Sucesso
-            this.uiManager.showToast('Permissões atualizadas com sucesso!', 'success');
+            this.uiManager.showSuccessToast('Permissões atualizadas com sucesso!');
             
             // Recarregar dados e atualizar tabela
             await this.loadData();
@@ -468,7 +474,7 @@ class PermissoesModule {
             
         } catch (error) {
             console.error('❌ [PermissoesModule] Erro ao salvar permissões:', error);
-            this.uiManager.showToast('Erro ao salvar permissões', 'error');
+            this.uiManager.showErrorToast('Erro ao salvar permissões', error.message);
             
             // Restaurar botão
             const saveBtn = document.getElementById('btn-salvar-permissoes');
@@ -501,7 +507,7 @@ class PermissoesModule {
 
         } catch (error) {
             console.error('❌ [PermissoesModule] Erro ao carregar log:', error);
-            this.uiManager.showToast('Erro ao carregar histórico', 'error');
+            this.uiManager.showErrorToast('Erro ao carregar histórico', error.message);
         }
     }
 
@@ -581,7 +587,7 @@ class PermissoesModule {
             btnReload.onclick = async () => {
                 await this.loadData();
                 this.hot.loadData(this.prepareTableData());
-                this.uiManager.showToast('Dados atualizados', 'success');
+                this.uiManager.showSuccessToast('Dados atualizados');
             };
         }
     }
