@@ -22,17 +22,32 @@ class PermissoesModule {
         // Verificar se usuário é admin
         this.isAdmin = window.authService && window.authService.isAdmin();
         if (!this.isAdmin) {
+            // Aguardar container para mostrar mensagem de acesso negado
+            this.container = await this.waitForContainer();
             this.showAccessDenied();
             return;
         }
 
-        this.container = document.getElementById('permissoes-table-container');
+        this.container = await this.waitForContainer();
         if (!this.container) {
-            console.error('❌ [PermissoesModule] Container não encontrado');
+            console.error('❌ [PermissoesModule] Container não encontrado após múltiplas tentativas');
             return;
         }
 
         await this.init();
+    }
+
+    async waitForContainer() {
+        // Tentar encontrar o container com retry
+        for (let i = 0; i < 15; i++) {
+            const container = document.getElementById('permissoes-table-container');
+            if (container) {
+                console.log('✅ [PermissoesModule] Container encontrado');
+                return container;
+            }
+            await new Promise(resolve => setTimeout(resolve, 100));
+        }
+        return null;
     }
 
     showAccessDenied() {
