@@ -100,6 +100,14 @@ class ViewManager {
             requiredModules: ['darf'],
             permission: 'admin'
         });
+
+        this.registerView('permissoes', {
+            title: 'Gestão de Permissões',
+            component: 'PermissoesView',
+            template: this.getPermissoesTemplate(),
+            requiredModules: ['permissoes'],
+            permission: 'admin'
+        });
     }
 
     /**
@@ -451,6 +459,8 @@ class ViewManager {
                     moduleClass = window.ImportacaoModule;
                 } else if (moduleName === 'usuarioManager') {
                     moduleClass = window.UsuarioManager;
+                } else if (moduleName === 'permissoes') {
+                    moduleClass = window.PermissoesModule;
                 } else {
                     // Try standard naming convention: capitalize first letter + 'Module'
                     const className = moduleName.charAt(0).toUpperCase() + moduleName.slice(1) + 'Module';
@@ -2116,6 +2126,39 @@ uted py-4">
 
     getDarfMobileTemplate() {
         return this.getDarfTemplate(); // Mobile usa o mesmo template (responsivo)
+    }
+
+    getPermissoesTemplate() {
+        return `
+            <div class="permissoes-container">
+                <div class="card-responsive mb-4">
+                    <div class="card-header-responsive bg-primary text-white">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0">
+                                <i class="fas fa-user-lock me-2"></i>Gestão de Permissões
+                            </h5>
+                            <button id="btn-reload-permissoes" class="btn btn-sm btn-light">
+                                <i class="fas fa-sync-alt"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="card-body-responsive">
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle me-2"></i>
+                            <strong>Gestão de Permissões:</strong> Controle quais proprietários cada usuário pode visualizar.
+                            Administradores têm acesso automático a todos os dados.
+                        </div>
+
+                        <!-- Container para Handsontable -->
+                        <div id="permissoes-table-container" class="mt-3"></div>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    getPermissoesMobileTemplate() {
+        return this.getPermissoesTemplate(); // Mobile usa o mesmo template (responsivo)
     }
 
     /**

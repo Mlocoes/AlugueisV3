@@ -182,6 +182,12 @@ class UnifiedNavigator {
                 permission: 'admin'
             },
             {
+                id: 'permissoes',
+                label: 'Permissões',
+                icon: 'fas fa-user-lock',
+                permission: 'admin'
+            },
+            {
                 id: 'importar',
                 label: 'Importar',
                 icon: 'fas fa-file-import',
